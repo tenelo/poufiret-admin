@@ -52,11 +52,24 @@ export class Connexion {
 
   private extraireMessageErreur(erreur: unknown): string {
     if (erreur instanceof HttpErrorResponse) {
+      // status 0 : la requête n'a pas atteint le serveur (réseau coupé, ou requête
+      // bloquée par le navigateur faute de headers CORS autorisant cette origine).
+      if (erreur.status === 0) {
+        return "Impossible de contacter le serveur. Vérifiez votre connexion ou la configuration CORS du backend.";
+      }
+
       const corps = erreur.error;
       if (typeof corps === 'string') {
         return corps;
       }
-      if (corps?.detail) {
+      // Format d'erreur du backend Poufiret : {erreur, code, message, details: {detail}}
+      if (typeof corps?.message === 'string') {
+        return corps.message;
+      }
+      if (typeof corps?.details?.detail === 'string') {
+        return corps.details.detail;
+      }
+      if (typeof corps?.detail === 'string') {
         return corps.detail;
       }
       if (corps?.non_field_errors?.length) {
