@@ -1,0 +1,45 @@
+.barre-laterale {
+  height: 100%;
+  padding: 1rem 0;
+  background: #1f2937;
+  color: #e5e7eb;
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  a,
+  .placeholder {
+    display: block;
+    padding: 0.65rem 1.25rem;
+    font-size: 0.9rem;
+  }
+
+  a {
+    color: #e5e7eb;
+    text-decoration: none;
+    border-left: 3px solid transparent;
+
+    &:hover {
+      background: #374151;
+    }
+
+    &.actif {
+      background: #374151;
+      border-left-color: #4f46e5;
+      font-weight: 600;
+    }
+  }
+
+  .placeholder {
+    color: #9ca3af;
+    cursor: default;
+
+    em {
+      font-style: normal;
+      font-size: 0.75rem;
+    }
+  }
+}

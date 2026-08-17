@@ -1,0 +1,6 @@
+<section class="tableau-de-bord">
+  @if (utilisateur(); as u) {
+    <h1>Bonjour {{ u.first_name || u.telephone }}</h1>
+  }
+  <p>Le contenu du tableau de bord sera ajouté prochainement.</p>
+</section>

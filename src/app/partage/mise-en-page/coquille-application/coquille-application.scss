@@ -1,0 +1,23 @@
+.coquille {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.corps {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.zone-barre-laterale {
+  flex: 0 0 220px;
+  overflow-y: auto;
+}
+
+.zone-contenu {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background: #f9fafb;
+}

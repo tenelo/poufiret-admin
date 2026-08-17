@@ -1,0 +1,40 @@
+<div class="page-connexion">
+  <form class="carte-connexion" [formGroup]="formulaire" (ngSubmit)="soumettre()">
+    <h1>Poufiret</h1>
+    <p class="sous-titre">Espace administration & partenaires</p>
+
+    <label for="telephone">Téléphone</label>
+    <input
+      id="telephone"
+      type="tel"
+      formControlName="telephone"
+      placeholder="Ex : 07000000"
+      autocomplete="tel"
+    />
+    @if (formulaire.controls.telephone.invalid && formulaire.controls.telephone.touched) {
+      <p class="erreur-champ">Le numéro de téléphone est requis.</p>
+    }
+
+    <label for="pin">Code PIN (4 chiffres)</label>
+    <input
+      id="pin"
+      type="password"
+      inputmode="numeric"
+      maxlength="4"
+      formControlName="pin"
+      placeholder="••••"
+      autocomplete="current-password"
+    />
+    @if (formulaire.controls.pin.invalid && formulaire.controls.pin.touched) {
+      <p class="erreur-champ">Le PIN doit contenir exactement 4 chiffres.</p>
+    }
+
+    @if (messageErreur()) {
+      <p class="erreur-generale">{{ messageErreur() }}</p>
+    }
+
+    <button type="submit" [disabled]="enCours()">
+      {{ enCours() ? 'Connexion en cours…' : 'Se connecter' }}
+    </button>
+  </form>
+</div>

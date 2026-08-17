@@ -1,0 +1,11 @@
+<header class="en-tete">
+  <span class="nom-app">Poufiret</span>
+
+  <div class="zone-utilisateur">
+    @if (utilisateur(); as u) {
+      <span class="telephone">{{ u.telephone }}</span>
+      <span class="role">{{ role() }}</span>
+    }
+    <button type="button" (click)="deconnexion()">Déconnexion</button>
+  </div>
+</header>
