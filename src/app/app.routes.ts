@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { authGuard } from './noyau/auth/auth.guard';
+import { roleGuard } from './noyau/auth/role.guard';
 
 export const routes: Routes = [
   {
@@ -23,6 +24,12 @@ export const routes: Routes = [
         path: 'tableau-de-bord',
         loadComponent: () =>
           import('./fonctionnalites/tableau-de-bord/tableau-de-bord').then((m) => m.TableauDeBord),
+      },
+      {
+        path: 'mon-profil',
+        canActivate: [roleGuard(['partenaire'])],
+        loadComponent: () =>
+          import('./fonctionnalites/partenaire/mon-profil/mon-profil').then((m) => m.MonProfil),
       },
       { path: '', pathMatch: 'full', redirectTo: 'tableau-de-bord' },
     ],

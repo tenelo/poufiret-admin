@@ -19,7 +19,7 @@ const ENTREES_ADMIN: EntreeMenu[] = [
 
 const ENTREES_PARTENAIRE: EntreeMenu[] = [
   { libelle: 'Tableau de bord', lien: '/tableau-de-bord' },
-  { libelle: 'Mon profil' },
+  { libelle: 'Mon profil', lien: '/mon-profil' },
   { libelle: 'Mes commandes' },
   { libelle: 'Mes produits' },
 ];

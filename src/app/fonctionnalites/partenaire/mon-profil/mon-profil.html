@@ -1,0 +1,181 @@
+<div class="page-mon-profil">
+  <h1>Mon profil</h1>
+  <p class="sous-titre">Gérez les informations de votre vitrine visible par les clients.</p>
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement du profil…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="chargerProfil()">Réessayer</button>
+    </div>
+  } @else {
+    <form class="formulaire-profil" [formGroup]="formulaire" (ngSubmit)="soumettre()">
+      <section class="section">
+        <h2>Identité du commerce</h2>
+
+        <label for="nom_commerce">Nom du commerce</label>
+        <input id="nom_commerce" type="text" formControlName="nom_commerce" />
+        @if (formulaire.controls.nom_commerce.invalid && formulaire.controls.nom_commerce.touched) {
+          <p class="erreur-champ">Le nom du commerce est requis.</p>
+        }
+
+        <label for="type_partenaire">Type de partenaire</label>
+        <select id="type_partenaire" formControlName="type_partenaire">
+          @for (
+            option of optionsAvecValeurCourante(formulaire.controls.type_partenaire.value);
+            track option.valeur
+          ) {
+            <option [value]="option.valeur">{{ option.libelle }}</option>
+          }
+        </select>
+        @if (
+          formulaire.controls.type_partenaire.invalid && formulaire.controls.type_partenaire.touched
+        ) {
+          <p class="erreur-champ">Le type de partenaire est requis.</p>
+        }
+
+        <label for="description">Description</label>
+        <textarea id="description" formControlName="description" rows="4"></textarea>
+      </section>
+
+      <section class="section">
+        <h2>Images de la vitrine</h2>
+
+        <div class="bloc-image">
+          <span class="etiquette-image">Logo</span>
+          @if (profil()?.logo) {
+            <img [src]="profil()!.logo" alt="Logo du commerce" class="apercu-image apercu-logo" />
+          } @else {
+            <div class="apercu-image apercu-vide apercu-logo">Aucun logo</div>
+          }
+          <p class="note-a-venir">Modification du logo à venir.</p>
+        </div>
+
+        <div class="bloc-image">
+          <span class="etiquette-image">Photo de couverture</span>
+          @if (profil()?.photo_couverture) {
+            <img
+              [src]="profil()!.photo_couverture"
+              alt="Photo de couverture du commerce"
+              class="apercu-image apercu-couverture"
+            />
+          } @else {
+            <div class="apercu-image apercu-vide apercu-couverture">Aucune photo de couverture</div>
+          }
+          <p class="note-a-venir">Modification de la photo de couverture à venir.</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Contacts</h2>
+
+        <label for="telephone_pro">Téléphone professionnel</label>
+        <input id="telephone_pro" type="tel" formControlName="telephone_pro" />
+
+        <label for="whatsapp">WhatsApp</label>
+        <input id="whatsapp" type="tel" formControlName="whatsapp" />
+
+        <label for="email_pro">Email professionnel</label>
+        <input id="email_pro" type="email" formControlName="email_pro" />
+        @if (formulaire.controls.email_pro.invalid && formulaire.controls.email_pro.touched) {
+          <p class="erreur-champ">L'adresse email n'est pas valide.</p>
+        }
+      </section>
+
+      <section class="section">
+        <h2>Localisation</h2>
+
+        <label for="ville">Ville</label>
+        <input id="ville" type="text" formControlName="ville" />
+
+        <label for="quartier">Quartier</label>
+        <input id="quartier" type="text" formControlName="quartier" />
+
+        <label for="secteur">Secteur</label>
+        <input id="secteur" type="text" formControlName="secteur" />
+
+        <label for="adresse">Adresse</label>
+        <input id="adresse" type="text" formControlName="adresse" />
+
+        <label for="description_acces">Comment accéder au commerce</label>
+        <textarea id="description_acces" formControlName="description_acces" rows="3"></textarea>
+      </section>
+
+      @if (messageErreur()) {
+        <p class="erreur-generale">{{ messageErreur() }}</p>
+      }
+      @if (messageSucces()) {
+        <p class="message-succes">{{ messageSucces() }}</p>
+      }
+
+      <button type="submit" [disabled]="enregistrementEnCours()">
+        {{ enregistrementEnCours() ? 'Enregistrement en cours…' : 'Enregistrer' }}
+      </button>
+    </form>
+
+    @if (profil(); as profilActuel) {
+      <section class="section section-lecture-seule">
+        <h2>Informations gérées par l'administration</h2>
+        <p class="note-a-venir">
+          Ces informations sont pilotées par l'administration et ne peuvent pas être modifiées ici.
+        </p>
+
+        <div class="grille-lecture-seule">
+          <div class="champ-lecture-seule">
+            <span class="etiquette">Statut</span>
+            <span class="valeur">{{ profilActuel.statut_libelle }}</span>
+          </div>
+
+          <div class="champ-lecture-seule">
+            <span class="etiquette">Type (libellé)</span>
+            <span class="valeur">{{ profilActuel.type_partenaire_libelle }}</span>
+          </div>
+
+          <div class="champ-lecture-seule">
+            <span class="etiquette">Visible sur l'application</span>
+            <span class="valeur">{{ profilActuel.est_visible ? 'Oui' : 'Non' }}</span>
+          </div>
+
+          <div class="champ-lecture-seule">
+            <span class="etiquette">Badge certifié</span>
+            <span class="valeur">{{ profilActuel.badge_certifie ? 'Oui' : 'Non' }}</span>
+          </div>
+
+          <div class="champ-lecture-seule">
+            <span class="etiquette">Mis en avant (favori)</span>
+            <span class="valeur">{{ profilActuel.est_faveur ? 'Oui' : 'Non' }}</span>
+          </div>
+
+          <div class="champ-lecture-seule">
+            <span class="etiquette">Plan</span>
+            <span class="valeur">{{ profilActuel.plan_libelle }}</span>
+          </div>
+
+          <div class="champ-lecture-seule">
+            <span class="etiquette">Fin de l'abonnement</span>
+            <span class="valeur">{{ profilActuel.abonnement_fin ?? '—' }}</span>
+          </div>
+
+          <div class="champ-lecture-seule">
+            <span class="etiquette">Nombre de vues</span>
+            <span class="valeur">{{ profilActuel.nb_vues }}</span>
+          </div>
+
+          <div class="champ-lecture-seule">
+            <span class="etiquette">Photos autorisées par article</span>
+            <span class="valeur">{{ profilActuel.nb_photos_par_article }}</span>
+          </div>
+
+          <div class="champ-lecture-seule">
+            <span class="etiquette">Nombre d'articles maximum</span>
+            <span class="valeur">{{ profilActuel.nb_articles_max }}</span>
+          </div>
+        </div>
+      </section>
+    }
+  }
+</div>
