@@ -3,7 +3,7 @@
 
   <div class="zone-utilisateur">
     @if (utilisateur(); as u) {
-      <span class="telephone">{{ u.telephone }}</span>
+      <span class="telephone">{{ u.username }}</span>
       <span class="role">{{ role() }}</span>
     }
     <button type="button" (click)="deconnexion()">Déconnexion</button>

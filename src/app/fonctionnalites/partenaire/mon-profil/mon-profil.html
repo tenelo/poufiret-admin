@@ -47,17 +47,34 @@
 
         <div class="bloc-image">
           <span class="etiquette-image">Logo</span>
-          @if (profil()?.logo) {
+          @if (apercuLogo()) {
+            <img [src]="apercuLogo()" alt="Aperçu du nouveau logo" class="apercu-image apercu-logo" />
+          } @else if (profil()?.logo) {
             <img [src]="profil()!.logo" alt="Logo du commerce" class="apercu-image apercu-logo" />
           } @else {
             <div class="apercu-image apercu-vide apercu-logo">Aucun logo</div>
           }
-          <p class="note-a-venir">Modification du logo à venir.</p>
+          <input
+            #entreeLogo
+            type="file"
+            accept="image/*"
+            hidden
+            (change)="selectionnerImage($event, 'logo')"
+          />
+          <button type="button" class="bouton-secondaire" (click)="entreeLogo.click()">
+            Changer le logo
+          </button>
         </div>
 
         <div class="bloc-image">
           <span class="etiquette-image">Photo de couverture</span>
-          @if (profil()?.photo_couverture) {
+          @if (apercuCouverture()) {
+            <img
+              [src]="apercuCouverture()"
+              alt="Aperçu de la nouvelle photo de couverture"
+              class="apercu-image apercu-couverture"
+            />
+          } @else if (profil()?.photo_couverture) {
             <img
               [src]="profil()!.photo_couverture"
               alt="Photo de couverture du commerce"
@@ -66,8 +83,35 @@
           } @else {
             <div class="apercu-image apercu-vide apercu-couverture">Aucune photo de couverture</div>
           }
-          <p class="note-a-venir">Modification de la photo de couverture à venir.</p>
+          <input
+            #entreeCouverture
+            type="file"
+            accept="image/*"
+            hidden
+            (change)="selectionnerImage($event, 'photo_couverture')"
+          />
+          <button type="button" class="bouton-secondaire" (click)="entreeCouverture.click()">
+            Changer la photo de couverture
+          </button>
         </div>
+
+        @if (messageErreurImages()) {
+          <p class="erreur-generale">{{ messageErreurImages() }}</p>
+        }
+        @if (messageSuccesImages()) {
+          <p class="message-succes">{{ messageSuccesImages() }}</p>
+        }
+
+        @if (imagesModifiees) {
+          <button
+            type="button"
+            class="bouton-secondaire bouton-enregistrer-images"
+            [disabled]="televersementImagesEnCours()"
+            (click)="enregistrerImages()"
+          >
+            {{ televersementImagesEnCours() ? 'Envoi en cours…' : 'Enregistrer les images' }}
+          </button>
+        }
       </section>
 
       <section class="section">

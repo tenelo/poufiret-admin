@@ -2,5 +2,49 @@
   @if (utilisateur(); as u) {
     <h1>Bonjour {{ u.first_name || u.telephone }}</h1>
   }
-  <p>Le contenu du tableau de bord sera ajouté prochainement.</p>
+
+  @if (role() === 'partenaire') {
+    @if (chargementEnCours()) {
+      <div class="etat-chargement">
+        <span class="spinner"></span>
+        <p>Chargement de votre vitrine…</p>
+      </div>
+    } @else if (erreurChargement()) {
+      <div class="etat-erreur">
+        <p>{{ erreurChargement() }}</p>
+        <button type="button" (click)="chargerProfil()">Réessayer</button>
+      </div>
+    } @else if (profil(); as p) {
+      <div class="grille-statistiques">
+        <div class="carte-statistique">
+          <span class="etiquette">Nombre de vues</span>
+          <span class="valeur">{{ p.nb_vues }}</span>
+        </div>
+        <div class="carte-statistique">
+          <span class="etiquette">Statut</span>
+          <span class="valeur">{{ p.statut_libelle }}</span>
+        </div>
+        <div class="carte-statistique">
+          <span class="etiquette">Visible sur l'application</span>
+          <span class="valeur">{{ p.est_visible ? 'Oui' : 'Non' }}</span>
+        </div>
+        <div class="carte-statistique">
+          <span class="etiquette">Plan</span>
+          <span class="valeur">{{ p.plan_libelle }}</span>
+        </div>
+        <div class="carte-statistique">
+          <span class="etiquette">Fin de l'abonnement</span>
+          <span class="valeur">{{ p.abonnement_fin ?? '—' }}</span>
+        </div>
+        <div class="carte-statistique">
+          <span class="etiquette">Badge certifié</span>
+          <span class="valeur">{{ p.badge_certifie ? 'Oui' : 'Non' }}</span>
+        </div>
+      </div>
+
+      <a class="lien-mon-profil" routerLink="/mon-profil">Gérer mon profil →</a>
+    }
+  } @else {
+    <p>Le contenu du tableau de bord sera ajouté prochainement.</p>
+  }
 </section>

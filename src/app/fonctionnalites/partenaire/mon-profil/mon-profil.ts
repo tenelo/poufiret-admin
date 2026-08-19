@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
@@ -8,6 +8,11 @@ import {
   ProfilPartenaire,
   RequeteMiseAJourProfilPartenaire,
 } from '../../../modeles/profil-partenaire.model';
+
+// Taille max acceptée côté client pour le logo / la photo de couverture.
+const TAILLE_MAX_IMAGE_OCTETS = 5 * 1024 * 1024;
+
+type ChampImage = 'logo' | 'photo_couverture';
 
 /**
  * Page "Mon profil" de l'espace partenaire : consultation et modification
@@ -19,7 +24,7 @@ import {
   templateUrl: './mon-profil.html',
   styleUrl: './mon-profil.scss',
 })
-export class MonProfil implements OnInit {
+export class MonProfil implements OnInit, OnDestroy {
   private readonly formBuilder = inject(FormBuilder);
   private readonly profilPartenaireService = inject(ProfilPartenaireService);
 
@@ -31,6 +36,21 @@ export class MonProfil implements OnInit {
   readonly messageSucces = signal<string | null>(null);
 
   readonly profil = signal<ProfilPartenaire | null>(null);
+
+  // Aperçus locaux (URL.createObjectURL) des images sélectionnées mais pas encore envoyées.
+  readonly apercuLogo = signal<string | null>(null);
+  readonly apercuCouverture = signal<string | null>(null);
+  private readonly fichierLogo = signal<File | null>(null);
+  private readonly fichierCouverture = signal<File | null>(null);
+
+  readonly televersementImagesEnCours = signal(false);
+  readonly messageErreurImages = signal<string | null>(null);
+  readonly messageSuccesImages = signal<string | null>(null);
+
+  /** True si au moins une nouvelle image attend d'être envoyée. */
+  get imagesModifiees(): boolean {
+    return this.fichierLogo() !== null || this.fichierCouverture() !== null;
+  }
 
   readonly optionsTypePartenaire = OPTIONS_TYPE_PARTENAIRE;
 
@@ -50,6 +70,10 @@ export class MonProfil implements OnInit {
 
   ngOnInit(): void {
     this.chargerProfil();
+  }
+
+  ngOnDestroy(): void {
+    this.revoquerApercus();
   }
 
   chargerProfil(): void {
@@ -91,6 +115,78 @@ export class MonProfil implements OnInit {
         this.messageErreur.set(this.extraireMessageErreur(erreur));
       },
     });
+  }
+
+  /** Appelé lors du choix d'un fichier pour le logo ou la photo de couverture. */
+  selectionnerImage(evenement: Event, champ: ChampImage): void {
+    const entree = evenement.target as HTMLInputElement;
+    const fichier = entree.files?.[0] ?? null;
+    entree.value = ''; // permet de resélectionner le même fichier plus tard
+
+    if (!fichier) {
+      return;
+    }
+
+    this.messageErreurImages.set(null);
+    this.messageSuccesImages.set(null);
+
+    if (!fichier.type.startsWith('image/')) {
+      this.messageErreurImages.set('Le fichier sélectionné doit être une image.');
+      return;
+    }
+    if (fichier.size > TAILLE_MAX_IMAGE_OCTETS) {
+      this.messageErreurImages.set("L'image ne doit pas dépasser 5 Mo.");
+      return;
+    }
+
+    const url = URL.createObjectURL(fichier);
+    if (champ === 'logo') {
+      if (this.apercuLogo()) URL.revokeObjectURL(this.apercuLogo()!);
+      this.fichierLogo.set(fichier);
+      this.apercuLogo.set(url);
+    } else {
+      if (this.apercuCouverture()) URL.revokeObjectURL(this.apercuCouverture()!);
+      this.fichierCouverture.set(fichier);
+      this.apercuCouverture.set(url);
+    }
+  }
+
+  /** Envoie au backend le(s) fichier(s) sélectionné(s) pour le logo et/ou la couverture. */
+  enregistrerImages(): void {
+    if (!this.imagesModifiees || this.televersementImagesEnCours()) {
+      return;
+    }
+
+    this.televersementImagesEnCours.set(true);
+    this.messageErreurImages.set(null);
+    this.messageSuccesImages.set(null);
+
+    this.profilPartenaireService
+      .televerserImagesProfil({
+        logo: this.fichierLogo() ?? undefined,
+        photoCouverture: this.fichierCouverture() ?? undefined,
+      })
+      .subscribe({
+        next: (profil) => {
+          this.televersementImagesEnCours.set(false);
+          this.profil.set(profil);
+          this.revoquerApercus();
+          this.messageSuccesImages.set('Images mises à jour avec succès.');
+        },
+        error: (erreur: unknown) => {
+          this.televersementImagesEnCours.set(false);
+          this.messageErreurImages.set(this.extraireMessageErreur(erreur));
+        },
+      });
+  }
+
+  private revoquerApercus(): void {
+    if (this.apercuLogo()) URL.revokeObjectURL(this.apercuLogo()!);
+    if (this.apercuCouverture()) URL.revokeObjectURL(this.apercuCouverture()!);
+    this.apercuLogo.set(null);
+    this.apercuCouverture.set(null);
+    this.fichierLogo.set(null);
+    this.fichierCouverture.set(null);
   }
 
   /** Liste des options du sélecteur de type, en y ajoutant la valeur courante si elle est inconnue. */
