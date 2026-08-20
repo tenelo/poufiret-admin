@@ -59,7 +59,9 @@ export class Connexion {
       }
 
       const corps = erreur.error;
-      if (typeof corps === 'string') {
+      // Une page d'erreur HTML (ex. 500 Django hors mode debug) n'est pas un
+      // message affichable : on retombe sur le message générique dans ce cas.
+      if (typeof corps === 'string' && !/^\s*<(!doctype|html)/i.test(corps)) {
         return corps;
       }
       // Format d'erreur du backend Poufiret : {erreur, code, message, details: {detail}}

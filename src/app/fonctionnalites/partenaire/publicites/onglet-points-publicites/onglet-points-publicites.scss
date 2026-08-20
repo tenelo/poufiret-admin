@@ -1,0 +1,215 @@
+.etat-chargement,
+.etat-vide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 0;
+  color: #6b7280;
+  text-align: center;
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #4f46e5;
+    border-radius: 50%;
+    animation: rotation 0.8s linear infinite;
+  }
+}
+
+@keyframes rotation {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.etat-erreur {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+
+  button {
+    padding: 0.5rem 1rem;
+    background: #ffffff;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    color: #b91c1c;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}
+
+.grille-publicites {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 960px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.carte-publicite {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.entete-carte {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+
+  .titre {
+    font-weight: 600;
+    color: #1a1a1a;
+    font-size: 0.95rem;
+  }
+}
+
+.badge {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.badge-active {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.badge-rejetee,
+.badge-terminee {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.formule {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.grille-stats-pub {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.stat-pub {
+  display: flex;
+  flex-direction: column;
+
+  .valeur {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .libelle {
+    font-size: 0.7rem;
+    color: #6b7280;
+  }
+}
+
+.jauge-cible {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.etiquette-jauge {
+  font-size: 0.75rem;
+  color: #6b7280;
+
+  .atteinte {
+    color: #15803d;
+    font-weight: 600;
+  }
+}
+
+.barre-progression {
+  height: 6px;
+  background: #f3f4f6;
+  border-radius: 999px;
+  overflow: hidden;
+
+  .remplissage {
+    height: 100%;
+    background: #e65100;
+    border-radius: 999px;
+  }
+
+  .remplissage-atteint {
+    background: #1b5e20;
+  }
+}
+
+.mini-barres {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mini-barre-ligne {
+  display: grid;
+  grid-template-columns: 90px 1fr 30px;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+
+.mini-barre-piste {
+  height: 6px;
+  background: #f3f4f6;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.mini-barre-remplissage {
+  height: 100%;
+  background: #4f46e5;
+  border-radius: 999px;
+}
+
+.mini-barre-valeur {
+  text-align: right;
+  color: #374151;
+}
+
+.periode {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.message-restreint {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 0.85rem;
+  font-style: italic;
+}

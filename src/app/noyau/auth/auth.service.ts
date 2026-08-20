@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Observable, map, tap, throwError } from 'rxjs';
 
 import { ConfigurationService } from '../config/configuration.service';
+import { PermissionsService } from '../permissions/permissions.service';
 import {
   ReponseConnexion,
   ReponseRafraichissement,
@@ -28,6 +29,7 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly configuration = inject(ConfigurationService);
   private readonly router = inject(Router);
+  private readonly permissionsService = inject(PermissionsService);
 
   private readonly utilisateurCourant = signal<Utilisateur | null>(this.lireUtilisateurStocke());
 
@@ -105,6 +107,7 @@ export class AuthService {
     localStorage.removeItem(CLE_JETON_RAFRAICHISSEMENT);
     localStorage.removeItem(CLE_UTILISATEUR);
     this.utilisateurCourant.set(null);
+    this.permissionsService.reinitialiser();
   }
 
   private lireUtilisateurStocke(): Utilisateur | null {

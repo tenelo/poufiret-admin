@@ -1,0 +1,89 @@
+.grille-graphiques {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: 800px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.carte-graphique {
+  padding: 1.1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  h2 {
+    margin: 0 0 0.9rem;
+    font-size: 0.95rem;
+    color: #1a1a1a;
+  }
+}
+
+.conteneur-tableau {
+  overflow-x: auto;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.tableau-produits {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  white-space: nowrap;
+
+  th,
+  td {
+    padding: 0.65rem 0.9rem;
+    text-align: left;
+  }
+
+  th {
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid #e5e7eb;
+
+    &:hover {
+      color: #1a1a1a;
+    }
+  }
+
+  td {
+    border-bottom: 1px solid #f3f4f6;
+    color: #374151;
+  }
+
+  .nom {
+    color: #1a1a1a;
+    font-weight: 600;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.chip {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.chip-succes {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.chip-neutre {
+  background: #f3f4f6;
+  color: #6b7280;
+}

@@ -1,0 +1,278 @@
+.page-tableau-de-bord-admin {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1a1a1a;
+  }
+
+  .sous-titre {
+    margin: 0.2rem 0 0;
+    font-size: 0.8rem;
+    color: #6b7280;
+  }
+}
+
+.bouton-rafraichir {
+  padding: 0.55rem 1.1rem;
+  background: #ffffff;
+  border: 1px solid #4f46e5;
+  border-radius: 8px;
+  color: #4f46e5;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: #eef2ff;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.etat-chargement {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 0;
+  color: #6b7280;
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #4f46e5;
+    border-radius: 50%;
+    animation: rotation 0.8s linear infinite;
+  }
+}
+
+@keyframes rotation {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.etat-erreur {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+
+  button {
+    padding: 0.5rem 1rem;
+    background: #ffffff;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    color: #b91c1c;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}
+
+.bloc {
+  margin-bottom: 2rem;
+
+  h2 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    color: #1a1a1a;
+  }
+}
+
+.grille-mixte {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+
+  @media (min-width: 800px) {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.colonne {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.grille-kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.carte-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  .icone {
+    font-size: 1.3rem;
+  }
+
+  .valeur {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .libelle {
+    font-size: 0.8rem;
+    color: #6b7280;
+  }
+}
+
+.carte-kpi-large .valeur {
+  font-size: 1.9rem;
+}
+
+.carte-graphique {
+  padding: 1.1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  margin-top: 1.25rem;
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  h3 {
+    margin: 0 0 0.9rem;
+    font-size: 0.9rem;
+    color: #1a1a1a;
+  }
+}
+
+.grille-mixte > .carte-graphique {
+  margin-top: 0;
+}
+
+.carte-statuts {
+  padding: 1.1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  h3 {
+    margin: 0 0 0.75rem;
+    font-size: 0.9rem;
+    color: #1a1a1a;
+  }
+}
+
+.ligne-statut {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.85rem;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .libelle-statut {
+    flex: 1;
+    color: #374151;
+  }
+
+  .valeur-statut {
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+}
+
+.pastille {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pastille-actifs {
+  background: #2e7d32;
+}
+
+.pastille-suspendus {
+  background: #ef6c00;
+}
+
+.pastille-bannis {
+  background: #c62828;
+}
+
+.pastille-supprimes {
+  background: #9ca3af;
+}
+
+.grille-ouvertures {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+
+  @media (min-width: 800px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.carte-ouverture {
+  padding: 1.1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  h3 {
+    margin: 0 0 0.75rem;
+    font-size: 0.9rem;
+    color: #1a1a1a;
+  }
+}
+
+.stat-ouverture {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0.3rem 0;
+  font-size: 0.85rem;
+
+  .valeur {
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .libelle {
+    color: #6b7280;
+  }
+}

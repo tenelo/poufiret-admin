@@ -1,0 +1,83 @@
+<div class="grille-kpi">
+  <div class="carte-kpi">
+    <span class="icone">👁️</span>
+    <span class="valeur">{{ vue().vuesProfil }}</span>
+    <span class="libelle">Vues du profil</span>
+  </div>
+
+  <div class="carte-kpi">
+    <span class="icone">📖</span>
+    <span class="valeur">{{ vue().vuesCatalogue }}</span>
+    <span class="libelle">Vues catalogue</span>
+  </div>
+
+  <div class="carte-kpi">
+    <span class="icone">📦</span>
+    <span class="valeur">
+      {{ vue().nbProduits }}{{ vue().nbProduitsMax >= 0 ? ' / ' + vue().nbProduitsMax : '' }}
+    </span>
+    <span class="libelle">Produits</span>
+    @if (vue().progressionProduits !== null) {
+      <div class="barre-progression">
+        <div class="remplissage" [style.width.%]="vue().progressionProduits"></div>
+      </div>
+    }
+  </div>
+
+  <div class="carte-kpi">
+    <span class="icone">❤️</span>
+    <span class="valeur">{{ vue().likesCumules }}</span>
+    <span class="libelle">Likes cumulés</span>
+  </div>
+
+  <div class="carte-kpi">
+    <span class="icone">🧾</span>
+    <span class="valeur">{{ vue().commandesTotales }}</span>
+    <span class="libelle">Commandes totales</span>
+  </div>
+
+  <div class="carte-kpi">
+    <span class="icone">💰</span>
+    <span class="valeur">{{ formaterFcfa(vue().caLivre) }}</span>
+    <span class="libelle">CA livré</span>
+  </div>
+</div>
+
+<div class="carte-abonnement">
+  <h2>Abonnement</h2>
+
+  <div class="ligne-abonnement">
+    <span class="etiquette">Plan</span>
+    <span class="valeur">{{ vue().planLibelle }}</span>
+  </div>
+
+  <div class="ligne-abonnement">
+    <span class="etiquette">Fin de l'abonnement</span>
+    <span
+      class="valeur"
+      [class.alerte]="vue().expirationProche"
+      [class.expiree]="vue().expirationDepassee"
+    >
+      {{ vue().abonnementFin ?? 'Illimité' }}
+      @if (vue().expirationProche) {
+        <span class="pastille-alerte">expire dans {{ vue().joursAvantExpiration }} j</span>
+      }
+      @if (vue().expirationDepassee) {
+        <span class="pastille-alerte pastille-expiree">expiré</span>
+      }
+    </span>
+  </div>
+
+  <div class="badges-abonnement">
+    <span class="badge">{{ vue().statutLibelle }}</span>
+    <span class="badge" [class.badge-succes]="vue().estVisible" [class.badge-neutre]="!vue().estVisible">
+      {{ vue().estVisible ? 'Visible' : 'Non visible' }}
+    </span>
+    @if (vue().badgeCertifie) {
+      <span class="badge badge-info">Certifié</span>
+    }
+    @if (vue().estFaveur) {
+      <span class="badge badge-info">En faveur</span>
+    }
+  </div>
+</div>

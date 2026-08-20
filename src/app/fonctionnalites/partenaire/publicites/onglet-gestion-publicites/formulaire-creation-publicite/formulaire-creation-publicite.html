@@ -1,0 +1,147 @@
+<div class="voile-modale" (click)="annule.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>Nouvelle campagne</h2>
+
+    <form class="formulaire" (ngSubmit)="soumettre()">
+      <label for="formule">Formule</label>
+      <select
+        id="formule"
+        [value]="formuleId() ?? ''"
+        (change)="selectionnerFormule($any($event.target).value)"
+      >
+        <option value="" disabled>Choisir une formule</option>
+        @for (formule of formules(); track formule.id) {
+          <option [value]="formule.id">{{ formule.nom }} — {{ formule.prix }} FCFA</option>
+        }
+      </select>
+      @if (touche() && !formuleId()) {
+        <p class="erreur-champ">Choisissez une formule.</p>
+      }
+
+      @if (formuleSelectionnee(); as formule) {
+        <div class="details-formule">
+          <div class="detail">
+            <span class="etiquette">Prix</span>
+            <span class="valeur">{{ formule.prix }} FCFA</span>
+          </div>
+          <div class="detail">
+            <span class="etiquette">Durée</span>
+            <span class="valeur">{{ formule.duree_jours }} j</span>
+          </div>
+          <div class="detail">
+            <span class="etiquette">Emplacements</span>
+            <span class="valeur">{{ formule.types_affichage.join(', ') }}</span>
+          </div>
+          <div class="detail">
+            <span class="etiquette">Vidéo</span>
+            <span class="valeur">
+              {{ formule.video_autorisee ? 'Autorisée (max ' + formule.duree_video_max_secondes + ' s)' : 'Non autorisée' }}
+            </span>
+          </div>
+          <div class="detail">
+            <span class="etiquette">Images</span>
+            <span class="valeur">jusqu'à {{ formule.nb_images_max }} au total</span>
+          </div>
+          @if (formule.cible_pourcentage_actifs) {
+            <div class="detail">
+              <span class="etiquette">Garantie de couverture</span>
+              <span class="valeur">{{ formule.cible_pourcentage_actifs }}% des clients actifs</span>
+            </div>
+          }
+        </div>
+      }
+
+      <label for="titre">Titre</label>
+      <input
+        id="titre"
+        type="text"
+        [value]="titre()"
+        (input)="titre.set($any($event.target).value)"
+      />
+      @if (touche() && !titre().trim()) {
+        <p class="erreur-champ">Le titre est requis.</p>
+      }
+
+      <label for="description">Description</label>
+      <textarea
+        id="description"
+        rows="3"
+        [value]="description()"
+        (input)="description.set($any($event.target).value)"
+      ></textarea>
+
+      <label for="portee">Portée</label>
+      <select
+        id="portee"
+        [value]="portee()"
+        (change)="portee.set($any($event.target).value)"
+      >
+        @for (option of optionsPortee; track option.valeur) {
+          <option [value]="option.valeur">{{ option.libelle }}</option>
+        }
+      </select>
+      <p class="note-champ">
+        La portée réellement appliquée ne peut jamais être inférieure à celle de votre forfait.
+      </p>
+
+      <span class="etiquette-image">Image de couverture</span>
+      @if (apercuImage()) {
+        <div class="bloc-image">
+          <img [src]="apercuImage()" alt="Aperçu de l'image de couverture" class="apercu-image" />
+          <button type="button" class="bouton-secondaire" (click)="retirerImage()">Retirer</button>
+        </div>
+      } @else {
+        <input
+          #entreeImage
+          type="file"
+          accept="image/*"
+          hidden
+          (change)="selectionnerImage($event)"
+        />
+        <button type="button" class="bouton-secondaire" (click)="entreeImage.click()">
+          Choisir une image
+        </button>
+      }
+      @if (touche() && !fichierImage()) {
+        <p class="erreur-champ">L'image de couverture est requise.</p>
+      }
+
+      @if (videoAutorisee()) {
+        <span class="etiquette-image">Vidéo (optionnelle)</span>
+        @if (fichierVideo()) {
+          <div class="bloc-image">
+            <span class="nom-fichier">{{ fichierVideo()!.name }}</span>
+            <button type="button" class="bouton-secondaire" (click)="retirerVideo()">Retirer</button>
+          </div>
+        } @else {
+          <input
+            #entreeVideo
+            type="file"
+            accept="video/*"
+            hidden
+            (change)="selectionnerVideo($event)"
+          />
+          <button type="button" class="bouton-secondaire" (click)="entreeVideo.click()">
+            Choisir une vidéo
+          </button>
+        }
+      } @else if (formuleId()) {
+        <p class="note-champ">La formule choisie n'autorise pas la vidéo.</p>
+      }
+
+      @if (messageErreurValidation()) {
+        <p class="erreur-generale">{{ messageErreurValidation() }}</p>
+      }
+      @if (messageErreur()) {
+        <p class="erreur-generale">{{ messageErreur() }}</p>
+      }
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annule.emit()">Annuler</button>
+        <button type="submit" [disabled]="enregistrementEnCours()">
+          {{ enregistrementEnCours() ? 'Enregistrement en cours…' : 'Créer en brouillon' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

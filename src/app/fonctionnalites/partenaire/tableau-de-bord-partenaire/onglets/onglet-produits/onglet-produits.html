@@ -1,0 +1,46 @@
+<div class="grille-graphiques">
+  <div class="carte-graphique">
+    <h2>Top 10 produits par vues</h2>
+    <app-graphique type="bar" [data]="donneesTop10()" [options]="optionsTop10" />
+  </div>
+
+  <div class="carte-graphique">
+    <h2>Répartition des vues par catégorie</h2>
+    <app-graphique type="doughnut" [data]="donneesCategories()" [options]="optionsCategories" />
+  </div>
+</div>
+
+<div class="conteneur-tableau">
+  <table class="tableau-produits">
+    <thead>
+      <tr>
+        <th (click)="trier('nom')">Nom</th>
+        <th (click)="trier('vuesTotal')">Vues total</th>
+        <th (click)="trier('vuesJour')">Jour</th>
+        <th (click)="trier('vuesSemaine')">Semaine</th>
+        <th (click)="trier('vuesMois')">Mois</th>
+        <th (click)="trier('likes')">Likes</th>
+        <th (click)="trier('prix')">Prix</th>
+        <th>Statut</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (ligne of lignesTriees(); track ligne.id) {
+        <tr>
+          <td class="nom">{{ ligne.nom }}</td>
+          <td>{{ ligne.vuesTotal }}</td>
+          <td>{{ ligne.vuesJour }}</td>
+          <td>{{ ligne.vuesSemaine }}</td>
+          <td>{{ ligne.vuesMois }}</td>
+          <td>{{ ligne.likes }}</td>
+          <td>{{ ligne.prix }} FCFA</td>
+          <td>
+            <span class="chip" [class.chip-succes]="ligne.estDisponible" [class.chip-neutre]="!ligne.estDisponible">
+              {{ ligne.estDisponible ? 'Actif' : 'Inactif' }}
+            </span>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

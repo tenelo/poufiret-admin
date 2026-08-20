@@ -1,0 +1,359 @@
+.page-mes-produits {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1a1a1a;
+  }
+
+  .sous-titre {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+}
+
+.bouton-principal {
+  align-self: flex-start;
+  padding: 0.6rem 1.25rem;
+  background: #4f46e5;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: #4338ca;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.quota-atteint {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  color: #b45309;
+  font-size: 0.85rem;
+}
+
+.erreur-generale {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.message-succes {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #15803d;
+  font-size: 0.85rem;
+}
+
+.etat-chargement,
+.etat-vide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 0;
+  color: #6b7280;
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #4f46e5;
+    border-radius: 50%;
+    animation: rotation 0.8s linear infinite;
+  }
+}
+
+@keyframes rotation {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.etat-erreur {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+
+  button {
+    padding: 0.5rem 1rem;
+    background: #ffffff;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    color: #b91c1c;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}
+
+// 1 colonne mobile, 2 colonnes tablette (>= 640px), 3 colonnes large écran (>= 960px).
+.grille-produits {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 960px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.carte-produit {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.zone-image {
+  width: 100%;
+  height: 150px;
+  background: #f4f5f7;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .image-vide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #9ca3af;
+    font-size: 0.8rem;
+  }
+}
+
+.corps-carte {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.9rem;
+}
+
+.nom-produit {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.prix {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e65100;
+
+  .prix-barre {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #9ca3af;
+    text-decoration: line-through;
+  }
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.badge {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.badge-succes {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.badge-neutre {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.badge-info {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.actions-carte {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.bouton-secondaire {
+  padding: 0.4rem 0.8rem;
+  background: #ffffff;
+  border: 1px solid #4f46e5;
+  border-radius: 8px;
+  color: #4f46e5;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: #eef2ff;
+  }
+}
+
+.bouton-danger {
+  padding: 0.4rem 0.8rem;
+  background: #ffffff;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: #fef2f2;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  color: #374151;
+  font-size: 0.9rem;
+
+  button {
+    padding: 0.45rem 0.9rem;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: #f4f5f7;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.voile-modale {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(17, 24, 39, 0.5);
+  z-index: 100;
+}
+
+.chargement-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  color: #374151;
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #4f46e5;
+    border-radius: 50%;
+    animation: rotation 0.8s linear infinite;
+  }
+}
+
+.voile-confirmation {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(17, 24, 39, 0.5);
+  z-index: 110;
+}
+
+.boite-confirmation {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 320px;
+  width: 100%;
+
+  p {
+    margin: 0 0 1rem;
+    color: #1a1a1a;
+  }
+}
+
+.actions-modale {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}

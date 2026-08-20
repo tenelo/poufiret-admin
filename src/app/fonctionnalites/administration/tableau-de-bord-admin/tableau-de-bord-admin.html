@@ -1,0 +1,147 @@
+<section class="page-tableau-de-bord-admin">
+  <div class="entete">
+    <div>
+      <h1>Tableau de bord</h1>
+      @if (donnees(); as d) {
+        <p class="sous-titre">Généré le {{ formaterDateGeneration(d.genere_le) }}</p>
+      }
+    </div>
+    <button type="button" class="bouton-rafraichir" [disabled]="chargementEnCours()" (click)="charger()">
+      {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
+    </button>
+  </div>
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement du tableau de bord…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (donnees(); as d) {
+    <!-- En temps réel -->
+    <section class="bloc">
+      <h2>En temps réel</h2>
+      <div class="grille-mixte">
+        <div class="carte-kpi carte-kpi-large">
+          <span class="icone">🟢</span>
+          <span class="valeur">{{ formaterNombre(d.en_ligne.total) }}</span>
+          <span class="libelle">En ligne maintenant</span>
+        </div>
+        <div class="carte-graphique">
+          <h3>Répartition par rôle</h3>
+          <app-graphique type="doughnut" [data]="donneesEnLigneParRole()" [options]="optionsDonut" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Comptes -->
+    <section class="bloc">
+      <h2>Comptes</h2>
+      <div class="grille-mixte">
+        <div class="colonne">
+          <div class="carte-kpi carte-kpi-large">
+            <span class="icone">👥</span>
+            <span class="valeur">{{ formaterNombre(d.comptes.total) }}</span>
+            <span class="libelle">Comptes au total</span>
+          </div>
+
+          <div class="carte-statuts">
+            <h3>Comptes par statut</h3>
+            <div class="ligne-statut">
+              <span class="pastille pastille-actifs"></span>
+              <span class="libelle-statut">Actifs</span>
+              <span class="valeur-statut">{{ formaterNombre(d.comptes_par_statut.actifs) }}</span>
+            </div>
+            <div class="ligne-statut">
+              <span class="pastille pastille-suspendus"></span>
+              <span class="libelle-statut">Suspendus</span>
+              <span class="valeur-statut">{{ formaterNombre(d.comptes_par_statut.suspendus) }}</span>
+            </div>
+            <div class="ligne-statut">
+              <span class="pastille pastille-bannis"></span>
+              <span class="libelle-statut">Bannis</span>
+              <span class="valeur-statut">{{ formaterNombre(d.comptes_par_statut.bannis) }}</span>
+            </div>
+            <div class="ligne-statut">
+              <span class="pastille pastille-supprimes"></span>
+              <span class="libelle-statut">Supprimés</span>
+              <span class="valeur-statut">{{ formaterNombre(d.comptes_par_statut.supprimes) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="carte-graphique">
+          <h3>Répartition par rôle</h3>
+          <app-graphique type="doughnut" [data]="donneesComptesParRole()" [options]="optionsDonut" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Fréquentation -->
+    <section class="bloc">
+      <h2>Fréquentation</h2>
+
+      <div class="grille-kpi">
+        @for (periode of listeConnexionsTotaux(); track periode.libelle) {
+          <div class="carte-kpi">
+            <span class="valeur">{{ formaterNombre(periode.total) }}</span>
+            <span class="libelle">Connexions distinctes — {{ periode.libelle }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="carte-graphique">
+        <h3>Connexions distinctes par rôle</h3>
+        <app-graphique type="bar" [data]="donneesConnexions()" [options]="optionsConnexions" />
+      </div>
+
+      <div class="grille-ouvertures">
+        @for (periode of listeOuvertures(); track periode.libelle) {
+          <div class="carte-ouverture">
+            <h3>{{ periode.libelle }}</h3>
+            <div class="stat-ouverture">
+              <span class="valeur">{{ formaterNombre(periode.donnees.total) }}</span>
+              <span class="libelle">Ouvertures</span>
+            </div>
+            <div class="stat-ouverture">
+              <span class="valeur">{{ formaterNombre(periode.donnees.personnes) }}</span>
+              <span class="libelle">Personnes</span>
+            </div>
+            <div class="stat-ouverture">
+              <span class="valeur">{{ periode.donnees.moyenne_par_personne }}</span>
+              <span class="libelle">Moyenne / personne</span>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Appareils -->
+    <section class="bloc">
+      <h2>Appareils</h2>
+      <div class="grille-mixte">
+        <div class="colonne">
+          <div class="carte-kpi carte-kpi-large">
+            <span class="icone">📱</span>
+            <span class="valeur">{{ formaterNombre(d.appareils.total) }}</span>
+            <span class="libelle">Sessions actives</span>
+          </div>
+          <div class="carte-kpi carte-kpi-large">
+            <span class="icone">🔢</span>
+            <span class="valeur">{{ formaterNombre(d.appareils.appareils_distincts) }}</span>
+            <span class="libelle">Appareils distincts</span>
+          </div>
+        </div>
+
+        <div class="carte-graphique">
+          <h3>Répartition par plateforme</h3>
+          <app-graphique type="doughnut" [data]="donneesPlateformes()" [options]="optionsDonut" />
+        </div>
+      </div>
+    </section>
+  }
+</section>

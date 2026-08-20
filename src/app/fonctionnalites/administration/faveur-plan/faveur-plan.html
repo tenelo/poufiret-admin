@@ -1,0 +1,182 @@
+<section class="page-faveur-plan">
+  <h1>Faveur de plan</h1>
+
+  @if (!partenaireSelectionne()) {
+    <!-- Phase 1 : recherche d'un partenaire -->
+    <div class="bloc-recherche">
+      <input
+        type="text"
+        class="champ-recherche"
+        placeholder="Rechercher un partenaire (nom du commerce, téléphone…)"
+        [value]="rechercheTexte()"
+        (input)="changerRecherche($any($event.target).value)"
+      />
+
+      @if (erreurRecherche()) {
+        <p class="erreur-generale">{{ erreurRecherche() }}</p>
+      }
+
+      @if (rechercheEnCours()) {
+        <div class="etat-chargement">
+          <span class="spinner"></span>
+          <p>Recherche…</p>
+        </div>
+      } @else if (rechercheTexte().trim().length > 0 && rechercheTexte().trim().length < 2) {
+        <p class="indice-recherche">Continuez à taper (2 caractères minimum).</p>
+      } @else if (rechercheLancee() && resultats().length === 0) {
+        <div class="etat-vide">
+          <p>Aucun partenaire trouvé.</p>
+        </div>
+      } @else if (resultats().length > 0) {
+        <div class="liste-resultats">
+          @for (partenaire of resultats(); track partenaire.id) {
+            <button type="button" class="carte-resultat" (click)="selectionnerPartenaire(partenaire)">
+              <div class="entete-resultat">
+                <span class="nom-commerce">{{ partenaire.nom_commerce }}</span>
+                <span class="chip">{{ partenaire.statut_libelle }}</span>
+              </div>
+              <span class="telephone">{{ partenaire.telephone }}</span>
+              <div class="details-resultat">
+                <span>{{ partenaire.type_partenaire_libelle }}</span>
+                <span>{{ partenaire.departement }}</span>
+              </div>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- Phase 2 : octroi/retrait de faveur pour le partenaire sélectionné -->
+    <div class="entete-partenaire">
+      <div>
+        <span class="nom-commerce">{{ partenaireSelectionne()!.nom_commerce }}</span>
+        <span class="telephone">{{ partenaireSelectionne()!.telephone }}</span>
+      </div>
+      <button type="button" class="bouton-secondaire" (click)="changerPartenaire()">
+        ← Changer de partenaire
+      </button>
+    </div>
+
+    @if (messageSucces()) {
+      <p class="message-succes">{{ messageSucces() }}</p>
+    }
+
+    <section class="bloc">
+      <h2>Abonnement</h2>
+
+      @if (profilFaveur(); as profil) {
+        <div class="carte-abonnement">
+          <div class="ligne-abonnement">
+            <span class="etiquette">Plan</span>
+            <span class="valeur">{{ profil.plan_libelle }}</span>
+          </div>
+          <div class="ligne-abonnement">
+            <span class="etiquette">Fin d'abonnement</span>
+            <span class="valeur">{{ formaterDate(profil.abonnement_fin) }}</span>
+          </div>
+          <div class="ligne-abonnement">
+            <span class="etiquette">Statut</span>
+            <span class="valeur">{{ profil.statut_libelle }}</span>
+          </div>
+          <div class="badges-abonnement">
+            <span class="chip" [class.chip-faveur]="profil.est_faveur">
+              {{ profil.est_faveur ? 'En faveur' : 'Sans faveur' }}
+            </span>
+            @if (profil.badge_certifie) {
+              <span class="chip chip-certifie">Certifié</span>
+            }
+          </div>
+          @if (profil.est_faveur && profil.faveur_motif) {
+            <p class="motif">Motif de la faveur : {{ profil.faveur_motif }}</p>
+          }
+
+          @if (erreurRetrait()) {
+            <p class="erreur-generale">{{ erreurRetrait() }}</p>
+          }
+
+          @if (profil.est_faveur) {
+            <button
+              type="button"
+              class="bouton-danger"
+              [disabled]="retraitEnCours()"
+              (click)="demanderRetrait()"
+            >
+              {{ retraitEnCours() ? 'Retrait en cours…' : 'Retirer la faveur' }}
+            </button>
+          }
+        </div>
+      } @else {
+        <p class="indice-recherche">
+          L'état d'abonnement de ce partenaire n'est pas encore chargé (aucune consultation directe
+          disponible) — il s'affichera ici après avoir offert un plan ci-dessous.
+        </p>
+      }
+    </section>
+
+    <section class="bloc bloc-offrir">
+      <h2>Offrir un plan</h2>
+
+      <label for="plan">Plan</label>
+      <select id="plan" [value]="planSelectionne()" (change)="changerPlanSelectionne($any($event.target).value)">
+        <option value="" disabled>Choisir un plan</option>
+        @for (option of optionsPlan; track option.code) {
+          <option [value]="option.code">{{ option.libelle }}</option>
+        }
+      </select>
+
+      <label for="motif-octroi">Motif (recommandé)</label>
+      <textarea
+        id="motif-octroi"
+        rows="2"
+        placeholder="Ex. Partenariat, structure interne, bon client historique…"
+        [value]="motifOctroi()"
+        (input)="changerMotifOctroi($any($event.target).value)"
+      ></textarea>
+
+      @if (erreurOctroi()) {
+        <p class="erreur-generale">{{ erreurOctroi() }}</p>
+      }
+
+      <button
+        type="button"
+        class="bouton-principal"
+        [disabled]="!planSelectionne() || octroiEnCours()"
+        (click)="demanderOctroi()"
+      >
+        {{ octroiEnCours() ? 'Envoi en cours…' : 'Offrir ce plan' }}
+      </button>
+    </section>
+  }
+</section>
+
+@if (octroiAConfirmer() && planSelectionne(); as plan) {
+  <div class="voile-confirmation" (click)="annulerOctroi()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>
+        Offrir le plan « {{ libellePlan(plan) }} » à « {{ partenaireSelectionne()!.nom_commerce }} » ?
+      </p>
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annulerOctroi()">Annuler</button>
+        <button type="button" class="bouton-confirmer" (click)="confirmerOctroi()">Confirmer</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (retraitAConfirmer()) {
+  <div class="voile-confirmation" (click)="annulerRetrait()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>Retirer la faveur de « {{ partenaireSelectionne()!.nom_commerce }} » ?</p>
+      <textarea
+        rows="2"
+        placeholder="Motif (optionnel)"
+        [value]="motifRetrait()"
+        (input)="changerMotifRetrait($any($event.target).value)"
+      ></textarea>
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annulerRetrait()">Annuler</button>
+        <button type="button" class="bouton-danger" (click)="confirmerRetrait()">Retirer</button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,102 @@
+<div class="voile-modale" (click)="ferme.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>Images — {{ nomArticle() }}</h2>
+
+    @if (messageErreur()) {
+      <p class="erreur-generale">{{ messageErreur() }}</p>
+    }
+    @if (messageSucces()) {
+      <p class="message-succes">{{ messageSucces() }}</p>
+    }
+
+    @if (chargementEnCours()) {
+      <div class="etat-chargement">
+        <span class="spinner"></span>
+        <p>Chargement des images…</p>
+      </div>
+    } @else if (erreurChargement()) {
+      <div class="etat-erreur">
+        <p>{{ erreurChargement() }}</p>
+        <button type="button" (click)="chargerImages()">Réessayer</button>
+      </div>
+    } @else {
+      @if (images().length === 0) {
+        <p class="etat-vide">Aucune image pour cet article.</p>
+      } @else {
+        <div class="grille-images">
+          @for (image of images(); track image.id) {
+            <div class="carte-image">
+              <img [src]="image.image" [alt]="image.legende ?? nomArticle()" />
+              @if (image.est_principale) {
+                <span class="badge-principale">Principale</span>
+              }
+              <button
+                type="button"
+                class="bouton-supprimer"
+                [disabled]="suppressionEnCoursId() === image.id"
+                (click)="demanderSuppression(image)"
+              >
+                Supprimer
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <div class="bloc-ajout">
+        <span class="etiquette-image">{{ images().length }} / {{ quotaMax() }} images utilisées</span>
+
+        @if (quotaAtteint()) {
+          <p class="quota-atteint">Limite de votre forfait atteinte.</p>
+        } @else if (apercuSelection()) {
+          <div class="apercu-ajout">
+            <img [src]="apercuSelection()" alt="Aperçu de la nouvelle image" />
+            <label class="case">
+              <input type="checkbox" [checked]="estPrincipaleSelection()" (change)="estPrincipaleSelection.set(!estPrincipaleSelection())" />
+              Définir comme image principale
+            </label>
+            <div class="actions-ajout">
+              <button type="button" class="bouton-secondaire" (click)="annulerSelection()">
+                Annuler
+              </button>
+              <button type="button" [disabled]="envoiEnCours()" (click)="ajouterImage()">
+                {{ envoiEnCours() ? 'Envoi en cours…' : 'Ajouter cette image' }}
+              </button>
+            </div>
+          </div>
+        } @else {
+          <input
+            #entreeFichier
+            type="file"
+            accept="image/*"
+            hidden
+            (change)="selectionnerImage($event)"
+          />
+          <button type="button" class="bouton-secondaire" (click)="entreeFichier.click()">
+            Ajouter une image
+          </button>
+        }
+      </div>
+    }
+
+    @if (imageAConfirmerSuppression(); as image) {
+      <div class="voile-confirmation" (click)="annulerSuppression()">
+        <div class="boite-confirmation" (click)="$event.stopPropagation()">
+          <p>Supprimer cette image ?</p>
+          <div class="actions-modale">
+            <button type="button" class="bouton-secondaire" (click)="annulerSuppression()">
+              Annuler
+            </button>
+            <button type="button" class="bouton-danger" (click)="confirmerSuppression()">
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="actions-modale actions-fermeture">
+      <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Fermer</button>
+    </div>
+  </div>
+</div>

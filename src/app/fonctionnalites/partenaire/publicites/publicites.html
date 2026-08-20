@@ -1,0 +1,27 @@
+<section class="page-publicites">
+  <h1>Publicités</h1>
+
+  <nav class="barre-onglets">
+    @for (onglet of sousOnglets; track onglet.valeur) {
+      <button
+        type="button"
+        class="onglet"
+        [class.onglet-actif]="sousOngletActif() === onglet.valeur"
+        (click)="changerSousOnglet(onglet.valeur)"
+      >
+        {{ onglet.libelle }}
+      </button>
+    }
+  </nav>
+
+  <div class="contenu-onglet">
+    @switch (sousOngletActif()) {
+      @case ('points') {
+        <app-onglet-points-publicites />
+      }
+      @case ('gestion') {
+        <app-onglet-gestion-publicites />
+      }
+    }
+  </div>
+</section>

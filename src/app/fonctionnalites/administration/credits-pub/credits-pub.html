@@ -1,0 +1,191 @@
+<section class="page-credits-pub">
+  <h1>Crédits de pub</h1>
+
+  @if (!partenaireSelectionne()) {
+    <!-- Phase 1 : recherche d'un partenaire -->
+    <div class="bloc-recherche">
+      <input
+        type="text"
+        class="champ-recherche"
+        placeholder="Rechercher un partenaire (nom du commerce, téléphone…)"
+        [value]="rechercheTexte()"
+        (input)="changerRecherche($any($event.target).value)"
+      />
+
+      @if (erreurRecherche()) {
+        <p class="erreur-generale">{{ erreurRecherche() }}</p>
+      }
+
+      @if (rechercheEnCours()) {
+        <div class="etat-chargement">
+          <span class="spinner"></span>
+          <p>Recherche…</p>
+        </div>
+      } @else if (rechercheTexte().trim().length > 0 && rechercheTexte().trim().length < 2) {
+        <p class="indice-recherche">Continuez à taper (2 caractères minimum).</p>
+      } @else if (rechercheLancee() && resultats().length === 0) {
+        <div class="etat-vide">
+          <p>Aucun partenaire trouvé.</p>
+        </div>
+      } @else if (resultats().length > 0) {
+        <div class="liste-resultats">
+          @for (partenaire of resultats(); track partenaire.id) {
+            <button type="button" class="carte-resultat" (click)="selectionnerPartenaire(partenaire)">
+              <div class="entete-resultat">
+                <span class="nom-commerce">{{ partenaire.nom_commerce }}</span>
+                <span class="chip">{{ partenaire.statut_libelle }}</span>
+              </div>
+              <span class="telephone">{{ partenaire.telephone }}</span>
+              <div class="details-resultat">
+                <span>{{ partenaire.type_partenaire_libelle }}</span>
+                <span>{{ partenaire.departement }}</span>
+              </div>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- Phase 2 : crédits du partenaire sélectionné -->
+    <div class="entete-partenaire">
+      <div>
+        <span class="nom-commerce">{{ partenaireSelectionne()!.nom_commerce }}</span>
+        <span class="telephone">{{ partenaireSelectionne()!.telephone }}</span>
+      </div>
+      <button type="button" class="bouton-secondaire" (click)="changerPartenaire()">
+        ← Changer de partenaire
+      </button>
+    </div>
+
+    @if (messageSucces()) {
+      <p class="message-succes">{{ messageSucces() }}</p>
+    }
+
+    <section class="bloc">
+      <h2>Crédits existants</h2>
+
+      @if (chargementCredits()) {
+        <div class="etat-chargement">
+          <span class="spinner"></span>
+          <p>Chargement des crédits…</p>
+        </div>
+      } @else if (erreurCredits()) {
+        <div class="etat-erreur">
+          <p>{{ erreurCredits() }}</p>
+          <button type="button" (click)="chargerCredits()">Réessayer</button>
+        </div>
+      } @else if (credits().length === 0) {
+        <div class="etat-vide">
+          <p>Aucun crédit pour ce partenaire.</p>
+        </div>
+      } @else {
+        @if (erreurRetrait()) {
+          <p class="erreur-generale">{{ erreurRetrait() }}</p>
+        }
+        <div class="liste-credits">
+          @for (credit of credits(); track credit.id) {
+            <div class="carte-credit" [class.carte-credit-consomme]="credit.statut === 'consomme'">
+              <div class="entete-credit">
+                <span class="formule-nom">{{ credit.formule_nom }}</span>
+                <span
+                  class="chip"
+                  [class.chip-disponible]="credit.statut === 'disponible'"
+                  [class.chip-consomme]="credit.statut === 'consomme'"
+                >
+                  {{ credit.statut === 'disponible' ? 'Disponible' : 'Consommé' }}
+                </span>
+              </div>
+              <span class="formule-prix">{{ formaterFcfa(credit.formule_prix) }}</span>
+              @if (credit.motif) {
+                <p class="motif">{{ credit.motif }}</p>
+              }
+              <div class="dates-credit">
+                <span>Offert le {{ formaterDate(credit.cree_le) }}</span>
+                @if (credit.statut === 'consomme') {
+                  <span>Consommé le {{ formaterDate(credit.consomme_le) }}</span>
+                }
+              </div>
+
+              @if (credit.statut === 'disponible') {
+                <button
+                  type="button"
+                  class="bouton-retirer"
+                  [disabled]="retraitEnCoursId() === credit.id"
+                  (click)="demanderRetrait(credit)"
+                >
+                  {{ retraitEnCoursId() === credit.id ? '…' : 'Retirer' }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="bloc bloc-offrir">
+      <h2>Offrir un crédit</h2>
+
+      @if (chargementFormules()) {
+        <div class="etat-chargement">
+          <span class="spinner"></span>
+          <p>Chargement des formules…</p>
+        </div>
+      } @else if (erreurFormules()) {
+        <div class="etat-erreur">
+          <p>{{ erreurFormules() }}</p>
+          <button type="button" (click)="chargerFormules()">Réessayer</button>
+        </div>
+      } @else if (formules().length === 0) {
+        <p class="indice-recherche">Aucune formule active disponible.</p>
+      } @else {
+        <label for="formule">Formule</label>
+        <select
+          id="formule"
+          [value]="formuleSelectionneeId() ?? ''"
+          (change)="changerFormuleSelectionnee($any($event.target).value)"
+        >
+          <option value="" disabled>Choisir une formule</option>
+          @for (formule of formules(); track formule.id) {
+            <option [value]="formule.id">
+              {{ formule.nom }} — {{ formaterFcfa(formule.prix) }} ({{ formule.types_affichage.join(', ') }})
+            </option>
+          }
+        </select>
+
+        <label for="motif">Motif (recommandé)</label>
+        <textarea
+          id="motif"
+          rows="2"
+          placeholder="Ex. Partenariat, lancement, compensation…"
+          [value]="motifOctroi()"
+          (input)="changerMotif($any($event.target).value)"
+        ></textarea>
+
+        @if (erreurOctroi()) {
+          <p class="erreur-generale">{{ erreurOctroi() }}</p>
+        }
+
+        <button
+          type="button"
+          class="bouton-principal"
+          [disabled]="!formuleSelectionneeId() || octroiEnCours()"
+          (click)="offrirCredit()"
+        >
+          {{ octroiEnCours() ? 'Envoi en cours…' : 'Offrir ce crédit' }}
+        </button>
+      }
+    </section>
+  }
+</section>
+
+@if (creditARetirer(); as credit) {
+  <div class="voile-confirmation" (click)="annulerRetrait()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>Retirer le crédit « {{ credit.formule_nom }} » ?</p>
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annulerRetrait()">Annuler</button>
+        <button type="button" class="bouton-danger" (click)="confirmerRetrait()">Retirer</button>
+      </div>
+    </div>
+  </div>
+}

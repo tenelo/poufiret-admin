@@ -1,0 +1,194 @@
+<section class="page-publicites-admin">
+  <div class="entete">
+    <h1>Publicités</h1>
+    <div class="actions-entete">
+      <button type="button" class="bouton-secondaire" [disabled]="chargementEnCours()" (click)="charger()">
+        {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
+      </button>
+
+      <div class="menu-export">
+        <button
+          type="button"
+          class="bouton-principal"
+          [disabled]="!peutExporter() || exportEnCours()"
+          [title]="infobulleExport()"
+          (click)="basculerMenuExport()"
+        >
+          {{ exportEnCours() ? 'Export en cours…' : '⭳ Exporter CSV' }}
+        </button>
+        @if (menuExportOuvert()) {
+          <div class="liste-export">
+            @for (option of optionsExport; track option.valeur) {
+              <button type="button" (click)="exporter(option.valeur)">{{ option.libelle }}</button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (erreurExport()) {
+    <p class="erreur-generale">{{ erreurExport() }}</p>
+  }
+  @if (messageErreur()) {
+    <p class="erreur-generale">{{ messageErreur() }}</p>
+  }
+  @if (messageSucces()) {
+    <p class="message-succes">{{ messageSucces() }}</p>
+  }
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement des publicités…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (donnees(); as d) {
+    <div class="grille-kpi">
+      <div class="carte-kpi">
+        <span class="valeur">{{ formaterNombre(d.totaux.nb_publicites ?? 0) }}</span>
+        <span class="libelle">Publicités</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="valeur">{{ formaterNombre(d.totaux.nb_actives ?? 0) }}</span>
+        <span class="libelle">Actives</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="valeur">{{ formaterNombre(d.totaux.total_impressions ?? 0) }}</span>
+        <span class="libelle">Impressions</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="valeur">{{ formaterNombre(d.totaux.total_personnes_touchees ?? 0) }}</span>
+        <span class="libelle">Personnes touchées</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="valeur">{{ formaterNombre(d.totaux.total_clics ?? 0) }}</span>
+        <span class="libelle">Clics</span>
+      </div>
+    </div>
+
+    @if (d.publicites.length > 0) {
+      <div class="carte-graphique">
+        <h3>Répartition par statut</h3>
+        <app-graphique type="doughnut" [data]="donneesStatuts()" [options]="optionsDonut" />
+      </div>
+    }
+
+    @if (d.publicites.length === 0) {
+      <div class="etat-vide">
+        <p>Aucune campagne.</p>
+      </div>
+    } @else {
+      <div class="grille-publicites">
+        @for (pub of d.publicites; track pub.id) {
+          <div class="carte-publicite">
+            <div class="entete-carte">
+              <span class="titre">{{ pub.titre }}</span>
+              <span class="badge badge-{{ pub.statut }}">{{ libellesStatut[pub.statut] }}</span>
+            </div>
+            <p class="formule">Formule : {{ pub.formule }}</p>
+
+            <div class="grille-stats-pub">
+              <div class="stat-pub">
+                <span class="valeur">{{ formaterNombre(pub.nb_impressions ?? 0) }}</span>
+                <span class="libelle">Impressions</span>
+              </div>
+              <div class="stat-pub">
+                <span class="valeur">{{ formaterNombre(pub.nb_clics ?? 0) }}</span>
+                <span class="libelle">Clics</span>
+              </div>
+              <div class="stat-pub">
+                <span class="valeur">{{ pub.taux_clic ?? 0 }}%</span>
+                <span class="libelle">Taux de clic</span>
+              </div>
+              <div class="stat-pub">
+                <span class="valeur">{{ formaterNombre(pub.nb_personnes_touchees ?? 0) }}</span>
+                <span class="libelle">Personnes touchées</span>
+              </div>
+            </div>
+
+            @if (pub.cible_pourcentage) {
+              <div class="jauge-cible">
+                <span class="etiquette-jauge">
+                  Cible {{ pub.cible_pourcentage }}%
+                  <span [class.atteinte]="pub.cible_atteinte">
+                    {{ pub.cible_atteinte ? 'atteinte' : 'en cours' }}
+                  </span>
+                </span>
+                <div class="barre-progression">
+                  <div
+                    class="remplissage"
+                    [class.remplissage-atteint]="pub.cible_atteinte"
+                    [style.width.%]="pub.cible_atteinte ? 100 : pub.cible_pourcentage"
+                  ></div>
+                </div>
+              </div>
+            }
+
+            @if (entreesImpressionsParType(pub.impressions_par_type).length > 0) {
+              <div class="mini-barres">
+                @for (entree of entreesImpressionsParType(pub.impressions_par_type); track entree.type) {
+                  <div class="mini-barre-ligne">
+                    <span class="mini-barre-libelle">{{ entree.type }}</span>
+                    <div class="mini-barre-piste">
+                      <div
+                        class="mini-barre-remplissage"
+                        [style.width.%]="pourcentageBarre(entree.valeur, pub.impressions_par_type)"
+                      ></div>
+                    </div>
+                    <span class="mini-barre-valeur">{{ entree.valeur }}</span>
+                  </div>
+                }
+              </div>
+            }
+
+            <p class="periode">
+              {{ pub.debut_diffusion ? (pub.debut_diffusion | date: 'dd/MM/yyyy') : '—' }}
+              →
+              {{ pub.fin_diffusion ? (pub.fin_diffusion | date: 'dd/MM/yyyy') : '—' }}
+            </p>
+
+            @if (peutModerer() && actionsDisponibles(pub).length > 0) {
+              <div class="actions-publicite">
+                @for (action of actionsDisponibles(pub); track action.cible) {
+                  <button
+                    type="button"
+                    [class.bouton-danger]="action.dangereuse"
+                    [class.bouton-action]="!action.dangereuse"
+                    [disabled]="transitionEnCoursId() === pub.id"
+                    (click)="demanderAction(pub, action)"
+                  >
+                    {{ transitionEnCoursId() === pub.id ? '…' : action.libelle }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+</section>
+
+@if (actionAConfirmer(); as attente) {
+  <div class="voile-confirmation" (click)="annulerAction()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>Confirmer « {{ attente.action.libelle }} » pour « {{ attente.publicite.titre }} » ?</p>
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annulerAction()">Annuler</button>
+        <button
+          type="button"
+          [class.bouton-danger]="attente.action.dangereuse"
+          [class.bouton-action]="!attente.action.dangereuse"
+          (click)="confirmerAction()"
+        >
+          Confirmer
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -4,7 +4,7 @@
   <div class="zone-utilisateur">
     @if (utilisateur(); as u) {
       <span class="telephone">{{ u.username }}</span>
-      <span class="role">{{ role() }}</span>
+      <span class="role" [class.role-superadmin]="estSuperadmin()">{{ libelleRole() }}</span>
     }
     <button type="button" (click)="deconnexion()">Déconnexion</button>
   </div>

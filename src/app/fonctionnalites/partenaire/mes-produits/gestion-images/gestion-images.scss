@@ -1,0 +1,269 @@
+.voile-modale {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background: rgba(17, 24, 39, 0.5);
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.modale {
+  width: 100%;
+  max-width: 720px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+
+  h2 {
+    margin: 0 0 1rem;
+    font-size: 1.2rem;
+    color: #1a1a1a;
+  }
+}
+
+.etat-chargement {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 0;
+  color: #6b7280;
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #4f46e5;
+    border-radius: 50%;
+    animation: rotation 0.8s linear infinite;
+  }
+}
+
+@keyframes rotation {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.etat-erreur {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+
+  button {
+    padding: 0.5rem 1rem;
+    background: #ffffff;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    color: #b91c1c;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}
+
+.etat-vide {
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+.erreur-generale {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.message-succes {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #15803d;
+  font-size: 0.85rem;
+}
+
+.grille-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.carte-image {
+  position: relative;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .bouton-supprimer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.3rem;
+    background: rgba(185, 28, 28, 0.85);
+    color: #ffffff;
+    border: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.badge-principale {
+  position: absolute;
+  top: 0.35rem;
+  left: 0.35rem;
+  padding: 0.15rem 0.5rem;
+  background: rgba(79, 70, 229, 0.9);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border-radius: 999px;
+}
+
+.bloc-ajout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+
+  .etiquette-image {
+    font-size: 0.8rem;
+    color: #6b7280;
+  }
+}
+
+.quota-atteint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #b45309;
+}
+
+.apercu-ajout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+  }
+
+  .case {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    color: #374151;
+  }
+}
+
+.actions-ajout,
+.actions-modale {
+  display: flex;
+  gap: 0.75rem;
+
+  button:not(.bouton-secondaire):not(.bouton-danger) {
+    padding: 0.6rem 1.25rem;
+    background: #4f46e5;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.actions-fermeture {
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+.bouton-secondaire {
+  padding: 0.6rem 1.25rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: #f4f5f7;
+  }
+}
+
+.bouton-danger {
+  padding: 0.6rem 1.25rem;
+  background: #dc2626;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: #b91c1c;
+  }
+}
+
+.voile-confirmation {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(17, 24, 39, 0.5);
+  z-index: 110;
+}
+
+.boite-confirmation {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 320px;
+  width: 100%;
+
+  p {
+    margin: 0 0 1rem;
+    color: #1a1a1a;
+  }
+}

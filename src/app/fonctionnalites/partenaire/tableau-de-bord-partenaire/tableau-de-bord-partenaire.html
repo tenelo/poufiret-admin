@@ -1,0 +1,42 @@
+<section class="page-tableau-de-bord">
+  <h1>Tableau de bord</h1>
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement de vos statistiques…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (vue(); as v) {
+    <nav class="barre-onglets">
+      @for (onglet of onglets; track onglet.valeur) {
+        <button
+          type="button"
+          class="onglet"
+          [class.onglet-actif]="ongletActif() === onglet.valeur"
+          (click)="changerOnglet(onglet.valeur)"
+        >
+          {{ onglet.libelle }}
+        </button>
+      }
+    </nav>
+
+    <div class="contenu-onglet">
+      @switch (ongletActif()) {
+        @case ('ensemble') {
+          <app-onglet-vue-ensemble [vue]="v.ensemble" />
+        }
+        @case ('produits') {
+          <app-onglet-produits [vue]="v.produits" />
+        }
+        @case ('commandes') {
+          <app-onglet-commandes [vue]="v.commandes" />
+        }
+      }
+    </div>
+  }
+</section>

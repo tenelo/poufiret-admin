@@ -1,0 +1,97 @@
+<section class="page-indicateurs">
+  <div class="entete">
+    <h1>Indicateurs partenaires</h1>
+    <div class="actions-entete">
+      <button type="button" class="bouton-secondaire" [disabled]="chargementEnCours()" (click)="charger()">
+        {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
+      </button>
+      <button type="button" class="bouton-principal" [disabled]="exportEnCours()" (click)="exporter()">
+        {{ exportEnCours() ? 'Export en cours…' : '⭳ Exporter CSV' }}
+      </button>
+    </div>
+  </div>
+
+  @if (erreurExport()) {
+    <p class="erreur-generale">{{ erreurExport() }}</p>
+  }
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement des indicateurs…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (donnees(); as d) {
+    <div class="grille-kpi">
+      <div class="carte-kpi">
+        <span class="icone">🏬</span>
+        <span class="valeur">{{ formaterNombre(d.total) }}</span>
+        <span class="libelle">Total partenaires</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="icone">✅</span>
+        <span class="valeur">{{ formaterNombre(d.actifs) }}</span>
+        <span class="libelle">Actifs</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="icone">👁️</span>
+        <span class="valeur">{{ formaterNombre(d.visibles) }}</span>
+        <span class="libelle">Visibles</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="icone">🏅</span>
+        <span class="valeur">{{ formaterNombre(d.certifies) }}</span>
+        <span class="libelle">Certifiés</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="icone">⭐</span>
+        <span class="valeur">{{ formaterNombre(d.en_faveur) }}</span>
+        <span class="libelle">En faveur</span>
+      </div>
+    </div>
+
+    <!-- Expirations d'abonnement -->
+    <section class="bloc">
+      <h2>Expirations d'abonnement</h2>
+      <div class="grille-expirations">
+        @for (tranche of listeExpirations(); track tranche.libelle) {
+          <div class="carte-expiration {{ tranche.classe }}">
+            <span class="valeur">{{ formaterNombre(tranche.valeur) }}</span>
+            <span class="libelle">{{ tranche.libelle }}</span>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Répartitions -->
+    <section class="bloc">
+      <h2>Répartitions</h2>
+      <div class="grille-graphiques">
+        <div class="carte-graphique">
+          <h3>Par plan</h3>
+          <app-graphique type="doughnut" [data]="donneesParPlan()" [options]="optionsDonut" />
+        </div>
+        <div class="carte-graphique">
+          <h3>Par statut</h3>
+          <app-graphique type="doughnut" [data]="donneesParStatut()" [options]="optionsDonut" />
+        </div>
+        <div class="carte-graphique">
+          <h3>Par type de partenaire</h3>
+          <app-graphique type="bar" [data]="donneesParType()" [options]="optionsBarresHorizontales" />
+        </div>
+        <div class="carte-graphique">
+          <h3>Par département</h3>
+          <app-graphique
+            type="bar"
+            [data]="donneesParDepartement()"
+            [options]="optionsBarresHorizontales"
+          />
+        </div>
+      </div>
+    </section>
+  }
+</section>

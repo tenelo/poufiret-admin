@@ -2,31 +2,91 @@ import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 import { AuthService } from '../../../noyau/auth/auth.service';
+import { PermissionsService } from '../../../noyau/permissions/permissions.service';
+import { NomCapacite } from '../../../modeles/permissions-admin.model';
 
-interface EntreeMenu {
+interface EntreeMenuPartenaire {
   libelle: string;
   lien?: string;
 }
 
-// Entrées de menu placeholder : les écrans métier seront ajoutés module par module.
-const ENTREES_ADMIN: EntreeMenu[] = [
-  { libelle: 'Tableau de bord', lien: '/tableau-de-bord' },
-  { libelle: 'Partenaires' },
-  { libelle: 'Utilisateurs' },
-  { libelle: 'Commandes' },
-  { libelle: 'Catégories' },
-];
+// Entrées de menu admin : chacune déclare la capacité qui la débloque.
+// Pour ajouter un écran admin, il suffit d'ajouter une ligne ici (+ sa route
+// protégée par capaciteGuard) — aucune autre modification n'est nécessaire.
+interface EntreeMenuAdmin {
+  libelle: string;
+  lien: string;
+  icone: string;
+  capacite: NomCapacite;
+}
 
-const ENTREES_PARTENAIRE: EntreeMenu[] = [
+const ENTREES_PARTENAIRE: EntreeMenuPartenaire[] = [
   { libelle: 'Tableau de bord', lien: '/tableau-de-bord' },
   { libelle: 'Mon profil', lien: '/mon-profil' },
-  { libelle: 'Mes commandes' },
-  { libelle: 'Mes produits' },
+  { libelle: 'Mes catégories', lien: '/mes-categories' },
+  { libelle: 'Mes produits', lien: '/mes-produits' },
+  { libelle: 'Mes commandes', lien: '/mes-commandes' },
+  { libelle: 'Publicités', lien: '/publicites' },
+];
+
+const ENTREES_ADMIN: EntreeMenuAdmin[] = [
+  { libelle: 'Tableau de bord', lien: '/tableau-de-bord', icone: '📊', capacite: 'voir_stats' },
+  {
+    libelle: 'Indicateurs partenaires',
+    lien: '/administration/indicateurs-partenaires',
+    icone: '📈',
+    capacite: 'voir_indicateurs',
+  },
+  {
+    libelle: 'Demandes de partenariat',
+    lien: '/administration/demandes-partenariat',
+    icone: '🤝',
+    capacite: 'valider_devenir_partenaire',
+  },
+  {
+    libelle: "Journal d'audit",
+    lien: '/administration/journal',
+    icone: '📜',
+    capacite: 'lire_journal',
+  },
+  {
+    libelle: 'Engagement clients',
+    lien: '/administration/engagement-clients',
+    icone: '🧑‍🤝‍🧑',
+    capacite: 'voir_stats',
+  },
+  {
+    libelle: 'Stats de connexion',
+    lien: '/administration/stats-connexion',
+    icone: '🔌',
+    capacite: 'voir_stats',
+  },
+  {
+    libelle: 'Publicités',
+    lien: '/administration/publicites',
+    icone: '📣',
+    capacite: 'voir_stats',
+  },
+  {
+    libelle: 'Crédits de pub',
+    lien: '/administration/credits-pub',
+    icone: '🎁',
+    capacite: 'offrir_campagne',
+  },
+  {
+    libelle: 'Faveur de plan',
+    lien: '/administration/faveur-plan',
+    icone: '⭐',
+    capacite: 'accorder_faveur',
+  },
 ];
 
 /**
- * Menu latéral de la coquille applicative. Les entrées affichées dépendent
- * du rôle de l'utilisateur connecté (admin vs partenaire).
+ * Menu latéral de la coquille applicative. Les entrées affichées dépendent du
+ * rôle de l'utilisateur connecté (admin vs partenaire) ; côté admin, chaque
+ * entrée n'apparaît que si l'admin connecté a la capacité qu'elle requiert
+ * (chargée par PermissionsService, mis en cache — voir CoquilleApplication
+ * pour le déclenchement du chargement).
  */
 @Component({
   selector: 'app-barre-laterale',
@@ -36,8 +96,13 @@ const ENTREES_PARTENAIRE: EntreeMenu[] = [
 })
 export class BarreLaterale {
   private readonly authService = inject(AuthService);
+  private readonly permissionsService = inject(PermissionsService);
 
-  readonly entrees = computed<EntreeMenu[]>(() => {
-    return this.authService.role() === 'admin' ? ENTREES_ADMIN : ENTREES_PARTENAIRE;
-  });
+  readonly estAdmin = computed(() => this.authService.role() === 'admin');
+
+  readonly entreesPartenaire = ENTREES_PARTENAIRE;
+
+  readonly entreesAdmin = computed<EntreeMenuAdmin[]>(() =>
+    ENTREES_ADMIN.filter((entree) => this.permissionsService.aLaCapacite(entree.capacite)),
+  );
 }

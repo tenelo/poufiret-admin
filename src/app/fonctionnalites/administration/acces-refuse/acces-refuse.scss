@@ -1,0 +1,27 @@
+.page-acces-refuse {
+  max-width: 480px;
+  margin: 3rem auto 0;
+  padding: 0 1rem;
+  text-align: center;
+
+  h1 {
+    margin: 0 0 0.75rem;
+    font-size: 1.4rem;
+    color: #b91c1c;
+  }
+
+  p {
+    color: #6b7280;
+    margin: 0 0 1.25rem;
+  }
+
+  a {
+    color: #4f46e5;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

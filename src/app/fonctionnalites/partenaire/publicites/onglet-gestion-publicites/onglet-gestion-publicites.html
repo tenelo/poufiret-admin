@@ -1,0 +1,75 @@
+<div class="entete-onglet">
+  <p class="note-cycle">
+    Cycle d'une campagne : <strong>Brouillon</strong> → <strong>Soumise</strong> (en attente de
+    paiement puis de validation par l'administration) → <strong>Active</strong>. Le paiement et la
+    validation se font côté administration, pas depuis cet écran.
+  </p>
+
+  <button type="button" class="bouton-principal" (click)="ouvrirCreation()">
+    + Créer une campagne
+  </button>
+</div>
+
+@if (messageErreur()) {
+  <p class="erreur-generale">{{ messageErreur() }}</p>
+}
+@if (messageSucces()) {
+  <p class="message-succes">{{ messageSucces() }}</p>
+}
+
+@if (chargementEnCours()) {
+  <div class="etat-chargement">
+    <span class="spinner"></span>
+    <p>Chargement de vos campagnes…</p>
+  </div>
+} @else if (erreurChargement()) {
+  <div class="etat-erreur">
+    <p>{{ erreurChargement() }}</p>
+    <button type="button" (click)="charger()">Réessayer</button>
+  </div>
+} @else if (publicites().length === 0) {
+  <div class="etat-vide">
+    <p>Vous n'avez pas encore de campagne. Créez-en une pour la faire apparaître ici.</p>
+  </div>
+} @else {
+  <div class="grille-publicites">
+    @for (publicite of publicites(); track publicite.id) {
+      <div class="carte-publicite">
+        @if (publicite.image_couverture) {
+          <img [src]="publicite.image_couverture" [alt]="publicite.titre" class="image-couverture" />
+        } @else {
+          <div class="image-vide">Aucune image</div>
+        }
+
+        <div class="corps-carte">
+          <div class="entete-carte">
+            <span class="titre">{{ publicite.titre }}</span>
+            <span class="badge badge-{{ publicite.statut }}">{{ libellesStatut[publicite.statut] }}</span>
+          </div>
+          <p class="formule">Formule : {{ nomFormule(publicite.formule) }}</p>
+
+          @if (peutSoumettre(publicite)) {
+            <button
+              type="button"
+              class="bouton-secondaire"
+              [disabled]="soumissionEnCoursId() === publicite.id"
+              (click)="soumettre(publicite)"
+            >
+              {{ soumissionEnCoursId() === publicite.id ? 'Envoi en cours…' : 'Soumettre' }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+}
+
+@if (formulaireOuvert()) {
+  <app-formulaire-creation-publicite
+    [formules]="formules()"
+    [enregistrementEnCours]="enregistrementEnCours()"
+    [messageErreur]="messageErreurFormulaire()"
+    (soumis)="creerCampagne($event)"
+    (annule)="fermerCreation()"
+  />
+}

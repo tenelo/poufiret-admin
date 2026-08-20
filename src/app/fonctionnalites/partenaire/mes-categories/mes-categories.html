@@ -1,0 +1,83 @@
+<section class="page-mes-categories">
+  <h1>Mes catégories</h1>
+  <p class="sous-titre">Gérez l'image de couverture affichée pour chacune de vos catégories.</p>
+
+  @if (messageErreur()) {
+    <p class="erreur-generale">{{ messageErreur() }}</p>
+  }
+  @if (messageSucces()) {
+    <p class="message-succes">{{ messageSucces() }}</p>
+  }
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement de vos catégories…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="chargerCategories()">Réessayer</button>
+    </div>
+  } @else if (categories().length === 0) {
+    <div class="etat-vide">
+      <p>Aucune catégorie pour le moment.</p>
+    </div>
+  } @else {
+    <div class="grille-categories">
+      @for (etat of categories(); track etat.categorie.id) {
+        <div class="carte-categorie">
+          <div class="zone-image">
+            @if (etat.apercu) {
+              <img [src]="etat.apercu" [alt]="etat.categorie.categorie_nom" class="image-couverture" />
+            } @else if (etat.categorie.image_couverture) {
+              <img
+                [src]="etat.categorie.image_couverture"
+                [alt]="etat.categorie.categorie_nom"
+                class="image-couverture"
+              />
+            } @else if (etat.categorie.categorie_icone) {
+              <div class="image-vide">
+                <img [src]="etat.categorie.categorie_icone" [alt]="etat.categorie.categorie_nom" class="icone-vide" />
+              </div>
+            } @else {
+              <div class="image-vide">
+                <span>Aucune image</span>
+              </div>
+            }
+
+            @if (etat.categorie.est_principale) {
+              <span class="badge-principale">Principale</span>
+            }
+
+            @if (etat.enCours) {
+              <div class="voile-chargement">
+                <span class="spinner"></span>
+              </div>
+            }
+          </div>
+
+          <div class="corps-carte">
+            <span class="nom-categorie">{{ etat.categorie.categorie_nom }}</span>
+
+            <input
+              #entreeFichier
+              type="file"
+              accept="image/*"
+              hidden
+              (change)="selectionnerImage($event, etat.categorie.id)"
+            />
+            <button
+              type="button"
+              class="bouton-secondaire"
+              [disabled]="etat.enCours"
+              (click)="entreeFichier.click()"
+            >
+              Changer l'image
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>

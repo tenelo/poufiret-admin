@@ -1,0 +1,156 @@
+<div class="voile-modale" (click)="ferme.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <div class="entete-modale">
+      <div>
+        <h2>{{ commande().numero }}</h2>
+        <span class="badge badge-{{ commande().statut }}">{{ libellesStatut[commande().statut] }}</span>
+      </div>
+      <button type="button" class="bouton-fermer" (click)="ferme.emit()" aria-label="Fermer">×</button>
+    </div>
+
+    <p class="date-commande">Reçue le {{ commande().created_at | date: 'dd/MM/yyyy à HH:mm' }}</p>
+
+    <section class="section">
+      <h3>Client</h3>
+      <p class="client-nom">{{ commande().client_nom }}</p>
+      <a class="client-telephone" href="tel:{{ commande().client_telephone }}">{{ commande().client_telephone }}</a>
+    </section>
+
+    <section class="section">
+      <h3>Articles</h3>
+      <div class="tableau-lignes">
+        @for (ligne of commande().lignes; track ligne.id) {
+          <div class="ligne-commande">
+            <div class="ligne-principale">
+              <span class="quantite">{{ ligne.quantite }} ×</span>
+              <span class="nom-article">{{ ligne.nom_article }}</span>
+              <span class="prix-ligne">{{ ligne.prix_ligne }} FCFA</span>
+            </div>
+            @if (ligne.variante_nom) {
+              <p class="detail-ligne">Variante : {{ ligne.variante_nom }}</p>
+            }
+            @if (ligne.note_speciale) {
+              <p class="detail-ligne note-speciale">Note : {{ ligne.note_speciale }}</p>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="recap-montants">
+        <div class="ligne-montant">
+          <span>Sous-total</span>
+          <span>{{ commande().sous_total }} FCFA</span>
+        </div>
+        <div class="ligne-montant">
+          <span>Frais de livraison</span>
+          <span>{{ commande().frais_livraison }} FCFA</span>
+        </div>
+        <div class="ligne-montant ligne-total">
+          <span>Total</span>
+          <span>{{ commande().total }} FCFA</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h3>Livraison &amp; paiement</h3>
+      <div class="champ-info">
+        <span class="etiquette">Mode</span>
+        <span class="valeur">{{ libellesModeLivraison[commande().mode_livraison] }}</span>
+      </div>
+
+      @if (commande().mode_livraison === 'livraison' && commande().adresse_snapshot) {
+        <div class="champ-info">
+          <span class="etiquette">Adresse</span>
+          <span class="valeur">{{ commande().adresse_snapshot | json }}</span>
+        </div>
+      }
+
+      <div class="champ-info">
+        <span class="etiquette">Paiement</span>
+        <span class="valeur">{{ libellesModePaiement[commande().mode_paiement] }}</span>
+      </div>
+
+      @if (commande().notes_client) {
+        <div class="champ-info">
+          <span class="etiquette">Notes du client</span>
+          <span class="valeur">{{ commande().notes_client }}</span>
+        </div>
+      }
+
+      @if (commande().raison_refus) {
+        <div class="champ-info">
+          <span class="etiquette">Motif du refus</span>
+          <span class="valeur">{{ commande().raison_refus }}</span>
+        </div>
+      }
+    </section>
+
+    @if (messageErreur()) {
+      <p class="erreur-generale">{{ messageErreur() }}</p>
+    }
+    @if (messageSucces()) {
+      <p class="message-succes">{{ messageSucces() }}</p>
+    }
+
+    @if (peutCommanderLivreur()) {
+      <button
+        type="button"
+        class="bouton-livreur"
+        [disabled]="livreurEnCours()"
+        (click)="commanderLivreur()"
+      >
+        {{ livreurEnCours() ? 'Envoi en cours…' : 'Commander un livreur' }}
+      </button>
+    }
+
+    @if (actionsDisponibles().length > 0) {
+      <div class="actions-transition">
+        @for (action of actionsDisponibles(); track action.cible) {
+          <button
+            type="button"
+            [class.bouton-danger]="action.dangereuse"
+            [class.bouton-principal]="!action.dangereuse"
+            [disabled]="transitionEnCours()"
+            (click)="demanderAction(action)"
+          >
+            {{ action.libelle }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+@if (dialogRefusOuvert()) {
+  <div class="voile-confirmation" (click)="annulerDialogRefus()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>Motif du refus</p>
+      <textarea
+        rows="3"
+        [value]="motifRefus()"
+        (input)="motifRefus.set($any($event.target).value)"
+        placeholder="Expliquez au client pourquoi la commande est refusée"
+      ></textarea>
+      @if (motifRefusTouche() && !motifRefus().trim()) {
+        <p class="erreur-champ">Le motif est requis.</p>
+      }
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annulerDialogRefus()">Annuler</button>
+        <button type="button" class="bouton-danger" (click)="confirmerRefus()">Refuser la commande</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (actionAConfirmer(); as action) {
+  <div class="voile-confirmation" (click)="annulerConfirmation()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>Confirmer « {{ action.libelle }} » pour la commande {{ commande().numero }} ?</p>
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annulerConfirmation()">Annuler</button>
+        <button type="button" class="bouton-danger" (click)="confirmerAction()">Confirmer</button>
+      </div>
+    </div>
+  </div>
+}

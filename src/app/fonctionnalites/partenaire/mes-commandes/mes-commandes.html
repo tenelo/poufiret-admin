@@ -1,0 +1,70 @@
+<section class="page-mes-commandes">
+  <div class="entete">
+    <div>
+      <h1>Mes commandes</h1>
+      <p class="sous-titre">Suivez et traitez les commandes reçues de vos clients.</p>
+    </div>
+
+    <select
+      class="filtre-statut"
+      [value]="filtreStatut()"
+      (change)="changerFiltre($any($event.target).value)"
+    >
+      @for (option of optionsFiltre; track option.valeur) {
+        <option [value]="option.valeur">{{ option.libelle }}</option>
+      }
+    </select>
+  </div>
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement de vos commandes…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="chargerCommandes()">Réessayer</button>
+    </div>
+  } @else if (commandes().length === 0) {
+    <div class="etat-vide">
+      <p>Aucune commande pour le moment.</p>
+    </div>
+  } @else {
+    <div class="grille-commandes">
+      @for (commande of commandes(); track commande.id) {
+        <button
+          type="button"
+          class="carte-commande"
+          [class.carte-nouvelle]="commande.statut === 'nouvelle'"
+          (click)="ouvrirDetail(commande)"
+        >
+          <div class="ligne-haut">
+            <span class="numero">{{ commande.numero }}</span>
+            <span class="badge badge-{{ commande.statut }}">{{ libellesStatut[commande.statut] }}</span>
+          </div>
+
+          <div class="infos-client">
+            <span class="client-nom">{{ commande.client_nom }}</span>
+            <span class="client-telephone">{{ commande.client_telephone }}</span>
+          </div>
+
+          <div class="ligne-bas">
+            <span class="mode-livraison">{{ libellesModeLivraison[commande.mode_livraison] }}</span>
+            <span class="total">{{ commande.total }} FCFA</span>
+          </div>
+
+          <span class="date-relative">{{ formaterDateRelative(commande.created_at) }}</span>
+        </button>
+      }
+    </div>
+  }
+
+  @if (commandeSelectionnee(); as commande) {
+    <app-detail-commande
+      [commande]="commande"
+      (ferme)="fermerDetail()"
+      (commandeMiseAJour)="surCommandeMiseAJour($event)"
+    />
+  }
+</section>

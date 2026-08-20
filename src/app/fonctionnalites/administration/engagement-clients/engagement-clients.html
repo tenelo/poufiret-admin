@@ -1,0 +1,136 @@
+<section class="page-engagement">
+  <div class="entete">
+    <h1>Engagement clients</h1>
+    <button type="button" class="bouton-rafraichir" [disabled]="chargementEnCours()" (click)="charger()">
+      {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
+    </button>
+  </div>
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement de l'engagement clients…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (donnees(); as d) {
+    @if (d.profils.length === 0) {
+      <div class="etat-vide">
+        <p>Aucun profil d'engagement.</p>
+      </div>
+    } @else {
+      <div class="grille-mixte">
+        <div class="colonne">
+          <div class="carte-kpi">
+            <span class="icone">👥</span>
+            <span class="valeur">{{ formaterNombre(d.nb_profils) }}</span>
+            <span class="libelle">Profils suivis</span>
+          </div>
+          <div class="carte-kpi carte-kpi-mise-en-avant">
+            <span class="icone">🔥</span>
+            <span class="valeur">{{ formaterNombre(d.nb_clients_actifs) }}</span>
+            <span class="libelle">Clients actifs</span>
+          </div>
+          <div class="carte-kpi">
+            <span class="valeur">{{ tauxActifs() }} %</span>
+            <span class="libelle">Taux d'actifs</span>
+          </div>
+        </div>
+
+        <div class="carte-graphique">
+          <h3>Actifs vs inactifs</h3>
+          <app-graphique type="doughnut" [data]="donneesActifsDonut()" [options]="optionsDonut" />
+        </div>
+      </div>
+
+      <div class="carte-graphique carte-pleine-largeur">
+        <h3>Top catégories consultées (tous clients)</h3>
+        <app-graphique type="bar" [data]="donneesTopCategories()" [options]="optionsBarresHorizontales" />
+      </div>
+
+      <div class="barre-filtres">
+        <input
+          type="text"
+          class="champ-recherche"
+          placeholder="Rechercher un identifiant, un téléphone…"
+          [value]="rechercheTexte()"
+          (input)="changerRecherche($any($event.target).value)"
+        />
+        <label class="toggle-actifs">
+          <input type="checkbox" [checked]="actifsSeulement()" (change)="basculerActifsSeulement()" />
+          Actifs seulement
+        </label>
+      </div>
+
+      @if (profilsTries().length === 0) {
+        <div class="etat-vide">
+          <p>Aucun profil ne correspond à ces filtres.</p>
+        </div>
+      } @else {
+        <div class="conteneur-tableau">
+          <table class="tableau-engagement">
+            <thead>
+              <tr>
+                <th (click)="trier('username')">Utilisateur</th>
+                <th (click)="trier('nb_articles_vus_mois')">Articles vus (mois)</th>
+                <th (click)="trier('nb_vues_catalogue_mois')">Vues catalogue (mois)</th>
+                <th (click)="trier('temps_cumule_secondes_mois')">Temps cumulé (mois)</th>
+                <th (click)="trier('derniere_activite')">Dernière activité</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (profil of profilsPage(); track profil.utilisateur_id) {
+                <tr class="ligne-profil" (click)="basculerDetail(profil)">
+                  <td class="cellule-utilisateur">
+                    <span class="username">{{ profil.username }}</span>
+                    <span class="telephone">{{ profil.telephone }}</span>
+                  </td>
+                  <td>{{ formaterNombre(profil.nb_articles_vus_mois) }}</td>
+                  <td>{{ formaterNombre(profil.nb_vues_catalogue_mois) }}</td>
+                  <td>{{ formaterDuree(profil.temps_cumule_secondes_mois) }}</td>
+                  <td>{{ formaterDateRelative(profil.derniere_activite) }}</td>
+                  <td>
+                    <span class="chip" [class.chip-actif]="profil.est_client_actif" [class.chip-inactif]="!profil.est_client_actif">
+                      {{ profil.est_client_actif ? 'Actif' : 'Inactif' }}
+                    </span>
+                  </td>
+                </tr>
+                @if (profilOuvertId() === profil.utilisateur_id) {
+                  <tr class="ligne-detail">
+                    <td colspan="6">
+                      @if (categoriesTriees(profil).length === 0) {
+                        <p class="detail-vide">Aucune catégorie consultée enregistrée.</p>
+                      } @else {
+                        <div class="detail-categories">
+                          @for (cat of categoriesTriees(profil); track cat.slug) {
+                            <span class="puce-categorie">{{ cat.slug }} · {{ cat.valeur }}</span>
+                          }
+                        </div>
+                      }
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (nombrePages() > 1) {
+          <div class="pagination">
+            <button type="button" [disabled]="pageAffichee() === 1" (click)="pagePrecedente()">
+              ← Précédent
+            </button>
+            <span>Page {{ pageAffichee() }} / {{ nombrePages() }}</span>
+            <button type="button" [disabled]="pageAffichee() === nombrePages()" (click)="pageSuivante()">
+              Suivant →
+            </button>
+          </div>
+        }
+      }
+    }
+  }
+</section>

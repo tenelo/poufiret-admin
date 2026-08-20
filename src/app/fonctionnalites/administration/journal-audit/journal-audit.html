@@ -1,0 +1,118 @@
+<section class="page-journal">
+  <div class="entete">
+    <div>
+      <h1>Journal d'audit</h1>
+      @if (!chargementEnCours() && !erreurChargement()) {
+        <span class="compteur">{{ total() }} entrée{{ total() > 1 ? 's' : '' }}</span>
+      }
+    </div>
+    <div class="actions-entete">
+      <button type="button" class="bouton-secondaire" [disabled]="chargementEnCours()" (click)="charger()">
+        {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
+      </button>
+      <button
+        type="button"
+        class="bouton-principal"
+        [disabled]="!peutExporter() || exportEnCours()"
+        [title]="infobulleExport()"
+        (click)="exporter()"
+      >
+        {{ exportEnCours() ? 'Export en cours…' : '⭳ Exporter CSV' }}
+      </button>
+    </div>
+  </div>
+
+  @if (erreurExport()) {
+    <p class="erreur-generale">{{ erreurExport() }}</p>
+  }
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement du journal…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (entrees().length === 0) {
+    <div class="etat-vide">
+      <p>Aucune action enregistrée.</p>
+    </div>
+  } @else {
+    @if (listePlafonnee()) {
+      <p class="mention-plafond">200 entrées les plus récentes affichées.</p>
+    }
+
+    <div class="barre-filtres">
+      <input
+        type="text"
+        class="champ-recherche"
+        placeholder="Rechercher un acteur, une cible, une action…"
+        [value]="rechercheTexte()"
+        (input)="changerRecherche($any($event.target).value)"
+      />
+      <select
+        class="filtre-action"
+        [value]="filtreAction()"
+        (change)="changerFiltreAction($any($event.target).value)"
+      >
+        <option value="">Toutes les actions</option>
+        @for (option of optionsAction(); track option.action) {
+          <option [value]="option.action">{{ option.libelle }}</option>
+        }
+      </select>
+    </div>
+
+    @if (entreesFiltrees().length === 0) {
+      <div class="etat-vide">
+        <p>Aucune entrée ne correspond à ces filtres.</p>
+      </div>
+    } @else {
+      <div class="conteneur-tableau">
+        <table class="tableau-journal">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Action</th>
+              <th>Acteur</th>
+              <th>Cible</th>
+              <th>Rôle</th>
+              <th>Motif</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (entree of entreesPage(); track entree.date + entree.action + entree.cible) {
+              <tr>
+                <td class="cellule-date">
+                  <span class="date-complete">{{ formaterDateComplete(entree.date) }}</span>
+                  <span class="date-relative">{{ formaterDateRelative(entree.date) }}</span>
+                </td>
+                <td>{{ entree.action_libelle }}</td>
+                <td>{{ entree.acteur }}</td>
+                <td>{{ entree.cible }}</td>
+                <td>
+                  <span class="chip-role chip-role-{{ entree.cible_role }}">{{ entree.cible_role }}</span>
+                </td>
+                <td class="cellule-motif">{{ entree.motif || '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (nombrePages() > 1) {
+        <div class="pagination">
+          <button type="button" [disabled]="pageAffichee() === 1" (click)="pagePrecedente()">
+            ← Précédent
+          </button>
+          <span>Page {{ pageAffichee() }} / {{ nombrePages() }}</span>
+          <button type="button" [disabled]="pageAffichee() === nombrePages()" (click)="pageSuivante()">
+            Suivant →
+          </button>
+        </div>
+      }
+    }
+  }
+</section>

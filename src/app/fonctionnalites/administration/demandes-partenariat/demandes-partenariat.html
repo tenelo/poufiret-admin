@@ -1,0 +1,116 @@
+<section class="page-demandes">
+  <div class="entete">
+    <h1>Demandes de partenariat</h1>
+    @if (!chargementEnCours() && !erreurChargement()) {
+      <span class="compteur" [class.compteur-vide]="total() === 0">
+        {{ total() }} demande{{ total() > 1 ? 's' : '' }} en attente
+      </span>
+    }
+  </div>
+
+  @if (messageErreur()) {
+    <p class="erreur-generale">{{ messageErreur() }}</p>
+  }
+  @if (messageSucces()) {
+    <p class="message-succes">{{ messageSucces() }}</p>
+  }
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement des demandes…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (total() === 0) {
+    <div class="etat-vide">
+      <p>Aucune demande en attente.</p>
+    </div>
+  } @else {
+    <div class="liste-demandes">
+      @for (demande of demandes(); track demande.id) {
+        <div class="carte-demande" [class.carte-ancienne]="estAncienne(demande.cree_le)">
+          <div class="corps-demande">
+            <div class="ligne-titre">
+              <span class="nom-commerce">{{ demande.nom_commerce }}</span>
+              @if (estAncienne(demande.cree_le)) {
+                <span class="badge-ancienne">En attente depuis longtemps</span>
+              }
+            </div>
+
+            <span class="nom-complet">{{ demande.nom_complet }}</span>
+            <a class="telephone" href="tel:{{ demande.telephone }}">{{ demande.telephone }}</a>
+
+            <div class="details-demande">
+              <span class="detail">{{ demande.type_partenaire }}</span>
+              <span class="detail">{{ demande.departement }}</span>
+              <span class="detail date-relative">{{ formaterDateRelative(demande.cree_le) }}</span>
+            </div>
+          </div>
+
+          <div class="actions-demande">
+            <button
+              type="button"
+              class="bouton-accepter"
+              [disabled]="demandeEnCoursId() === demande.id"
+              (click)="demanderAcceptation(demande)"
+            >
+              {{ demandeEnCoursId() === demande.id ? '…' : 'Accepter' }}
+            </button>
+            <button
+              type="button"
+              class="bouton-rejeter"
+              [disabled]="demandeEnCoursId() === demande.id"
+              (click)="demanderRejet(demande)"
+            >
+              {{ demandeEnCoursId() === demande.id ? '…' : 'Rejeter' }}
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>
+
+@if (demandeAConfirmerAcceptation(); as demande) {
+  <div class="voile-confirmation" (click)="annulerAcceptation()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>
+        Confirmer l'acceptation de « {{ demande.nom_commerce }} » ? Le partenaire deviendra actif
+        et visible.
+      </p>
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annulerAcceptation()">Annuler</button>
+        <button type="button" class="bouton-confirmer-accepter" (click)="confirmerAcceptation()">
+          Confirmer
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (demandeARejeter(); as demande) {
+  <div class="voile-confirmation" (click)="annulerRejet()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>Motif du rejet de « {{ demande.nom_commerce }} »</p>
+      <textarea
+        rows="3"
+        [value]="motifRejet()"
+        (input)="motifRejet.set($any($event.target).value)"
+        placeholder="Expliquez pourquoi la demande est rejetée"
+      ></textarea>
+      @if (motifRejetTouche() && !motifRejet().trim()) {
+        <p class="erreur-champ">Le motif est requis.</p>
+      }
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annulerRejet()">Annuler</button>
+        <button type="button" class="bouton-confirmer-rejeter" (click)="confirmerRejet()">
+          Rejeter la demande
+        </button>
+      </div>
+    </div>
+  </div>
+}

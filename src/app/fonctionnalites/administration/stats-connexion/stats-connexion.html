@@ -1,0 +1,104 @@
+<section class="page-stats-connexion">
+  <div class="entete">
+    <div>
+      <h1>Stats de connexion</h1>
+      @if (donnees(); as d) {
+        <p class="sous-titre">Généré le {{ formaterDateGeneration(d.genere_le) }}</p>
+      }
+    </div>
+    <button type="button" class="bouton-rafraichir" [disabled]="chargementEnCours()" (click)="charger()">
+      {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
+    </button>
+  </div>
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement des stats de connexion…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (donnees(); as d) {
+    <div class="grille-kpi">
+      <div class="carte-kpi carte-kpi-large">
+        <span class="icone">🟢</span>
+        <span class="valeur">{{ formaterNombre(d.en_ligne.total) }}</span>
+        <span class="libelle">En ligne maintenant</span>
+      </div>
+      <div class="carte-kpi carte-kpi-large">
+        <span class="icone">👥</span>
+        <span class="valeur">{{ formaterNombre(d.comptes.total) }}</span>
+        <span class="libelle">Comptes au total</span>
+      </div>
+    </div>
+
+    <section class="bloc">
+      <h2>Connexions &amp; ouvertures par période</h2>
+      <div class="grille-periodes">
+        @for (periode of cartesPeriodes(); track periode.libelle) {
+          <div class="carte-periode">
+            <h3>{{ periode.libelle }}</h3>
+            <div class="ligne-stat">
+              <span class="libelle">Connexions distinctes</span>
+              <span class="valeur">{{ formaterNombre(periode.connexionsDistinctes) }}</span>
+            </div>
+            <div class="ligne-stat">
+              <span class="libelle">Ouvertures</span>
+              <span class="valeur">{{ formaterNombre(periode.ouvertures.total) }}</span>
+            </div>
+            <div class="ligne-stat">
+              <span class="libelle">Personnes</span>
+              <span class="valeur">{{ formaterNombre(periode.ouvertures.personnes) }}</span>
+            </div>
+            <div class="ligne-stat">
+              <span class="libelle">Moyenne / personne</span>
+              <span class="valeur">{{ periode.ouvertures.moyenne_par_personne }}</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="carte-graphique">
+        <h3>Connexions distinctes par période</h3>
+        <app-graphique type="bar" [data]="donneesConnexionsPeriodes()" [options]="optionsBarres" />
+      </div>
+    </section>
+
+    <section class="bloc-export">
+      <h2>Export détaillé</h2>
+      <p class="explication">
+        Exporte le détail session par session (début, dernier ping, durée, active) pour la période
+        choisie.
+      </p>
+
+      @if (erreurExport()) {
+        <p class="erreur-generale">{{ erreurExport() }}</p>
+      }
+
+      <div class="controles-export">
+        <label for="jours">N derniers jours (optionnel, vide = tout)</label>
+        <input
+          id="jours"
+          type="number"
+          min="1"
+          step="1"
+          placeholder="Tout"
+          [value]="joursInput()"
+          (input)="changerJours($any($event.target).value)"
+        />
+        <button
+          type="button"
+          class="bouton-exporter"
+          [disabled]="!peutExporter() || exportEnCours()"
+          [title]="infobulleExport()"
+          (click)="exporter()"
+        >
+          {{ exportEnCours() ? 'Export en cours…' : '⭳ Exporter les sessions (CSV)' }}
+        </button>
+      </div>
+    </section>
+  }
+</section>

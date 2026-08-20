@@ -1,13 +1,26 @@
 <nav class="barre-laterale">
-  <ul>
-    @for (entree of entrees(); track entree.libelle) {
-      <li>
-        @if (entree.lien) {
-          <a [routerLink]="entree.lien" routerLinkActive="actif">{{ entree.libelle }}</a>
-        } @else {
-          <span class="placeholder">{{ entree.libelle }} <em>(à venir)</em></span>
-        }
-      </li>
-    }
-  </ul>
+  @if (estAdmin()) {
+    <ul>
+      @for (entree of entreesAdmin(); track entree.lien) {
+        <li>
+          <a [routerLink]="entree.lien" routerLinkActive="actif">
+            <span class="icone">{{ entree.icone }}</span>
+            {{ entree.libelle }}
+          </a>
+        </li>
+      }
+    </ul>
+  } @else {
+    <ul>
+      @for (entree of entreesPartenaire; track entree.libelle) {
+        <li>
+          @if (entree.lien) {
+            <a [routerLink]="entree.lien" routerLinkActive="actif">{{ entree.libelle }}</a>
+          } @else {
+            <span class="placeholder">{{ entree.libelle }} <em>(à venir)</em></span>
+          }
+        </li>
+      }
+    </ul>
+  }
 </nav>

@@ -1,0 +1,32 @@
+<div class="grille-kpi">
+  <div class="carte-kpi">
+    <span class="valeur">{{ vue().commandesTotales }}</span>
+    <span class="libelle">Commandes totales</span>
+  </div>
+  <div class="carte-kpi">
+    <span class="valeur">{{ formaterFcfa(vue().panierMoyen) }}</span>
+    <span class="libelle">Panier moyen (livrées)</span>
+  </div>
+  <div class="carte-kpi">
+    <span class="valeur">{{ vue().tauxAcceptation !== null ? vue().tauxAcceptation + ' %' : '—' }}</span>
+    <span class="libelle">Taux d'acceptation</span>
+  </div>
+  @for (mode of vue().parModeLivraison; track mode.libelle) {
+    <div class="carte-kpi">
+      <span class="valeur">{{ mode.valeur }}</span>
+      <span class="libelle">{{ mode.libelle }}</span>
+    </div>
+  }
+</div>
+
+<div class="grille-graphiques">
+  <div class="carte-graphique">
+    <h2>Répartition par statut</h2>
+    <app-graphique type="doughnut" [data]="donneesStatuts()" [options]="optionsStatuts" />
+  </div>
+
+  <div class="carte-graphique">
+    <h2>Chiffre d'affaires par mois (commandes livrées)</h2>
+    <app-graphique type="line" [data]="donneesCa()" [options]="optionsCa" />
+  </div>
+</div>

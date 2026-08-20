@@ -1,0 +1,98 @@
+<div class="voile-modale" (click)="annule.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>{{ article() ? "Modifier l'article" : 'Nouvel article' }}</h2>
+
+    <form class="formulaire-article" [formGroup]="formulaire" (ngSubmit)="soumettre()">
+      <label for="nom">Nom</label>
+      <input id="nom" type="text" formControlName="nom" />
+      @if (formulaire.controls.nom.invalid && formulaire.controls.nom.touched) {
+        <p class="erreur-champ">Le nom est requis.</p>
+      }
+
+      <label for="type">Type</label>
+      <select id="type" formControlName="type">
+        @for (option of optionsTypeArticle; track option.valeur) {
+          <option [value]="option.valeur">{{ option.libelle }}</option>
+        }
+      </select>
+
+      <label for="categorie">Catégorie</label>
+      <select id="categorie" formControlName="categorie">
+        <option [ngValue]="null" disabled>Choisir une catégorie</option>
+        @for (option of categories(); track option.id) {
+          <option [ngValue]="option.id">
+            {{ '—'.repeat(option.profondeur) }} {{ option.libelle }}
+          </option>
+        }
+      </select>
+      @if (formulaire.controls.categorie.invalid && formulaire.controls.categorie.touched) {
+        <p class="erreur-champ">La catégorie est requise.</p>
+      }
+
+      <label for="description">Description</label>
+      <textarea id="description" formControlName="description" rows="3"></textarea>
+
+      <div class="ligne-champs">
+        <div class="champ">
+          <label for="prix">Prix</label>
+          <input id="prix" type="number" min="0" step="1" formControlName="prix" />
+          @if (formulaire.controls.prix.invalid && formulaire.controls.prix.touched) {
+            <p class="erreur-champ">Le prix doit être positif.</p>
+          }
+        </div>
+
+        <div class="champ">
+          <label for="prix_promotion">Prix promo</label>
+          <input id="prix_promotion" type="number" min="0" step="1" formControlName="prix_promotion" />
+        </div>
+      </div>
+      @if (formulaire.errors?.['prixPromotionSuperieur'] && formulaire.controls.prix_promotion.touched) {
+        <p class="erreur-champ">Le prix promo ne peut pas dépasser le prix normal.</p>
+      }
+
+      <div class="ligne-champs">
+        <div class="champ">
+          <label for="unite">Unité</label>
+          <input id="unite" type="text" formControlName="unite" placeholder="ex. kg, portion" />
+        </div>
+
+        <div class="champ">
+          <label for="temps_preparation_min">Préparation (min)</label>
+          <input id="temps_preparation_min" type="number" min="0" formControlName="temps_preparation_min" />
+        </div>
+      </div>
+
+      <label for="section_menu">Section du menu</label>
+      <input id="section_menu" type="text" formControlName="section_menu" />
+
+      <label for="details">Détails</label>
+      <textarea id="details" formControlName="details" rows="3"></textarea>
+
+      <div class="ligne-cases">
+        <label class="case">
+          <input type="checkbox" formControlName="est_actif" />
+          Actif
+        </label>
+        <label class="case">
+          <input type="checkbox" formControlName="est_disponible" />
+          Disponible
+        </label>
+        <label class="case">
+          <input type="checkbox" formControlName="est_en_promotion" />
+          En promotion
+        </label>
+      </div>
+
+      @if (messageErreur()) {
+        <p class="erreur-generale">{{ messageErreur() }}</p>
+      }
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annule.emit()">Annuler</button>
+        <button type="submit" [disabled]="enregistrementEnCours()">
+          {{ enregistrementEnCours() ? 'Enregistrement en cours…' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

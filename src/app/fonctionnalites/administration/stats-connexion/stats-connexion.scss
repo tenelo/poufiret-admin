@@ -1,0 +1,272 @@
+.page-stats-connexion {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1a1a1a;
+  }
+
+  .sous-titre {
+    margin: 0.2rem 0 0;
+    font-size: 0.8rem;
+    color: #6b7280;
+  }
+}
+
+.bouton-rafraichir {
+  padding: 0.55rem 1.1rem;
+  background: #ffffff;
+  border: 1px solid #4f46e5;
+  border-radius: 8px;
+  color: #4f46e5;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: #eef2ff;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.etat-chargement {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 0;
+  color: #6b7280;
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #4f46e5;
+    border-radius: 50%;
+    animation: rotation 0.8s linear infinite;
+  }
+}
+
+@keyframes rotation {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.etat-erreur {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+
+  button {
+    padding: 0.5rem 1rem;
+    background: #ffffff;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    color: #b91c1c;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}
+
+.grille-kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.carte-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  .icone {
+    font-size: 1.3rem;
+  }
+
+  .libelle {
+    font-size: 0.8rem;
+    color: #6b7280;
+  }
+}
+
+.carte-kpi-large .valeur {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.bloc {
+  margin-bottom: 2rem;
+
+  h2 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    color: #1a1a1a;
+  }
+}
+
+.grille-periodes {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+
+  @media (min-width: 700px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.carte-periode {
+  padding: 1.1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  h3 {
+    margin: 0 0 0.6rem;
+    font-size: 0.9rem;
+    color: #1a1a1a;
+  }
+}
+
+.ligne-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.82rem;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .libelle {
+    color: #6b7280;
+  }
+
+  .valeur {
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+}
+
+.carte-graphique {
+  padding: 1.1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  h3 {
+    margin: 0 0 0.9rem;
+    font-size: 0.9rem;
+    color: #1a1a1a;
+  }
+}
+
+.bloc-export {
+  padding: 1.25rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+
+  h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.1rem;
+    color: #1a1a1a;
+  }
+}
+
+.explication {
+  margin: 0 0 1.1rem;
+  font-size: 0.85rem;
+  color: #374151;
+}
+
+.erreur-generale {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.controles-export {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  input {
+    width: 140px;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.9rem;
+
+    &:focus {
+      outline: none;
+      border-color: #1b5e20;
+    }
+  }
+}
+
+.bouton-exporter {
+  padding: 0.6rem 1.25rem;
+  background: #1b5e20;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: #164a1a;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

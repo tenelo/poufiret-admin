@@ -1,0 +1,152 @@
+<section class="page-mes-produits">
+  <div class="entete">
+    <div>
+      <h1>Mes produits</h1>
+      <p class="sous-titre">Gérez les articles de votre catalogue.</p>
+    </div>
+
+    <button
+      type="button"
+      class="bouton-principal"
+      [disabled]="quotaArticlesAtteint()"
+      (click)="ouvrirCreation()"
+    >
+      + Ajouter un produit
+    </button>
+  </div>
+
+  @if (quotaArticlesAtteint()) {
+    <p class="quota-atteint">
+      Limite de votre forfait atteinte ({{ totalArticles() }} / {{ profil()?.nb_articles_max }} articles).
+    </p>
+  }
+
+  @if (messageErreur()) {
+    <p class="erreur-generale">{{ messageErreur() }}</p>
+  }
+  @if (messageSucces()) {
+    <p class="message-succes">{{ messageSucces() }}</p>
+  }
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement de vos produits…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="chargerArticles(pageCourante())">Réessayer</button>
+    </div>
+  } @else if (articles().length === 0) {
+    <div class="etat-vide">
+      <p>Aucun produit pour le moment.</p>
+    </div>
+  } @else {
+    <div class="grille-produits">
+      @for (article of articles(); track article.id) {
+        <div class="carte-produit">
+          <div class="zone-image">
+            @if (article.image_principale) {
+              <img [src]="article.image_principale" [alt]="article.nom" />
+            } @else {
+              <div class="image-vide">Aucune image</div>
+            }
+          </div>
+
+          <div class="corps-carte">
+            <span class="nom-produit">{{ article.nom }}</span>
+
+            <div class="prix">
+              @if (article.est_en_promotion && article.prix_promotion) {
+                <span class="prix-barre">{{ article.prix }} FCFA</span>
+                <span class="prix-promo">{{ article.prix_promotion }} FCFA</span>
+              } @else {
+                <span>{{ article.prix }} FCFA</span>
+              }
+            </div>
+
+            <div class="badges">
+              <span class="badge" [class.badge-succes]="article.est_disponible" [class.badge-neutre]="!article.est_disponible">
+                {{ article.est_disponible ? 'Disponible' : 'Indisponible' }}
+              </span>
+              <span class="badge badge-info">{{ article.nb_vues }} vues</span>
+            </div>
+
+            <div class="actions-carte">
+              <button type="button" class="bouton-secondaire" (click)="ouvrirEdition(article)">
+                Modifier
+              </button>
+              <button type="button" class="bouton-secondaire" (click)="ouvrirImages(article)">
+                Gérer les images
+              </button>
+              <button type="button" class="bouton-danger" (click)="demanderSuppression(article)">
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="pagination">
+      <button type="button" [disabled]="!pagePrecedenteDisponible()" (click)="pagePrecedente()">
+        ← Précédent
+      </button>
+      <span>Page {{ pageCourante() }}</span>
+      <button type="button" [disabled]="!pageSuivanteDisponible()" (click)="pageSuivante()">
+        Suivant →
+      </button>
+    </div>
+  }
+
+  @if (chargementDetailEnCours()) {
+    <div class="voile-modale">
+      <div class="chargement-detail">
+        <span class="spinner"></span>
+        <p>Chargement de l'article…</p>
+      </div>
+    </div>
+  }
+
+  @if (formulaireOuvert()) {
+    <app-formulaire-article
+      [categories]="categoriesAplaties()"
+      [article]="articleEnEdition()"
+      [enregistrementEnCours]="enregistrementEnCours()"
+      [messageErreur]="messageErreurFormulaire()"
+      (soumis)="soumettreFormulaire($event)"
+      (annule)="fermerFormulaire()"
+    />
+  }
+
+  @if (articleAConfirmerSuppression(); as article) {
+    <div class="voile-confirmation" (click)="annulerSuppression()">
+      <div class="boite-confirmation" (click)="$event.stopPropagation()">
+        <p>Supprimer « {{ article.nom }} » ?</p>
+        <div class="actions-modale">
+          <button type="button" class="bouton-secondaire" (click)="annulerSuppression()">
+            Annuler
+          </button>
+          <button
+            type="button"
+            class="bouton-danger"
+            [disabled]="suppressionEnCours()"
+            (click)="confirmerSuppression()"
+          >
+            {{ suppressionEnCours() ? 'Suppression…' : 'Supprimer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (articleImagesOuvert(); as article) {
+    <app-gestion-images
+      [articleId]="article.id"
+      [nomArticle]="article.nom"
+      [quotaMax]="profil()?.nb_photos_par_article ?? 0"
+      (ferme)="fermerImages()"
+    />
+  }
+</section>

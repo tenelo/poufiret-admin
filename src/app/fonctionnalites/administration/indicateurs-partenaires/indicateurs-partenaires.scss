@@ -1,0 +1,281 @@
+.page-indicateurs {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1a1a1a;
+  }
+}
+
+.actions-entete {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.bouton-secondaire {
+  padding: 0.55rem 1.1rem;
+  background: #ffffff;
+  border: 1px solid #4f46e5;
+  border-radius: 8px;
+  color: #4f46e5;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: #eef2ff;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.bouton-principal {
+  padding: 0.55rem 1.1rem;
+  background: #1b5e20;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: #164a1a;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.erreur-generale {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.etat-chargement {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 0;
+  color: #6b7280;
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #4f46e5;
+    border-radius: 50%;
+    animation: rotation 0.8s linear infinite;
+  }
+}
+
+@keyframes rotation {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.etat-erreur {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+
+  button {
+    padding: 0.5rem 1rem;
+    background: #ffffff;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    color: #b91c1c;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}
+
+.grille-kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.carte-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  .icone {
+    font-size: 1.3rem;
+  }
+
+  .valeur {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .libelle {
+    font-size: 0.8rem;
+    color: #6b7280;
+  }
+}
+
+.bloc {
+  margin-bottom: 2rem;
+
+  h2 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    color: #1a1a1a;
+  }
+}
+
+// Expirations d'abonnement : code couleur d'urgence, du plus critique (rouge)
+// au plus neutre (gris), pour que le survol soit immédiat.
+.grille-expirations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.carte-expiration {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.1rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+
+  .valeur {
+    font-size: 1.8rem;
+    font-weight: 800;
+  }
+
+  .libelle {
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+}
+
+.urgence-critique {
+  background: #fef2f2;
+  border-color: #fecaca;
+
+  .valeur {
+    color: #b91c1c;
+  }
+
+  .libelle {
+    color: #b91c1c;
+  }
+}
+
+.urgence-haute {
+  background: #fff1e6;
+  border-color: #fed7aa;
+
+  .valeur {
+    color: #c2410c;
+  }
+
+  .libelle {
+    color: #c2410c;
+  }
+}
+
+.urgence-moyenne {
+  background: #fff7ed;
+  border-color: #fed7aa;
+
+  .valeur {
+    color: #e65100;
+  }
+
+  .libelle {
+    color: #b45309;
+  }
+}
+
+.urgence-basse {
+  background: #fefce8;
+  border-color: #fef08a;
+
+  .valeur {
+    color: #a16207;
+  }
+
+  .libelle {
+    color: #a16207;
+  }
+}
+
+.urgence-neutre {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+
+  .valeur {
+    color: #374151;
+  }
+
+  .libelle {
+    color: #6b7280;
+  }
+}
+
+.grille-graphiques {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+
+  @media (min-width: 800px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.carte-graphique {
+  padding: 1.1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  h3 {
+    margin: 0 0 0.9rem;
+    font-size: 0.9rem;
+    color: #1a1a1a;
+  }
+}

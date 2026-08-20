@@ -1,0 +1,137 @@
+.grille-kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.carte-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  .icone {
+    font-size: 1.3rem;
+  }
+
+  .valeur {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .libelle {
+    font-size: 0.8rem;
+    color: #6b7280;
+  }
+}
+
+.barre-progression {
+  margin-top: 0.4rem;
+  height: 6px;
+  background: #f3f4f6;
+  border-radius: 999px;
+  overflow: hidden;
+
+  .remplissage {
+    height: 100%;
+    background: #1b5e20;
+    border-radius: 999px;
+  }
+}
+
+.carte-abonnement {
+  padding: 1.25rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  h2 {
+    margin: 0 0 0.9rem;
+    font-size: 1rem;
+    color: #1a1a1a;
+  }
+}
+
+.ligne-abonnement {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.9rem;
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+
+  .etiquette {
+    color: #6b7280;
+  }
+
+  .valeur {
+    color: #1a1a1a;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .valeur.alerte {
+    color: #b45309;
+  }
+
+  .valeur.expiree {
+    color: #b91c1c;
+  }
+}
+
+.pastille-alerte {
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: #fffbeb;
+  color: #b45309;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.pastille-expiree {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.badges-abonnement {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.badge {
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.badge-succes {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.badge-neutre {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.badge-info {
+  background: #eef2ff;
+  color: #4f46e5;
+}

@@ -4,6 +4,10 @@
  */
 
 export interface ProfilPartenaire {
+  // Id du ProfilPartenaire (pas celui du User) — c'est cet id qu'attendent les endpoints
+  // qui référencent "le partenaire" ailleurs dans l'API (ex. ?partenaire=<id> sur les articles).
+  id: number;
+
   // Champs modifiables par le partenaire.
   nom_commerce: string;
   description: string;
