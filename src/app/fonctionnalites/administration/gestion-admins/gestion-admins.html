@@ -1,0 +1,130 @@
+<section class="page-gestion-admins">
+  <div class="entete-page">
+    <h1>Gestion des admins</h1>
+    <button type="button" class="bouton-principal" (click)="ouvrirCreation()">+ Créer un admin</button>
+  </div>
+
+  @if (messageErreur()) {
+    <p class="erreur-generale">{{ messageErreur() }}</p>
+  }
+  @if (messageSucces()) {
+    <p class="message-succes">{{ messageSucces() }}</p>
+  }
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement des admins…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="chargerAdmins()">Réessayer</button>
+    </div>
+  } @else if (admins().length === 0) {
+    <div class="etat-vide">
+      <p>Aucun admin pour le moment.</p>
+    </div>
+  } @else {
+    <div class="liste-admins">
+      @for (admin of admins(); track admin.id) {
+        <div class="carte-admin">
+          <div class="entete-admin">
+            <div class="identite-admin">
+              <span class="nom-complet">{{ admin.nom_complet || admin.username }}</span>
+              <span class="username">&#64;{{ admin.username }} · {{ admin.telephone }}</span>
+            </div>
+            <span class="chip" [class.chip-actif]="admin.is_active" [class.chip-inactif]="!admin.is_active">
+              {{ admin.is_active ? 'Actif' : 'Inactif' }}
+            </span>
+          </div>
+
+          <span class="nb-capacites">
+            {{ compterCapacitesActives(admin.capacites) }} capacité(s) active(s)
+          </span>
+
+          <div class="actions-admin">
+            <button type="button" class="bouton-secondaire" (click)="ouvrirEditionCapacites(admin)">
+              Éditer les capacités
+            </button>
+            <button type="button" class="bouton-danger" (click)="demanderRevocation(admin)">
+              Révoquer
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>
+
+@if (panneauCreationOuvert()) {
+  <app-creer-admin
+    [enregistrementEnCours]="envoiCreationEnCours()"
+    [messageErreur]="erreurCreation()"
+    (soumis)="soumettreCreation($event)"
+    (annule)="fermerCreation()"
+  />
+}
+
+@if (adminEnEditionCapacites(); as admin) {
+  <app-editer-capacites
+    [admin]="admin"
+    [enregistrementEnCours]="envoiCapacitesEnCours()"
+    [messageErreur]="erreurCapacites()"
+    (enregistre)="enregistrerCapacites($event)"
+    (ferme)="fermerEditionCapacites()"
+  />
+}
+
+@if (reponseCreationSucces(); as reponse) {
+  <div class="voile-modale" (click)="fermerPanneauSucces()">
+    <div class="modale panneau-succes" (click)="$event.stopPropagation()">
+      <h2>Admin créé avec succès</h2>
+      <p class="recap">
+        <strong>&#64;{{ reponse.username }}</strong> — {{ reponse.telephone }}
+      </p>
+
+      <div class="bloc-pin">
+        <span class="etiquette-pin">Code PIN généré</span>
+        <span class="valeur-pin">{{ reponse.pin_clair }}</span>
+        <p class="avertissement-pin">
+          ⚠️ Notez ce code maintenant et transmettez-le une seule fois à l'admin concerné : il ne sera
+          plus jamais affiché.
+        </p>
+        <button type="button" class="bouton-secondaire" (click)="copierPin()">
+          {{ pinCopie() ? 'Copié ✓' : 'Copier le PIN' }}
+        </button>
+      </div>
+
+      <button type="button" class="bouton-principal" (click)="fermerPanneauSucces()">Fermer</button>
+    </div>
+  </div>
+}
+
+@if (adminARevoquer(); as admin) {
+  <div class="voile-confirmation" (click)="annulerRevocation()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p class="titre-dialog">Révoquer {{ admin.nom_complet || admin.username }} ?</p>
+      <p class="consequence-dialog">
+        Le compte redevient un utilisateur normal (non-admin) — il n'est pas supprimé et conserve ses
+        données.
+      </p>
+
+      <label for="motif-revocation">Motif (optionnel)</label>
+      <textarea
+        id="motif-revocation"
+        rows="2"
+        placeholder="Raison de la révocation…"
+        [value]="motifRevocation()"
+        (input)="changerMotifRevocation($any($event.target).value)"
+      ></textarea>
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annulerRevocation()">Annuler</button>
+        <button type="button" class="bouton-danger" [disabled]="revocationEnCours()" (click)="confirmerRevocation()">
+          {{ revocationEnCours() ? '…' : 'Révoquer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

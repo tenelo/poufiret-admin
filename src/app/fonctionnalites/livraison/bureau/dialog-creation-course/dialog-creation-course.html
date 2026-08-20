@@ -1,0 +1,104 @@
+<div class="voile-modale" (click)="annule.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>Nouvelle course</h2>
+
+    @if (messageErreur()) {
+      <p class="erreur-generale">{{ messageErreur() }}</p>
+    }
+
+    <form class="formulaire-course" [formGroup]="formulaire" (ngSubmit)="soumettre()">
+      <h3 class="titre-section">Point A — Retrait</h3>
+      <label for="a_quartier">Quartier</label>
+      <input id="a_quartier" type="text" formControlName="a_quartier" />
+      @if (formulaire.controls.a_quartier.invalid && formulaire.controls.a_quartier.touched) {
+        <p class="erreur-champ">Le quartier de retrait est requis.</p>
+      }
+
+      <div class="ligne-champs">
+        <div class="champ">
+          <label for="a_nom_contact">Nom du contact</label>
+          <input id="a_nom_contact" type="text" formControlName="a_nom_contact" />
+          @if (formulaire.controls.a_nom_contact.invalid && formulaire.controls.a_nom_contact.touched) {
+            <p class="erreur-champ">Requis.</p>
+          }
+        </div>
+        <div class="champ">
+          <label for="a_telephone_contact">Téléphone</label>
+          <input id="a_telephone_contact" type="tel" formControlName="a_telephone_contact" />
+          @if (
+            formulaire.controls.a_telephone_contact.invalid && formulaire.controls.a_telephone_contact.touched
+          ) {
+            <p class="erreur-champ">Requis.</p>
+          }
+        </div>
+      </div>
+
+      <div class="ligne-champs">
+        <div class="champ">
+          <label for="a_latitude">Latitude <span class="optionnel">(optionnel)</span></label>
+          <input id="a_latitude" type="text" formControlName="a_latitude" />
+        </div>
+        <div class="champ">
+          <label for="a_longitude">Longitude <span class="optionnel">(optionnel)</span></label>
+          <input id="a_longitude" type="text" formControlName="a_longitude" />
+        </div>
+      </div>
+
+      <h3 class="titre-section">Point B — Livraison</h3>
+      <label for="b_quartier">Quartier</label>
+      <input id="b_quartier" type="text" formControlName="b_quartier" />
+      @if (formulaire.controls.b_quartier.invalid && formulaire.controls.b_quartier.touched) {
+        <p class="erreur-champ">Le quartier de livraison est requis.</p>
+      }
+
+      <div class="ligne-champs">
+        <div class="champ">
+          <label for="b_nom_contact">Nom du contact</label>
+          <input id="b_nom_contact" type="text" formControlName="b_nom_contact" />
+          @if (formulaire.controls.b_nom_contact.invalid && formulaire.controls.b_nom_contact.touched) {
+            <p class="erreur-champ">Requis.</p>
+          }
+        </div>
+        <div class="champ">
+          <label for="b_telephone_contact">Téléphone</label>
+          <input id="b_telephone_contact" type="tel" formControlName="b_telephone_contact" />
+          @if (
+            formulaire.controls.b_telephone_contact.invalid && formulaire.controls.b_telephone_contact.touched
+          ) {
+            <p class="erreur-champ">Requis.</p>
+          }
+        </div>
+      </div>
+
+      <div class="ligne-champs">
+        <div class="champ">
+          <label for="b_latitude">Latitude <span class="optionnel">(optionnel)</span></label>
+          <input id="b_latitude" type="text" formControlName="b_latitude" />
+        </div>
+        <div class="champ">
+          <label for="b_longitude">Longitude <span class="optionnel">(optionnel)</span></label>
+          <input id="b_longitude" type="text" formControlName="b_longitude" />
+        </div>
+      </div>
+
+      <h3 class="titre-section">Colis <span class="optionnel">(optionnel)</span></h3>
+      <div class="ligne-champs">
+        <div class="champ">
+          <label for="description_colis">Description</label>
+          <input id="description_colis" type="text" formControlName="description_colis" />
+        </div>
+        <div class="champ">
+          <label for="prix">Prix (FCFA)</label>
+          <input id="prix" type="text" formControlName="prix" />
+        </div>
+      </div>
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annule.emit()">Annuler</button>
+        <button type="submit" [disabled]="enregistrementEnCours()">
+          {{ enregistrementEnCours() ? 'Création en cours…' : 'Créer la course' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

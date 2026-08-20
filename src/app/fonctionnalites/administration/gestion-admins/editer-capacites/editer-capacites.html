@@ -1,0 +1,29 @@
+<div class="voile-modale" (click)="ferme.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>Capacités de {{ admin().nom_complet || admin().username }}</h2>
+    <p class="sous-titre">{{ admin().telephone }} · &#64;{{ admin().username }}</p>
+
+    @if (messageErreur()) {
+      <p class="erreur-generale">{{ messageErreur() }}</p>
+    }
+
+    <app-selecteur-capacites
+      [valeurs]="valeursCourantes()"
+      [estSuperAdmin]="estSuperAdmin()"
+      (bascule)="basculerCapacite($event)"
+      (basculerGroupe)="basculerGroupeCapacites($event)"
+    />
+
+    <div class="actions-modale">
+      <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Annuler</button>
+      <button
+        type="button"
+        class="bouton-principal"
+        [disabled]="!aDesModifications() || enregistrementEnCours()"
+        (click)="enregistrer()"
+      >
+        {{ enregistrementEnCours() ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
+    </div>
+  </div>
+</div>

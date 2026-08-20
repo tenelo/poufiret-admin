@@ -1,0 +1,153 @@
+<section class="page-dispatching">
+  <div class="entete-page">
+    <h1>Dispatching</h1>
+    <div class="actions-entete">
+      <button type="button" class="bouton-secondaire" (click)="rafraichirTout()">↻ Rafraîchir</button>
+      <button type="button" class="bouton-principal" (click)="ouvrirCreation()">+ Nouvelle course</button>
+    </div>
+  </div>
+
+  @if (messageSucces()) {
+    <p class="message-succes">{{ messageSucces() }}</p>
+  }
+
+  <div class="colonnes">
+    <!-- Colonne gauche : courses -->
+    <section class="colonne colonne-courses">
+      <div class="entete-colonne">
+        <h2>Courses</h2>
+        <select class="champ-filtre" [value]="filtreStatutCourse()" (change)="changerFiltreStatutCourse($any($event.target).value)">
+          @for (option of optionsStatutCourse; track option.valeur) {
+            <option [value]="option.valeur">{{ option.libelle }}</option>
+          }
+        </select>
+      </div>
+
+      @if (coursesChargement()) {
+        <div class="etat-chargement">
+          <span class="spinner"></span>
+          <p>Chargement des courses…</p>
+        </div>
+      } @else if (coursesErreur()) {
+        <div class="etat-erreur">
+          <p>{{ coursesErreur() }}</p>
+          <button type="button" (click)="chargerCourses()">Réessayer</button>
+        </div>
+      } @else if (courses().length === 0) {
+        <div class="etat-vide">
+          <p>Aucune course pour ce filtre.</p>
+        </div>
+      } @else {
+        <div class="liste-courses">
+          @for (course of courses(); track course.id) {
+            <div class="carte-course" [class.carte-a-assigner]="estCourseAAssigner(course)">
+              <div class="entete-course">
+                <span class="numero-course">{{ course.numero }}</span>
+                <span class="chip" [class]="classeChipStatutCourse(course.statut)">
+                  {{ libellesStatutCourse[course.statut] }}
+                </span>
+              </div>
+
+              <div class="trajet-course">
+                <div class="point">
+                  <span class="repere">A</span>
+                  <span class="quartier">{{ course.point_a.quartier }}</span>
+                  <span class="contact">{{ course.point_a.nom_contact }}</span>
+                </div>
+                <span class="fleche">→</span>
+                <div class="point">
+                  <span class="repere">B</span>
+                  <span class="quartier">{{ course.point_b.quartier }}</span>
+                  <span class="contact">{{ course.point_b.nom_contact }}</span>
+                </div>
+              </div>
+
+              <div class="pied-course">
+                <span class="prix-course">{{ formaterFcfa(course.prix) }}</span>
+                <span class="livreur-course">
+                  {{ course.livreur ? 'Livreur assigné' : 'Non assigné' }}
+                </span>
+                <span class="heure-course">{{ formaterDateRelativeLivraison(course.cree_le) }}</span>
+              </div>
+
+              @if (estCourseAssignable(course)) {
+                <button type="button" class="bouton-assigner" (click)="ouvrirAssignation(course)">
+                  {{ course.livreur ? 'Réassigner' : 'Assigner' }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- Colonne droite : livreurs -->
+    <section class="colonne colonne-livreurs">
+      <div class="entete-colonne">
+        <h2>Livreurs</h2>
+        <select
+          class="champ-filtre"
+          [value]="filtreStatutLivreur()"
+          (change)="changerFiltreStatutLivreur($any($event.target).value)"
+        >
+          @for (option of optionsStatutLivreur; track option.valeur) {
+            <option [value]="option.valeur">{{ option.libelle }}</option>
+          }
+        </select>
+      </div>
+
+      @if (livreursChargement()) {
+        <div class="etat-chargement">
+          <span class="spinner"></span>
+          <p>Chargement des livreurs…</p>
+        </div>
+      } @else if (livreursErreur()) {
+        <div class="etat-erreur">
+          <p>{{ livreursErreur() }}</p>
+          <button type="button" (click)="chargerLivreurs()">Réessayer</button>
+        </div>
+      } @else if (livreursAffiches().length === 0) {
+        <div class="etat-vide">
+          <p>Aucun livreur pour ce filtre.</p>
+        </div>
+      } @else {
+        <div class="liste-livreurs">
+          @for (livreur of livreursAffiches(); track livreur.id) {
+            <div class="carte-livreur" [class.carte-en-ligne]="livreur.statut === 'en_ligne'">
+              <div class="entete-livreur">
+                <span class="nom-livreur">{{ iconeVehicule(livreur.type_vehicule) }} {{ livreur.nom }}</span>
+                <span class="chip" [class.chip-en-ligne]="livreur.statut === 'en_ligne'">
+                  {{ livreur.statut === 'en_ligne' ? 'En ligne' : 'Hors ligne' }}
+                </span>
+              </div>
+              <a class="telephone-livreur" [href]="telHref(livreur.telephone)">{{ livreur.telephone }}</a>
+              <span class="position-livreur">
+                Position : {{ formaterDateRelativeLivraison(livreur.position_maj_le) }}
+              </span>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  </div>
+</section>
+
+@if (courseAAssigner(); as course) {
+  <app-dialog-assignation
+    [course]="course"
+    [livreurs]="livreurs()"
+    [enCours]="assignationEnCours()"
+    [messageErreur]="erreurAssignation()"
+    (assigne)="assigner($event)"
+    (ferme)="fermerAssignation()"
+  />
+}
+
+@if (dialogCreationOuvert()) {
+  <app-dialog-creation-course
+    [enregistrementEnCours]="creationEnCours()"
+    [messageErreur]="erreurCreation()"
+    (soumis)="soumettreCreation($event)"
+    (annule)="fermerCreation()"
+  />
+}

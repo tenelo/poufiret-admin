@@ -1,0 +1,152 @@
+.voile-modale {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background: rgba(17, 24, 39, 0.5);
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.modale {
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+
+  h2 {
+    margin: 0 0 0.2rem;
+    font-size: 1.15rem;
+    color: #1a1a1a;
+  }
+}
+
+.sous-titre {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.erreur-generale {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.etat-vide {
+  color: #9ca3af;
+  font-size: 0.85rem;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+.liste-livreurs-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.carte-livreur-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.75rem 0.9rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+
+  &:hover:not(:disabled) {
+    border-color: #0369a1;
+    background: #f0f9ff;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.carte-hors-ligne {
+  background: #fafafa;
+}
+
+.entete-livreur-dialog {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.nom-livreur {
+  font-weight: 700;
+  color: #1a1a1a;
+  font-size: 0.92rem;
+}
+
+.chip {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: #f3f4f6;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.chip-en-ligne {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.telephone-livreur,
+.position-livreur {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.avertissement-hors-ligne {
+  margin-top: 0.2rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #b45309;
+}
+
+.indice-en-cours {
+  margin-top: 0.2rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #0369a1;
+}
+
+.actions-modale {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.1rem;
+}
+
+.bouton-secondaire {
+  padding: 0.55rem 1.1rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: #f4f5f7;
+  }
+}

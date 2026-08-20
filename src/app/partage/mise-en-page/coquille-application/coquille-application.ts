@@ -22,6 +22,10 @@ export class CoquilleApplication implements OnInit {
   private readonly permissionsService = inject(PermissionsService);
 
   ngOnInit(): void {
+    // Resynchronise l'espace/le rôle au chargement — best-effort, ne bloque
+    // jamais l'affichage si l'appel échoue.
+    this.authService.rafraichirUtilisateur().subscribe({ error: () => {} });
+
     if (this.authService.role() === 'admin') {
       this.permissionsService.chargerPermissions().subscribe();
     }

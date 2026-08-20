@@ -10,7 +10,12 @@ import {
   ReponseRafraichissement,
   RequeteConnexion,
 } from '../../modeles/auth.model';
-import { RoleUtilisateur, Utilisateur } from '../../modeles/utilisateur.model';
+import {
+  RoleUtilisateur,
+  Utilisateur,
+  UtilisateurBrut,
+  versUtilisateurModele,
+} from '../../modeles/utilisateur.model';
 
 // Clés utilisées pour la persistance dans localStorage.
 const CLE_JETON_ACCES = 'poufiret_admin_access';
@@ -61,9 +66,26 @@ export class AuthService {
     return this.http
       .post<ReponseConnexion>(`${this.configuration.apiUrl}/auth/connexion/`, requete)
       .pipe(
+        map((reponse) => ({ ...reponse, utilisateur: versUtilisateurModele(reponse.utilisateur) })),
         tap((reponse) => this.enregistrerSession(reponse)),
         map((reponse) => reponse.utilisateur),
       );
+  }
+
+  /**
+   * Rafraîchit l'utilisateur en cache via GET /auth/moi/ (ex. au chargement d'une
+   * coquille applicative, pour resynchroniser l'espace/le bureau après un
+   * changement côté backend). Best-effort : ne touche pas aux jetons, l'appelant
+   * peut ignorer une erreur sans casser la session existante.
+   */
+  rafraichirUtilisateur(): Observable<Utilisateur> {
+    return this.http.get<UtilisateurBrut>(`${this.configuration.apiUrl}/auth/moi/`).pipe(
+      map((brut) => versUtilisateurModele(brut)),
+      tap((utilisateur) => {
+        localStorage.setItem(CLE_UTILISATEUR, JSON.stringify(utilisateur));
+        this.utilisateurCourant.set(utilisateur);
+      }),
+    );
   }
 
   /** Efface la session locale et redirige vers la page de connexion. */
@@ -95,7 +117,7 @@ export class AuthService {
       );
   }
 
-  private enregistrerSession(reponse: ReponseConnexion): void {
+  private enregistrerSession(reponse: { access: string; refresh: string; utilisateur: Utilisateur }): void {
     localStorage.setItem(CLE_JETON_ACCES, reponse.access);
     localStorage.setItem(CLE_JETON_RAFRAICHISSEMENT, reponse.refresh);
     localStorage.setItem(CLE_UTILISATEUR, JSON.stringify(reponse.utilisateur));

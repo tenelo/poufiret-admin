@@ -1,8 +1,15 @@
+import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
 
 import { authGuard } from './noyau/auth/auth.guard';
 import { roleGuard } from './noyau/auth/role.guard';
 import { capaciteGuard } from './noyau/permissions/capacite.guard';
+import { superAdminGuard } from './noyau/permissions/super-admin.guard';
+import { gestionAdminsGuard } from './noyau/permissions/gestion-admins.guard';
+import { redirectionRacineGuard } from './noyau/auth/redirection-racine.guard';
+import { AuthService } from './noyau/auth/auth.service';
+import { livraisonGuard } from './fonctionnalites/livraison/livraison.guard';
+import { niveauDepuisEspace, racineNiveau } from './fonctionnalites/livraison/niveau-livraison';
 
 export const routes: Routes = [
   {
@@ -11,11 +18,14 @@ export const routes: Routes = [
       import('./fonctionnalites/authentification/connexion/connexion').then((m) => m.Connexion),
   },
   {
-    // Coquille applicative : toutes les routes protégées (nécessitant une connexion) vivent ici.
-    // Pour restreindre une route future à un rôle précis, ajouter roleGuard(['admin']) (ou ['partenaire'])
-    // dans son propre `canActivate`, en plus de l'authGuard déjà posé sur ce parent.
+    // Coquille applicative (espaces admin/partenaire) : toutes les routes protégées
+    // (nécessitant une connexion) vivent ici. Pour restreindre une route future à un
+    // rôle précis, ajouter roleGuard(['admin']) (ou ['partenaire']) dans son propre
+    // `canActivate`, en plus de l'authGuard déjà posé sur ce parent.
+    // redirectionRacineGuard écarte les espaces TeneLivr/mobile-only vers leur propre
+    // espace avant d'entrer ici (voir noyau/auth/route-par-espace.ts).
     path: '',
-    canActivate: [authGuard],
+    canActivate: [authGuard, redirectionRacineGuard],
     loadComponent: () =>
       import('./partage/mise-en-page/coquille-application/coquille-application').then(
         (m) => m.CoquilleApplication,
@@ -139,7 +149,146 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./fonctionnalites/administration/faveur-plan/faveur-plan').then((m) => m.FaveurPlan),
       },
+      {
+        path: 'administration/creer-partenaire',
+        canActivate: [roleGuard(['admin']), capaciteGuard],
+        data: { capacite: 'creer_partenaire' },
+        loadComponent: () =>
+          import('./fonctionnalites/administration/creation-partenaire/creation-partenaire').then(
+            (m) => m.CreationPartenaire,
+          ),
+      },
+      {
+        // Réservé super-admin : is_superuser, pas une capacité fine.
+        path: 'administration/moderation',
+        canActivate: [roleGuard(['admin']), superAdminGuard],
+        loadComponent: () =>
+          import('./fonctionnalites/administration/moderation/moderation').then((m) => m.Moderation),
+      },
+      {
+        path: 'administration/paiements',
+        canActivate: [roleGuard(['admin']), capaciteGuard],
+        data: {
+          capacite: 'voir_stats',
+          titre: 'Paiements',
+          message: 'Module de paiement — bientôt disponible.',
+        },
+        loadComponent: () =>
+          import('./fonctionnalites/administration/ecran-a-venir/ecran-a-venir').then((m) => m.EcranAVenir),
+      },
+      {
+        // Accès combiné : super-admin OU capacité gerer_admins (voir gestionAdminsGuard).
+        path: 'administration/gestion-admins',
+        canActivate: [roleGuard(['admin']), gestionAdminsGuard],
+        loadComponent: () =>
+          import('./fonctionnalites/administration/gestion-admins/gestion-admins').then(
+            (m) => m.GestionAdmins,
+          ),
+      },
       { path: '', pathMatch: 'full', redirectTo: 'tableau-de-bord' },
+    ],
+  },
+  {
+    path: 'espace-mobile',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./fonctionnalites/espace-mobile/espace-mobile').then((m) => m.EspaceMobile),
+  },
+  {
+    // Espace TeneLivr, isolé du reste de l'app (voir fonctionnalites/livraison/).
+    // livraisonGuard n'autorise que les espaces coordination/supervision/gestion_livraison.
+    path: 'livraison',
+    canActivate: [authGuard, livraisonGuard],
+    loadComponent: () =>
+      import('./fonctionnalites/livraison/mise-en-page/layout-livraison/layout-livraison').then(
+        (m) => m.LayoutLivraison,
+      ),
+    children: [
+      {
+        path: 'coordonnateur',
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            data: { titre: "Vue d'ensemble" },
+            loadComponent: () =>
+              import('./fonctionnalites/livraison/ecran-a-venir-livraison/ecran-a-venir-livraison').then(
+                (m) => m.EcranAVenirLivraison,
+              ),
+          },
+          {
+            path: 'villes',
+            data: { titre: 'Toutes les villes' },
+            loadComponent: () =>
+              import('./fonctionnalites/livraison/ecran-a-venir-livraison/ecran-a-venir-livraison').then(
+                (m) => m.EcranAVenirLivraison,
+              ),
+          },
+          {
+            path: 'comptes',
+            data: { titre: 'Comptes livraison' },
+            loadComponent: () =>
+              import('./fonctionnalites/livraison/ecran-a-venir-livraison/ecran-a-venir-livraison').then(
+                (m) => m.EcranAVenirLivraison,
+              ),
+          },
+        ],
+      },
+      {
+        path: 'superviseur',
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            data: { titre: 'Ma ville' },
+            loadComponent: () =>
+              import('./fonctionnalites/livraison/ecran-a-venir-livraison/ecran-a-venir-livraison').then(
+                (m) => m.EcranAVenirLivraison,
+              ),
+          },
+          {
+            path: 'comptes',
+            data: { titre: 'Comptes de ma ville' },
+            loadComponent: () =>
+              import('./fonctionnalites/livraison/ecran-a-venir-livraison/ecran-a-venir-livraison').then(
+                (m) => m.EcranAVenirLivraison,
+              ),
+          },
+        ],
+      },
+      {
+        path: 'gestionnaire',
+        children: [
+          {
+            // Poste de dispatching : courses + livreurs de la ville, assignation manuelle.
+            path: '',
+            pathMatch: 'full',
+            loadComponent: () =>
+              import(
+                './fonctionnalites/livraison/bureau/dispatching-gestionnaire/dispatching-gestionnaire'
+              ).then((m) => m.DispatchingGestionnaire),
+          },
+          {
+            path: 'livreurs',
+            data: { titre: 'Livreurs' },
+            loadComponent: () =>
+              import('./fonctionnalites/livraison/ecran-a-venir-livraison/ecran-a-venir-livraison').then(
+                (m) => m.EcranAVenirLivraison,
+              ),
+          },
+        ],
+      },
+      {
+        // Redirige /livraison vers la racine du niveau de l'utilisateur connecté
+        // (livraisonGuard garantit qu'un niveau existe à ce stade).
+        path: '',
+        pathMatch: 'full',
+        redirectTo: () => {
+          const authService = inject(AuthService);
+          const niveau = niveauDepuisEspace(authService.utilisateur()?.espace);
+          return niveau ? racineNiveau(niveau) : '/connexion';
+        },
+      },
     ],
   },
   { path: '**', redirectTo: 'connexion' },

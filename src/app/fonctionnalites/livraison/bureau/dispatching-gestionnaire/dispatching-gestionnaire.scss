@@ -1,0 +1,358 @@
+.page-dispatching {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 0 3rem;
+}
+
+.entete-page {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1a1a1a;
+  }
+}
+
+.actions-entete {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.bouton-principal {
+  padding: 0.6rem 1.2rem;
+  background: #0369a1;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: #075985;
+  }
+}
+
+.bouton-secondaire {
+  padding: 0.6rem 1.1rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: #f4f5f7;
+  }
+}
+
+.message-succes {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #15803d;
+  font-size: 0.85rem;
+}
+
+.colonnes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .colonnes {
+    grid-template-columns: 1fr;
+  }
+}
+
+.colonne {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.entete-colonne {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #1a1a1a;
+  }
+}
+
+.champ-filtre {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  background: #ffffff;
+
+  &:focus {
+    outline: none;
+    border-color: #0369a1;
+  }
+}
+
+.etat-chargement,
+.etat-vide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 0;
+  color: #6b7280;
+  text-align: center;
+
+  .spinner {
+    width: 26px;
+    height: 26px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #0369a1;
+    border-radius: 50%;
+    animation: rotation 0.8s linear infinite;
+  }
+}
+
+@keyframes rotation {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.etat-erreur {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+
+  button {
+    padding: 0.5rem 1rem;
+    background: #ffffff;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    color: #b91c1c;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}
+
+// ---- Courses ----
+
+.liste-courses,
+.liste-livreurs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.carte-course {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.carte-a-assigner {
+  border-color: #fbbf24;
+  background: #fffbeb;
+}
+
+.entete-course {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.numero-course {
+  font-weight: 700;
+  color: #1a1a1a;
+  font-size: 0.88rem;
+}
+
+.chip {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: #f3f4f6;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.chip-attention {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.chip-erreur {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.chip-succes {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.chip-info {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.chip-neutre {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.trajet-course {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  .point {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .repere {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #0369a1;
+  }
+
+  .quartier {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .contact {
+    font-size: 0.76rem;
+    color: #6b7280;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .fleche {
+    color: #9ca3af;
+    flex-shrink: 0;
+  }
+}
+
+.pied-course {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: #6b7280;
+  flex-wrap: wrap;
+
+  .prix-course {
+    font-weight: 700;
+    color: #e65100;
+  }
+}
+
+.bouton-assigner {
+  align-self: flex-start;
+  padding: 0.4rem 0.9rem;
+  background: #0369a1;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: #075985;
+  }
+}
+
+// ---- Livreurs ----
+
+.carte-livreur {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.85rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.carte-en-ligne {
+  border-color: #bbf7d0;
+  background: #f7fef9;
+}
+
+.entete-livreur {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.nom-livreur {
+  font-weight: 700;
+  color: #1a1a1a;
+  font-size: 0.9rem;
+}
+
+.chip-en-ligne {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.telephone-livreur {
+  font-size: 0.8rem;
+  color: #0369a1;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.position-livreur {
+  font-size: 0.76rem;
+  color: #9ca3af;
+}

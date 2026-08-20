@@ -3,8 +3,10 @@
  * capacités fines de l'admin connecté (grille `PermissionsAdmin` côté backend).
  */
 
-// Les 31 capacités possibles de la grille admin, pour l'autocomplétion lors
+// Les 33 capacités possibles de la grille admin, pour l'autocomplétion lors
 // de la déclaration des entrées de menu / des routes protégées.
+// `gerer_admins` est privilégiée : seul un super-admin peut la poser à true
+// (le backend ignore silencieusement toute tentative venant d'un non-superuser).
 export type NomCapacite =
   | 'suspendre_client'
   | 'suspendre_partenaire'
@@ -37,7 +39,8 @@ export type NomCapacite =
   | 'voir_stats'
   | 'voir_indicateurs'
   | 'lire_journal'
-  | 'exporter_csv';
+  | 'exporter_csv'
+  | 'gerer_admins';
 
 // Corps brut renvoyé par le backend (snake_case).
 export interface ReponsePermissionsAdmin {

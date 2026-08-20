@@ -1,0 +1,35 @@
+<div class="groupes-capacites">
+  @for (groupe of groupes; track groupe.titre) {
+    <section class="groupe-capacite">
+      <div class="entete-groupe">
+        <h3>{{ groupe.titre }}</h3>
+        @if (groupe.capacites.length > 1) {
+          <div class="actions-groupe">
+            <button type="button" class="lien-groupe" (click)="toutCocher(groupe)">Tout cocher</button>
+            <button type="button" class="lien-groupe" (click)="toutDecocher(groupe)">Tout décocher</button>
+          </div>
+        }
+      </div>
+      <div class="grille-capacites">
+        @for (capacite of groupe.capacites; track capacite.nom) {
+          <label
+            class="case-capacite"
+            [class.case-verrouillee]="estVerrouillee(capacite)"
+            [title]="estVerrouillee(capacite) ? 'Réservé au super-admin' : ''"
+          >
+            <input
+              type="checkbox"
+              [checked]="estActive(capacite.nom)"
+              [disabled]="estVerrouillee(capacite)"
+              (change)="bascule.emit(capacite.nom)"
+            />
+            {{ capacite.libelle }}
+            @if (estVerrouillee(capacite)) {
+              <span class="badge-verrou">🔒</span>
+            }
+          </label>
+        }
+      </div>
+    </section>
+  }
+</div>

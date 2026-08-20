@@ -1,0 +1,51 @@
+<div class="voile-modale" (click)="annule.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>Créer un admin</h2>
+
+    @if (messageErreur()) {
+      <p class="erreur-generale">{{ messageErreur() }}</p>
+    }
+
+    <form class="formulaire-creation" [formGroup]="formulaire" (ngSubmit)="soumettre()">
+      <label for="telephone-creer-admin">Téléphone</label>
+      <input id="telephone-creer-admin" type="tel" formControlName="telephone" placeholder="+225..." />
+      @if (formulaire.controls.telephone.invalid && formulaire.controls.telephone.touched) {
+        <p class="erreur-champ">
+          Le téléphone est requis et doit commencer par "+" suivi de chiffres (ex. +2250700000000).
+        </p>
+      }
+
+      <div class="ligne-champs">
+        <div class="champ">
+          <label for="prenom-creer-admin">Prénom</label>
+          <input id="prenom-creer-admin" type="text" formControlName="prenom" />
+        </div>
+        <div class="champ">
+          <label for="nom-creer-admin">Nom</label>
+          <input id="nom-creer-admin" type="text" formControlName="nom" />
+        </div>
+      </div>
+
+      <label for="username-creer-admin">Username</label>
+      <input id="username-creer-admin" type="text" formControlName="username" />
+      <p class="indice">Optionnel — généré automatiquement si laissé vide.</p>
+
+      <h3 class="titre-section-capacites">
+        Capacités initiales <span class="optionnel">(optionnel)</span>
+      </h3>
+      <app-selecteur-capacites
+        [valeurs]="capacitesInitiales()"
+        [estSuperAdmin]="estSuperAdmin()"
+        (bascule)="basculerCapacite($event)"
+        (basculerGroupe)="basculerGroupeCapacites($event)"
+      />
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annule.emit()">Annuler</button>
+        <button type="submit" [disabled]="enregistrementEnCours()">
+          {{ enregistrementEnCours() ? 'Création en cours…' : "Créer l'admin" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -13,11 +13,13 @@ interface EntreeMenuPartenaire {
 // Entrées de menu admin : chacune déclare la capacité qui la débloque.
 // Pour ajouter un écran admin, il suffit d'ajouter une ligne ici (+ sa route
 // protégée par capaciteGuard) — aucune autre modification n'est nécessaire.
+// Une entrée sans `capacite` (ex. Modération de comptes) est réservée au
+// super-admin (is_superuser), à la place d'une capacité fine.
 interface EntreeMenuAdmin {
   libelle: string;
   lien: string;
   icone: string;
-  capacite: NomCapacite;
+  capacite?: NomCapacite;
 }
 
 const ENTREES_PARTENAIRE: EntreeMenuPartenaire[] = [
@@ -79,6 +81,32 @@ const ENTREES_ADMIN: EntreeMenuAdmin[] = [
     icone: '⭐',
     capacite: 'accorder_faveur',
   },
+  {
+    libelle: 'Créer un partenaire',
+    lien: '/administration/creer-partenaire',
+    icone: '➕',
+    capacite: 'creer_partenaire',
+  },
+  {
+    libelle: 'Paiements',
+    lien: '/administration/paiements',
+    icone: '💳',
+    capacite: 'voir_stats',
+  },
+  {
+    // Pas de capacité : réservé au super-admin, voir le filtre ci-dessous.
+    libelle: 'Modération de comptes',
+    lien: '/administration/moderation',
+    icone: '🛡️',
+  },
+  {
+    // is_superuser a toujours cette capacité à true côté backend : suffit à
+    // couvrir la condition "super-admin OU gerer_admins" pour le menu.
+    libelle: 'Gestion des admins',
+    lien: '/administration/gestion-admins',
+    icone: '👥',
+    capacite: 'gerer_admins',
+  },
 ];
 
 /**
@@ -103,6 +131,10 @@ export class BarreLaterale {
   readonly entreesPartenaire = ENTREES_PARTENAIRE;
 
   readonly entreesAdmin = computed<EntreeMenuAdmin[]>(() =>
-    ENTREES_ADMIN.filter((entree) => this.permissionsService.aLaCapacite(entree.capacite)),
+    ENTREES_ADMIN.filter((entree) =>
+      entree.capacite
+        ? this.permissionsService.aLaCapacite(entree.capacite)
+        : (this.permissionsService.permissionsActuelles()?.isSuperuser ?? false),
+    ),
   );
 }

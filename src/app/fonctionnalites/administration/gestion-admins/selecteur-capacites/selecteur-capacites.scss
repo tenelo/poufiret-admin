@@ -1,0 +1,73 @@
+.groupes-capacites {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.groupe-capacite {
+  padding: 0.9rem 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.entete-groupe {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+
+  h3 {
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #374151;
+  }
+}
+
+.actions-groupe {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.lien-groupe {
+  background: none;
+  border: none;
+  color: #4f46e5;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.76rem;
+  text-decoration: underline;
+}
+
+.grille-capacites {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.4rem 1rem;
+}
+
+.case-capacite {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #374151;
+
+  input {
+    width: auto;
+  }
+}
+
+.case-verrouillee {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.badge-verrou {
+  font-size: 0.75rem;
+}

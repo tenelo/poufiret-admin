@@ -1,0 +1,14 @@
+<header class="en-tete-livraison">
+  <span class="nom-app">TeneLivr</span>
+
+  <div class="zone-utilisateur">
+    @if (utilisateur(); as u) {
+      @if (nomBureau()) {
+        <span class="bureau">{{ nomBureau() }}</span>
+      }
+      <span class="telephone">{{ u.username || u.telephone }}</span>
+      <span class="role">{{ libelleNiveau() }}</span>
+    }
+    <button type="button" (click)="deconnexion()">Déconnexion</button>
+  </div>
+</header>

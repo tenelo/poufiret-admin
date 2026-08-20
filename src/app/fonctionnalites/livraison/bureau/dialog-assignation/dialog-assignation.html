@@ -1,0 +1,49 @@
+<div class="voile-modale" (click)="ferme.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>Assigner un livreur</h2>
+    <p class="sous-titre">
+      Course {{ course().numero }} — {{ course().point_a.quartier }} → {{ course().point_b.quartier }}
+    </p>
+
+    @if (messageErreur()) {
+      <p class="erreur-generale">{{ messageErreur() }}</p>
+    }
+
+    @if (livreursTries().length === 0) {
+      <p class="etat-vide">Aucun livreur disponible dans cette ville.</p>
+    } @else {
+      <div class="liste-livreurs-dialog">
+        @for (livreur of livreursTries(); track livreur.id) {
+          <button
+            type="button"
+            class="carte-livreur-dialog"
+            [class.carte-hors-ligne]="livreur.statut === 'hors_ligne'"
+            [disabled]="enCours()"
+            (click)="choisir(livreur)"
+          >
+            <div class="entete-livreur-dialog">
+              <span class="nom-livreur">{{ iconeVehicule(livreur.type_vehicule) }} {{ livreur.nom }}</span>
+              <span class="chip" [class.chip-en-ligne]="livreur.statut === 'en_ligne'">
+                {{ livreur.statut === 'en_ligne' ? 'En ligne' : 'Hors ligne' }}
+              </span>
+            </div>
+            <span class="telephone-livreur">{{ livreur.telephone }}</span>
+            <span class="position-livreur">
+              Position : {{ formaterDateRelativeLivraison(livreur.position_maj_le) }}
+            </span>
+            @if (livreur.statut === 'hors_ligne') {
+              <span class="avertissement-hors-ligne">⚠️ Ce livreur est actuellement hors ligne.</span>
+            }
+            @if (livreurEnCoursId() === livreur.id) {
+              <span class="indice-en-cours">Assignation en cours…</span>
+            }
+          </button>
+        }
+      </div>
+    }
+
+    <div class="actions-modale">
+      <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Annuler</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,49 @@
+.en-tete-livraison {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 1.5rem;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+
+  .nom-app {
+    font-weight: 700;
+    color: #0c4a6e;
+  }
+
+  .zone-utilisateur {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: #4b5563;
+
+    .bureau {
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .role {
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    button {
+      padding: 0.4rem 0.8rem;
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+
+      &:hover {
+        background: #e5e7eb;
+      }
+    }
+  }
+}

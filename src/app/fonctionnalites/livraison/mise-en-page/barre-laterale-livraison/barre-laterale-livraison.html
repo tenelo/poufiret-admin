@@ -1,0 +1,12 @@
+<nav class="barre-laterale-livraison">
+  <ul>
+    @for (entree of entrees(); track entree.lien) {
+      <li>
+        <a [routerLink]="entree.lien" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">
+          <span class="icone">{{ entree.icone }}</span>
+          {{ entree.libelle }}
+        </a>
+      </li>
+    }
+  </ul>
+</nav>

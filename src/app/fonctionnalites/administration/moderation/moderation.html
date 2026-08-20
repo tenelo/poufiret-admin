@@ -1,0 +1,155 @@
+<section class="page-moderation">
+  <h1>Modération de comptes</h1>
+  <p class="avertissement-portee">
+    ⚠️ Actions sensibles : les comptes suspendus, bannis ou supprimés perdent l'accès à la plateforme.
+    Vérifiez l'identité du compte avant toute action.
+  </p>
+
+  <div class="bloc-recherche">
+    <input
+      type="text"
+      class="champ-recherche"
+      placeholder="Rechercher un compte (nom, username, téléphone…)"
+      [value]="rechercheTexte()"
+      (input)="changerRecherche($any($event.target).value)"
+    />
+
+    <select
+      class="champ-role"
+      [value]="filtreRole()"
+      (change)="changerFiltreRole($any($event.target).value)"
+    >
+      @for (option of optionsRole; track option.valeur) {
+        <option [value]="option.valeur">{{ option.libelle }}</option>
+      }
+    </select>
+  </div>
+
+  @if (erreurRecherche()) {
+    <p class="erreur-generale">{{ erreurRecherche() }}</p>
+  }
+  @if (messageSucces()) {
+    <p class="message-succes">{{ messageSucces() }}</p>
+  }
+  @if (erreurAction()) {
+    <p class="erreur-generale">{{ erreurAction() }}</p>
+  }
+
+  @if (rechercheEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Recherche…</p>
+    </div>
+  } @else if (rechercheTexte().trim().length > 0 && rechercheTexte().trim().length < 2) {
+    <p class="indice-recherche">Continuez à taper (2 caractères minimum).</p>
+  } @else if (rechercheLancee() && comptes().length === 0) {
+    <div class="etat-vide">
+      <p>Aucun compte trouvé.</p>
+    </div>
+  } @else if (comptes().length > 0) {
+    <div class="liste-comptes">
+      @for (compte of comptes(); track compte.id) {
+        <div class="carte-compte">
+          <div class="entete-compte">
+            <div class="identite-compte">
+              <span class="nom-complet">{{ compte.nom_complet || compte.username }}</span>
+              <span class="username">&#64;{{ compte.username }} · {{ compte.telephone }}</span>
+            </div>
+            <div class="chips-compte">
+              <span class="chip chip-role">{{ compte.role_libelle }}</span>
+              <span class="chip" [class]="classeChipEtat(compte)">{{ compte.etat_libelle }}</span>
+            </div>
+          </div>
+
+          <span class="date-inscription">Inscrit le {{ formaterDate(compte.date_joined) }}</span>
+
+          @if (actionsDisponibles(compte).length > 0) {
+            <div class="actions-compte">
+              @for (option of actionsDisponibles(compte); track option.action) {
+                <button
+                  type="button"
+                  class="bouton-action"
+                  [class.bouton-action-renforcee]="option.gravite === 'renforcee'"
+                  [class.bouton-action-hard]="option.gravite === 'hard'"
+                  [disabled]="actionEnCoursId() === compte.id"
+                  (click)="demanderAction(compte, option)"
+                >
+                  {{ actionEnCoursId() === compte.id ? '…' : option.libelle }}
+                </button>
+              }
+            </div>
+          } @else {
+            <p class="indice-recherche">Aucune action disponible pour cet état.</p>
+          }
+        </div>
+      }
+    </div>
+  }
+</section>
+
+@if (actionEnAttente(); as attente) {
+  <div class="voile-confirmation" (click)="annulerAction()">
+    <div
+      class="boite-confirmation"
+      [class.boite-confirmation-renforcee]="graviteEnAttente() === 'renforcee'"
+      [class.boite-confirmation-hard]="graviteEnAttente() === 'hard'"
+      (click)="$event.stopPropagation()"
+    >
+      @if (graviteEnAttente() === 'hard') {
+        <p class="titre-dialog titre-dialog-hard">⚠️ Suppression définitive</p>
+        <p class="avertissement-hard">
+          Action irréversible : le compte de <strong>{{ attente.compte.nom_complet || attente.compte.username }}</strong>
+          et ses données seront définitivement supprimés.
+        </p>
+      } @else {
+        <p class="titre-dialog">{{ attente.option.libelle }} ce compte ?</p>
+      }
+
+      <p class="cible-dialog">{{ attente.compte.nom_complet || attente.compte.username }} — {{ attente.compte.telephone }}</p>
+
+      @if (consequenceEnAttente()) {
+        <p class="consequence-dialog">{{ consequenceEnAttente() }}</p>
+      }
+
+      <label for="motif-action">
+        Motif {{ attente.option.gravite === 'simple' ? '(recommandé)' : '(obligatoire)' }}
+      </label>
+      <textarea
+        id="motif-action"
+        rows="2"
+        placeholder="Expliquez la raison de cette action…"
+        [value]="motifAction()"
+        (input)="changerMotif($any($event.target).value)"
+      ></textarea>
+      @if (motifToucheAction() && !motifAction().trim()) {
+        <p class="erreur-champ">Le motif est obligatoire pour cette action.</p>
+      }
+
+      @if (graviteEnAttente() === 'hard') {
+        <label for="confirmation-hard">
+          Pour confirmer, retapez le username ou le téléphone du compte
+          (« {{ attente.compte.username }} » ou « {{ attente.compte.telephone }} »)
+        </label>
+        <input
+          id="confirmation-hard"
+          type="text"
+          class="champ-confirmation-hard"
+          [value]="saisieConfirmationHard()"
+          (input)="changerSaisieConfirmationHard($any($event.target).value)"
+        />
+      }
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annulerAction()">Annuler</button>
+        <button
+          type="button"
+          class="bouton-danger"
+          [disabled]="graviteEnAttente() === 'hard' && !hardConfirmationValide()"
+          (click)="confirmerAction()"
+        >
+          {{ attente.option.libelle }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

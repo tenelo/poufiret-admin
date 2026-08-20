@@ -1,0 +1,171 @@
+<section class="page-creation-partenaire">
+  <h1>Créer un partenaire</h1>
+
+  @if (reponseSucces(); as reponse) {
+    <div class="panneau-succes">
+      <h2>Partenaire créé avec succès</h2>
+      <p class="recap">
+        <strong>{{ reponse.nom_commerce }}</strong> — {{ reponse.telephone }}
+      </p>
+
+      <div class="bloc-pin">
+        <span class="etiquette-pin">Code PIN généré</span>
+        <span class="valeur-pin">{{ reponse.pin_par_defaut }}</span>
+        <p class="avertissement-pin">
+          ⚠️ Notez ce code maintenant et transmettez-le au partenaire : il ne sera plus jamais
+          affiché.
+        </p>
+        <button type="button" class="bouton-secondaire" (click)="copierPin()">
+          {{ pinCopie() ? 'Copié ✓' : 'Copier le PIN' }}
+        </button>
+      </div>
+
+      <button type="button" class="bouton-principal" (click)="creerUnAutre()">
+        + Créer un autre partenaire
+      </button>
+    </div>
+  } @else {
+    @if (messageErreur()) {
+      <p class="erreur-generale">{{ messageErreur() }}</p>
+    }
+
+    <form class="formulaire-creation" [formGroup]="formulaire" (ngSubmit)="soumettre()">
+      <section class="section">
+        <h2>Identité du compte</h2>
+
+        <label for="telephone">Téléphone</label>
+        <input id="telephone" type="tel" formControlName="telephone" placeholder="+225..." />
+        @if (formulaire.controls.telephone.invalid && formulaire.controls.telephone.touched) {
+          <p class="erreur-champ">
+            Le téléphone est requis et doit commencer par "+" suivi de chiffres (ex. +2250700000000).
+          </p>
+        }
+
+        <div class="ligne-champs">
+          <div class="champ">
+            <label for="prenom">Prénom</label>
+            <input id="prenom" type="text" formControlName="prenom" />
+          </div>
+          <div class="champ">
+            <label for="nom">Nom</label>
+            <input id="nom" type="text" formControlName="nom" />
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Enseigne</h2>
+
+        <label for="nom_commerce">Nom du commerce</label>
+        <input id="nom_commerce" type="text" formControlName="nom_commerce" />
+        @if (formulaire.controls.nom_commerce.invalid && formulaire.controls.nom_commerce.touched) {
+          <p class="erreur-champ">Le nom du commerce est requis.</p>
+        }
+
+        <label for="type_partenaire">Type de partenaire</label>
+        <select id="type_partenaire" formControlName="type_partenaire">
+          <option value="">— Non renseigné —</option>
+          @for (option of optionsTypePartenaire; track option.valeur) {
+            <option [value]="option.valeur">{{ option.libelle }}</option>
+          }
+        </select>
+
+        <label for="description">Description</label>
+        <textarea id="description" formControlName="description" rows="3"></textarea>
+      </section>
+
+      <section class="section">
+        <h2>Localisation</h2>
+
+        <label for="departement">Département</label>
+        @if (chargementDepartements()) {
+          <p class="indice">Chargement des départements…</p>
+        } @else if (erreurDepartements()) {
+          <p class="erreur-champ">
+            {{ erreurDepartements() }}
+            <button type="button" class="lien-reessayer" (click)="chargerDepartements()">Réessayer</button>
+          </p>
+        } @else {
+          <select id="departement" formControlName="departement">
+            <option value="">— Non renseigné —</option>
+            @for (departement of departements(); track departement.id) {
+              <option [value]="departement.id">
+                {{ departement.nom }} ({{ departement.region }})
+              </option>
+            }
+          </select>
+        }
+
+        <div class="ligne-champs">
+          <div class="champ">
+            <label for="ville">Ville</label>
+            <input id="ville" type="text" formControlName="ville" />
+          </div>
+          <div class="champ">
+            <label for="quartier">Quartier</label>
+            <input id="quartier" type="text" formControlName="quartier" />
+          </div>
+        </div>
+
+        <label for="secteur">Secteur</label>
+        <input id="secteur" type="text" formControlName="secteur" />
+
+        <label for="adresse">Adresse</label>
+        <input id="adresse" type="text" formControlName="adresse" />
+      </section>
+
+      <section class="section">
+        <h2>Contact pro</h2>
+
+        <div class="ligne-champs">
+          <div class="champ">
+            <label for="telephone_pro">Téléphone professionnel</label>
+            <input id="telephone_pro" type="tel" formControlName="telephone_pro" />
+          </div>
+          <div class="champ">
+            <label for="whatsapp">WhatsApp</label>
+            <input id="whatsapp" type="tel" formControlName="whatsapp" />
+          </div>
+        </div>
+
+        <label for="email_pro">Email professionnel</label>
+        <input id="email_pro" type="email" formControlName="email_pro" />
+        @if (formulaire.controls.email_pro.invalid && formulaire.controls.email_pro.touched) {
+          <p class="erreur-champ">L'adresse email n'est pas valide.</p>
+        }
+      </section>
+
+      <section class="section">
+        <h2>Catégories <span class="optionnel">(optionnel)</span></h2>
+
+        @if (chargementCategories()) {
+          <p class="indice">Chargement des catégories…</p>
+        } @else if (erreurCategories()) {
+          <p class="erreur-champ">
+            {{ erreurCategories() }}
+            <button type="button" class="lien-reessayer" (click)="chargerCategories()">Réessayer</button>
+          </p>
+        } @else if (categoriesAplaties().length === 0) {
+          <p class="indice">Aucune catégorie disponible.</p>
+        } @else {
+          <div class="liste-categories">
+            @for (categorie of categoriesAplaties(); track categorie.id) {
+              <label class="case-categorie" [style.padding-left.rem]="categorie.profondeur * 1.1">
+                <input
+                  type="checkbox"
+                  [checked]="categoriesSelectionnees().has(categorie.id)"
+                  (change)="basculerCategorie(categorie.id)"
+                />
+                {{ categorie.libelle }}
+              </label>
+            }
+          </div>
+        }
+      </section>
+
+      <button type="submit" class="bouton-principal" [disabled]="envoiEnCours()">
+        {{ envoiEnCours() ? 'Création en cours…' : 'Créer le partenaire' }}
+      </button>
+    </form>
+  }
+</section>

@@ -3,8 +3,8 @@ import { ActivatedRoute } from '@angular/router';
 
 /**
  * Placeholder générique pour les écrans admin pas encore construits. Le titre
- * affiché vient de `route.data['titre']` — une même route.data.capacite
- * continue de protéger l'accès via capaciteGuard.
+ * (et, optionnellement, le message) affichés viennent de `route.data` — une
+ * même route.data.capacite continue de protéger l'accès via capaciteGuard.
  */
 @Component({
   selector: 'app-ecran-a-venir',
@@ -16,4 +16,6 @@ export class EcranAVenir {
   private readonly route = inject(ActivatedRoute);
 
   readonly titre = (this.route.snapshot.data['titre'] as string) ?? 'Écran';
+  readonly message =
+    (this.route.snapshot.data['message'] as string) ?? 'Cet écran sera construit prochainement.';
 }

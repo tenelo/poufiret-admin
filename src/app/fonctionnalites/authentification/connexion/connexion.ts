@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { AuthService } from '../../../noyau/auth/auth.service';
+import { routeParEspace } from '../../../noyau/auth/route-par-espace';
 
 /**
  * Page de connexion : téléphone + PIN à 4 chiffres.
@@ -39,9 +40,9 @@ export class Connexion {
     this.messageErreur.set(null);
 
     this.authService.connexion(telephone, pin).subscribe({
-      next: () => {
+      next: (utilisateur) => {
         this.enCours.set(false);
-        this.router.navigate(['/tableau-de-bord']);
+        this.router.navigateByUrl(routeParEspace(utilisateur.espace));
       },
       error: (erreur: unknown) => {
         this.enCours.set(false);
