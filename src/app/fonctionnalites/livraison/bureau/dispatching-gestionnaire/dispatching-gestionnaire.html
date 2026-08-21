@@ -2,8 +2,18 @@
   <div class="entete-page">
     <h1>Dispatching</h1>
     <div class="actions-entete">
+      @if (modeMultiVille()) {
+        <select class="champ-filtre" [value]="villeSelectionneeId() ?? ''" (change)="changerVilleSelectionnee($any($event.target).value)">
+          <option value="">Toutes les villes</option>
+          @for (departement of departements(); track departement.id) {
+            <option [value]="departement.id">{{ departement.nom }}</option>
+          }
+        </select>
+      }
       <button type="button" class="bouton-secondaire" (click)="rafraichirTout()">↻ Rafraîchir</button>
-      <button type="button" class="bouton-principal" (click)="ouvrirCreation()">+ Nouvelle course</button>
+      @if (permettreCreationCourse()) {
+        <button type="button" class="bouton-principal" (click)="ouvrirCreation()">+ Nouvelle course</button>
+      }
     </div>
   </div>
 
@@ -43,9 +53,14 @@
             <div class="carte-course" [class.carte-a-assigner]="estCourseAAssigner(course)">
               <div class="entete-course">
                 <span class="numero-course">{{ course.numero }}</span>
-                <span class="chip" [class]="classeChipStatutCourse(course.statut)">
-                  {{ libellesStatutCourse[course.statut] }}
-                </span>
+                <div class="chips-entete-course">
+                  @if (modeMultiVille()) {
+                    <span class="chip chip-ville">{{ nomVille(course.ville) }}</span>
+                  }
+                  <span class="chip" [class]="classeChipStatutCourse(course.statut)">
+                    {{ libellesStatutCourse[course.statut] }}
+                  </span>
+                </div>
               </div>
 
               <div class="trajet-course">
@@ -116,9 +131,14 @@
             <div class="carte-livreur" [class.carte-en-ligne]="livreur.statut === 'en_ligne'">
               <div class="entete-livreur">
                 <span class="nom-livreur">{{ iconeVehicule(livreur.type_vehicule) }} {{ livreur.nom }}</span>
-                <span class="chip" [class.chip-en-ligne]="livreur.statut === 'en_ligne'">
-                  {{ livreur.statut === 'en_ligne' ? 'En ligne' : 'Hors ligne' }}
-                </span>
+                <div class="chips-entete-course">
+                  @if (modeMultiVille() && livreur.ville) {
+                    <span class="chip chip-ville">{{ nomVille(livreur.ville) }}</span>
+                  }
+                  <span class="chip" [class.chip-en-ligne]="livreur.statut === 'en_ligne'">
+                    {{ livreur.statut === 'en_ligne' ? 'En ligne' : 'Hors ligne' }}
+                  </span>
+                </div>
               </div>
               <a class="telephone-livreur" [href]="telHref(livreur.telephone)">{{ livreur.telephone }}</a>
               <span class="position-livreur">

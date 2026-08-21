@@ -1,12 +1,14 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval } from 'rxjs';
 
 import { BureauLivraisonService } from '../bureau-livraison.service';
+import { SourceDispatchingLivraison } from '../source-dispatching-livraison';
 import { DialogAssignation } from '../dialog-assignation/dialog-assignation';
 import { DialogCreationCourse } from '../dialog-creation-course/dialog-creation-course';
 import { extraireMessageErreurLivraison } from '../../extraire-message-erreur-livraison';
 import { formaterDateRelativeLivraison, formaterFcfa, telHref } from '../../formatage-livraison';
+import { Departement } from '../../../../modeles/departement.model';
 import {
   CourseLivraison,
   LIBELLES_STATUT_COURSE,
@@ -22,9 +24,12 @@ import { LivreurBureau, OPTIONS_STATUT_LIVREUR, StatutLivreur, iconeVehicule } f
 const INTERVALLE_RAFRAICHISSEMENT_MS = 30000;
 
 /**
- * Poste de dispatching du bureau (gestionnaire) : courses et livreurs de la
- * ville côte à côte, assignation manuelle, création de course. Module
- * livraison isolé — aucune dépendance à un service admin Poufiret.
+ * Poste de dispatching : courses et livreurs côte à côte, assignation
+ * manuelle. Composant paramétrable (source des données) réutilisé tel quel
+ * par le bureau (ville unique, `source` par défaut, création de course) et
+ * par le coordonnateur (`modeMultiVille`, sélecteur de ville, pas de
+ * création de course) — voir DispatchingCoordonnateur. Module livraison
+ * isolé — aucune dépendance à un service admin Poufiret.
  */
 @Component({
   selector: 'app-dispatching-gestionnaire',
@@ -33,8 +38,19 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 30000;
   styleUrl: './dispatching-gestionnaire.scss',
 })
 export class DispatchingGestionnaire implements OnInit {
-  private readonly service = inject(BureauLivraisonService);
+  private readonly bureauService = inject(BureauLivraisonService);
   private readonly destroyRef = inject(DestroyRef);
+
+  // Par défaut : source bureau (comportement historique inchangé quand
+  // aucune source n'est fournie — routes bureau existantes non touchées).
+  readonly source = input<SourceDispatchingLivraison | null>(null);
+  readonly modeMultiVille = input(false);
+  readonly departements = input<Departement[]>([]);
+  readonly permettreCreationCourse = input(true);
+
+  private readonly sourceEffective = computed<SourceDispatchingLivraison>(
+    () => this.source() ?? this.bureauService,
+  );
 
   readonly optionsStatutCourse = OPTIONS_STATUT_COURSE;
   readonly optionsStatutLivreur = OPTIONS_STATUT_LIVREUR;
@@ -48,6 +64,9 @@ export class DispatchingGestionnaire implements OnInit {
   readonly telHref = telHref;
 
   readonly messageSucces = signal<string | null>(null);
+
+  // ---- Ville (coordonnateur uniquement) ----
+  readonly villeSelectionneeId = signal<number | null>(null);
 
   // ---- Courses (filtre serveur) ----
   readonly filtreStatutCourse = signal<StatutCourse | ''>('');
@@ -102,18 +121,20 @@ export class DispatchingGestionnaire implements OnInit {
       this.coursesChargement.set(true);
       this.coursesErreur.set(null);
     }
-    this.service.listerCourses(this.filtreStatutCourse()).subscribe({
-      next: (courses) => {
-        this.coursesChargement.set(false);
-        this.courses.set(courses);
-      },
-      error: (erreur: unknown) => {
-        this.coursesChargement.set(false);
-        if (!silencieux) {
-          this.coursesErreur.set(extraireMessageErreurLivraison(erreur));
-        }
-      },
-    });
+    this.sourceEffective()
+      .listerCourses(this.filtreStatutCourse(), this.villeSelectionneeId() ?? undefined)
+      .subscribe({
+        next: (courses) => {
+          this.coursesChargement.set(false);
+          this.courses.set(courses);
+        },
+        error: (erreur: unknown) => {
+          this.coursesChargement.set(false);
+          if (!silencieux) {
+            this.coursesErreur.set(extraireMessageErreurLivraison(erreur));
+          }
+        },
+      });
   }
 
   chargerLivreurs(silencieux = false): void {
@@ -123,18 +144,20 @@ export class DispatchingGestionnaire implements OnInit {
     }
     // Roster complet (pas de statut) : le filtre statut est appliqué côté client
     // (livreursAffiches), pour rester synchronisé avec le dialog d'assignation.
-    this.service.listerLivreurs().subscribe({
-      next: (livreurs) => {
-        this.livreursChargement.set(false);
-        this.livreurs.set(livreurs);
-      },
-      error: (erreur: unknown) => {
-        this.livreursChargement.set(false);
-        if (!silencieux) {
-          this.livreursErreur.set(extraireMessageErreurLivraison(erreur));
-        }
-      },
-    });
+    this.sourceEffective()
+      .listerLivreurs(undefined, this.villeSelectionneeId() ?? undefined)
+      .subscribe({
+        next: (livreurs) => {
+          this.livreursChargement.set(false);
+          this.livreurs.set(livreurs);
+        },
+        error: (erreur: unknown) => {
+          this.livreursChargement.set(false);
+          if (!silencieux) {
+            this.livreursErreur.set(extraireMessageErreurLivraison(erreur));
+          }
+        },
+      });
   }
 
   changerFiltreStatutCourse(valeur: string): void {
@@ -144,6 +167,17 @@ export class DispatchingGestionnaire implements OnInit {
 
   changerFiltreStatutLivreur(valeur: string): void {
     this.filtreStatutLivreur.set(valeur as StatutLivreur | '');
+  }
+
+  /** Coordonnateur uniquement : pilote les deux colonnes via ?ville=. */
+  changerVilleSelectionnee(valeur: string): void {
+    this.villeSelectionneeId.set(valeur ? Number(valeur) : null);
+    this.chargerCourses(false);
+    this.chargerLivreurs(false);
+  }
+
+  nomVille(villeId: number): string {
+    return this.departements().find((d) => d.id === villeId)?.nom ?? '—';
   }
 
   // ---- Assignation ----
@@ -165,7 +199,7 @@ export class DispatchingGestionnaire implements OnInit {
     this.assignationEnCours.set(true);
     this.erreurAssignation.set(null);
 
-    this.service.assignerLivreur(course.id, livreurId).subscribe({
+    this.sourceEffective().assignerLivreur(course.id, livreurId).subscribe({
       next: (courseMaj) => {
         this.assignationEnCours.set(false);
         this.courseAAssigner.set(null);
@@ -194,7 +228,9 @@ export class DispatchingGestionnaire implements OnInit {
     this.creationEnCours.set(true);
     this.erreurCreation.set(null);
 
-    this.service.creerCourse(payload).subscribe({
+    // Uniquement disponible en mode bureau (permettreCreationCourse) : on
+    // passe toujours par bureauService, jamais par la source injectée.
+    this.bureauService.creerCourse(payload).subscribe({
       next: (reponse) => {
         this.creationEnCours.set(false);
         this.dialogCreationOuvert.set(false);

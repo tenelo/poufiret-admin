@@ -43,19 +43,21 @@ export function iconePointCourse(lettre: 'A' | 'B'): L.DivIcon {
   });
 }
 
-export function contenuPopupLivreur(livreur: LivreurBureau): string {
+export function contenuPopupLivreur(livreur: LivreurBureau, nomVille?: string): string {
   return `<div>
     <strong>${iconeVehicule(livreur.type_vehicule)} ${echapperHtml(livreur.nom)}</strong><br>
+    ${nomVille ? `<span>📍 ${echapperHtml(nomVille)}</span><br>` : ''}
     <span>${echapperHtml(livreur.telephone)}</span><br>
     <span>${livreur.statut === 'en_ligne' ? 'En ligne' : 'Hors ligne'}</span><br>
     <span>Position : ${formaterDateRelativeLivraison(livreur.position_maj_le)}</span>
   </div>`;
 }
 
-export function contenuPopupPointCourse(course: CourseLivraison, lettre: 'A' | 'B'): string {
+export function contenuPopupPointCourse(course: CourseLivraison, lettre: 'A' | 'B', nomVille?: string): string {
   const point = lettre === 'A' ? course.point_a : course.point_b;
   return `<div>
     <strong>Course ${echapperHtml(course.numero)} — Point ${lettre}</strong><br>
+    ${nomVille ? `<span>📍 ${echapperHtml(nomVille)}</span><br>` : ''}
     <span>${echapperHtml(point.quartier)}</span><br>
     <span>Statut : ${echapperHtml(LIBELLES_STATUT_COURSE[course.statut])}</span>
   </div>`;

@@ -28,11 +28,17 @@ export class DialogAssignation {
   readonly iconeVehicule = iconeVehicule;
   readonly formaterDateRelativeLivraison = formaterDateRelativeLivraison;
 
+  // Ne proposer que les livreurs de la même ville que la course (le backend
+  // refuse une assignation inter-villes avec un 400) — `livreur.ville` est
+  // absent en mode bureau (ville unique, filtrage sans objet), défini en
+  // mode coordonnateur (roster multi-villes).
   readonly livreursTries = computed(() =>
-    [...this.livreurs()].sort((a, b) => {
-      if (a.statut === b.statut) return a.nom.localeCompare(b.nom);
-      return a.statut === 'en_ligne' ? -1 : 1;
-    }),
+    [...this.livreurs()]
+      .filter((l) => l.ville === undefined || l.ville === this.course().ville)
+      .sort((a, b) => {
+        if (a.statut === b.statut) return a.nom.localeCompare(b.nom);
+        return a.statut === 'en_ligne' ? -1 : 1;
+      }),
   );
 
   choisir(livreur: LivreurBureau): void {

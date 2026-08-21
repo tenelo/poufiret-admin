@@ -15,6 +15,9 @@ export interface LivreurBureau {
   latitude: number | null;
   longitude: number | null;
   position_maj_le: string | null;
+  // Présent uniquement côté coordonnateur (roster multi-villes) ; absent
+  // (implicitement la ville du bureau) côté bureau.
+  ville?: number;
 }
 
 export const OPTIONS_STATUT_LIVREUR: { valeur: StatutLivreur | ''; libelle: string }[] = [

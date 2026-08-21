@@ -1,0 +1,141 @@
+<div class="stats-livraison">
+  <div class="bloc-periode">
+    <div class="champ">
+      <label for="debut-periode">Du</label>
+      <input id="debut-periode" type="date" [value]="debutSaisi()" (input)="changerDebut($any($event.target).value)" />
+    </div>
+    <div class="champ">
+      <label for="fin-periode">Au</label>
+      <input id="fin-periode" type="date" [value]="finSaisi()" (input)="changerFin($any($event.target).value)" />
+    </div>
+    <button type="button" class="bouton-principal" (click)="appliquerPeriode()">Appliquer</button>
+    <span class="periode-affichee">
+      Période affichée : {{ donnees().periode.debut }} → {{ donnees().periode.fin }}
+    </span>
+  </div>
+
+  <!-- KPI -->
+  <div class="grille-kpi">
+    <div class="carte-kpi">
+      <span class="etiquette-kpi">CA total</span>
+      <span class="valeur-kpi">{{ formaterFcfa(donnees().ca_total) }}</span>
+    </div>
+    <div class="carte-kpi">
+      <span class="etiquette-kpi">Panier moyen</span>
+      <span class="valeur-kpi">{{ formaterFcfa(donnees().panier_moyen) }}</span>
+    </div>
+    <div class="carte-kpi">
+      <span class="etiquette-kpi">Courses</span>
+      <span class="valeur-kpi">{{ formaterNombre(donnees().taux_conversion.nb_courses) }}</span>
+    </div>
+    <div class="carte-kpi">
+      <span class="etiquette-kpi">Taux de conversion</span>
+      <span class="valeur-kpi">{{ tauxConversionFormate() }}</span>
+    </div>
+  </div>
+
+  <!-- CA par période -->
+  <section class="bloc-graphique">
+    <div class="entete-bloc">
+      <h2>Chiffre d'affaires</h2>
+      <div class="bascule-unite">
+        <button type="button" [class.actif]="uniteCa() === 'jour'" (click)="changerUniteCa('jour')">Jour</button>
+        <button type="button" [class.actif]="uniteCa() === 'mois'" (click)="changerUniteCa('mois')">Mois</button>
+        <button type="button" [class.actif]="uniteCa() === 'heure'" (click)="changerUniteCa('heure')">Heure</button>
+      </div>
+    </div>
+    @if (pointsCaActuels().length === 0) {
+      <p class="etat-vide">Aucune donnée de chiffre d'affaires pour cette période.</p>
+    } @else {
+      <div class="zone-graphique">
+        <app-graphique [type]="'line'" [data]="dataCourbeCa()" [options]="optionsCourbeCa" />
+      </div>
+    }
+  </section>
+
+  <!-- Stats par livreur -->
+  <section class="bloc-graphique">
+    <h2>Stats par livreur</h2>
+    @if (statsParLivreurTriees().length === 0) {
+      <p class="etat-vide">Aucun livreur avec des courses sur cette période.</p>
+    } @else {
+      <div class="zone-graphique zone-graphique-courte">
+        <app-graphique [type]="'bar'" [data]="dataBarresLivreurs()" [options]="optionsBarresLivreurs" />
+      </div>
+      <div class="zone-table">
+        <table class="table-livreurs">
+          <thead>
+            <tr>
+              <th>Livreur</th>
+              <th>Courses</th>
+              <th>Livrées</th>
+              <th>CA généré</th>
+              <th>Réussite</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (ligne of statsParLivreurTriees(); track ligne.livreur_id) {
+              <tr>
+                <td>{{ ligne.livreur_nom }}</td>
+                <td>{{ formaterNombre(ligne.nb_courses) }}</td>
+                <td>{{ formaterNombre(ligne.nb_livrees) }}</td>
+                <td>{{ formaterFcfa(ligne.ca_genere) }}</td>
+                <td>{{ ligne.taux_reussite.toFixed(1) }} %</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  @if (afficherAnalysesFines()) {
+    <div class="grille-analyses">
+      <section class="bloc-graphique">
+        <h2>Répartition des demandeurs</h2>
+        @if (totalDemandeurs() === 0) {
+          <p class="etat-vide">Aucune donnée sur cette période.</p>
+        } @else {
+          <div class="zone-graphique">
+            <app-graphique [type]="'doughnut'" [data]="dataDonutDemandeurs()" />
+          </div>
+        }
+      </section>
+
+      <section class="bloc-graphique">
+        <h2>Top quartiers de départ</h2>
+        @if (donnees().top_quartiers_depart.length === 0) {
+          <p class="etat-vide">Aucune donnée sur cette période.</p>
+        } @else {
+          <div class="zone-graphique">
+            <app-graphique [type]="'bar'" [data]="dataBarresTopQuartiers()" [options]="optionsBarresHorizontales" />
+          </div>
+        }
+      </section>
+
+      <section class="bloc-graphique">
+        <h2>Top catégories partenaire</h2>
+        @if (donnees().top_categories_partenaire.length === 0) {
+          <p class="etat-vide">Aucune donnée sur cette période.</p>
+        } @else {
+          <div class="zone-graphique">
+            <app-graphique [type]="'bar'" [data]="dataBarresTopCategories()" [options]="optionsBarresHorizontales" />
+          </div>
+        }
+      </section>
+
+      @if (afficherTopVilles()) {
+        <section class="bloc-graphique">
+          <h2>Top villes</h2>
+          @if (donnees().top_villes.length === 0) {
+            <p class="etat-vide">Aucune donnée sur cette période.</p>
+          } @else {
+            <div class="zone-graphique">
+              <app-graphique [type]="'bar'" [data]="dataBarresTopVilles()" [options]="optionsBarresHorizontales" />
+            </div>
+          }
+        </section>
+      }
+    </div>
+  }
+</div>

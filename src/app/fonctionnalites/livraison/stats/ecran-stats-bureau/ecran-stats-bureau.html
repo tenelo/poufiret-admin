@@ -1,0 +1,17 @@
+<section class="page-stats">
+  <h1>Statistiques</h1>
+
+  @if (chargement()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement des statistiques…</p>
+    </div>
+  } @else if (erreur()) {
+    <div class="etat-erreur">
+      <p>{{ erreur() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (donnees(); as d) {
+    <app-stats-livraison [donnees]="d" [mode]="mode()" (periodeChangee)="surChangementPeriode($event)" />
+  }
+</section>

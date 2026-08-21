@@ -1,0 +1,25 @@
+<section class="page-stats">
+  <div class="entete-page">
+    <h1>Statistiques</h1>
+    <select class="champ-filtre" [value]="villeSelectionneeId() ?? ''" (change)="changerVille($any($event.target).value)">
+      <option value="">Toutes les villes</option>
+      @for (departement of departements(); track departement.id) {
+        <option [value]="departement.id">{{ departement.nom }}</option>
+      }
+    </select>
+  </div>
+
+  @if (chargement()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement des statistiques…</p>
+    </div>
+  } @else if (erreur()) {
+    <div class="etat-erreur">
+      <p>{{ erreur() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (donnees(); as d) {
+    <app-stats-livraison [donnees]="d" [mode]="'coordonnateur'" (periodeChangee)="surChangementPeriode($event)" />
+  }
+</section>

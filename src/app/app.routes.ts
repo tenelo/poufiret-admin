@@ -208,21 +208,21 @@ export const routes: Routes = [
         path: 'coordonnateur',
         children: [
           {
+            // Carte temps réel multi-villes (composant carte partagé avec le bureau).
             path: '',
             pathMatch: 'full',
-            data: { titre: "Vue d'ensemble" },
             loadComponent: () =>
-              import('./fonctionnalites/livraison/ecran-a-venir-livraison/ecran-a-venir-livraison').then(
-                (m) => m.EcranAVenirLivraison,
+              import('./fonctionnalites/livraison/coordonnateur/carte-coordonnateur/carte-coordonnateur').then(
+                (m) => m.CarteCoordonnateur,
               ),
           },
           {
+            // Dispatching multi-villes (composant dispatching partagé avec le bureau).
             path: 'villes',
-            data: { titre: 'Toutes les villes' },
             loadComponent: () =>
-              import('./fonctionnalites/livraison/ecran-a-venir-livraison/ecran-a-venir-livraison').then(
-                (m) => m.EcranAVenirLivraison,
-              ),
+              import(
+                './fonctionnalites/livraison/coordonnateur/dispatching-coordonnateur/dispatching-coordonnateur'
+              ).then((m) => m.DispatchingCoordonnateur),
           },
           {
             // Gestion des comptes (superviseurs/gestionnaires/livreurs) par ville.
@@ -231,6 +231,14 @@ export const routes: Routes = [
               import(
                 './fonctionnalites/livraison/coordonnateur/gestion-comptes-coordonnateur/gestion-comptes-coordonnateur'
               ).then((m) => m.GestionComptesCoordonnateur),
+          },
+          {
+            // Stats nationales, filtrables par ville (mode coordonnateur : + top villes).
+            path: 'statistiques',
+            loadComponent: () =>
+              import(
+                './fonctionnalites/livraison/stats/ecran-stats-coordonnateur/ecran-stats-coordonnateur'
+              ).then((m) => m.EcranStatsCoordonnateur),
           },
         ],
       },
@@ -261,6 +269,14 @@ export const routes: Routes = [
                 (m) => m.CarteLivreurs,
               ),
           },
+          {
+            // Mode déduit de l'espace (superviseur -> complet).
+            path: 'statistiques',
+            loadComponent: () =>
+              import('./fonctionnalites/livraison/stats/ecran-stats-bureau/ecran-stats-bureau').then(
+                (m) => m.EcranStatsBureau,
+              ),
+          },
         ],
       },
       {
@@ -288,6 +304,14 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./fonctionnalites/livraison/carte-livreurs/carte-livreurs').then(
                 (m) => m.CarteLivreurs,
+              ),
+          },
+          {
+            // Mode déduit de l'espace (gestionnaire -> allégé).
+            path: 'statistiques',
+            loadComponent: () =>
+              import('./fonctionnalites/livraison/stats/ecran-stats-bureau/ecran-stats-bureau').then(
+                (m) => m.EcranStatsBureau,
               ),
           },
         ],

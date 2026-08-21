@@ -4,7 +4,9 @@ import {
   DestroyRef,
   ElementRef,
   OnDestroy,
+  computed,
   inject,
+  input,
   signal,
   viewChild,
 } from '@angular/core';
@@ -14,7 +16,9 @@ import { forkJoin, interval } from 'rxjs';
 import * as L from 'leaflet';
 
 import { BureauLivraisonService } from '../bureau/bureau-livraison.service';
+import { SourceDispatchingLivraison } from '../bureau/source-dispatching-livraison';
 import { extraireMessageErreurLivraison } from '../extraire-message-erreur-livraison';
+import { Departement } from '../../../modeles/departement.model';
 import { CourseLivraison, StatutCourse } from '../modeles/course-livraison.model';
 import { LivreurBureau } from '../modeles/livreur-bureau.model';
 import { contenuPopupLivreur, contenuPopupPointCourse, iconeLivreur, iconePointCourse } from './marqueurs-carte';
@@ -67,8 +71,18 @@ const FONDS_CARTE: FondCarte[] = [
   styleUrl: './carte-livreurs.scss',
 })
 export class CarteLivreurs implements AfterViewInit, OnDestroy {
-  private readonly service = inject(BureauLivraisonService);
+  private readonly bureauService = inject(BureauLivraisonService);
   private readonly destroyRef = inject(DestroyRef);
+
+  // Par défaut : source bureau (comportement historique inchangé quand
+  // aucune source n'est fournie — routes bureau existantes non touchées).
+  readonly source = input<SourceDispatchingLivraison | null>(null);
+  readonly modeMultiVille = input(false);
+  readonly departements = input<Departement[]>([]);
+
+  private readonly sourceEffective = computed<SourceDispatchingLivraison>(
+    () => this.source() ?? this.bureauService,
+  );
 
   private readonly conteneurCarte = viewChild.required<ElementRef<HTMLDivElement>>('conteneurCarte');
 
@@ -77,6 +91,8 @@ export class CarteLivreurs implements AfterViewInit, OnDestroy {
   private readonly marqueursLivreurs = new Map<string, L.Marker>();
   private readonly marqueursCourses = new Map<string, L.Marker>();
   private timerErreurEphemere: ReturnType<typeof setTimeout> | undefined;
+
+  readonly villeSelectionneeId = signal<number | null>(null);
 
   readonly fondsCarte = FONDS_CARTE;
   readonly fondActuelId = signal(FONDS_CARTE[0].id);
@@ -113,9 +129,10 @@ export class CarteLivreurs implements AfterViewInit, OnDestroy {
   }
 
   rafraichir(premierChargement: boolean): void {
+    const villeId = this.villeSelectionneeId() ?? undefined;
     forkJoin({
-      livreurs: this.service.listerLivreurs(),
-      courses: this.service.listerCourses(),
+      livreurs: this.sourceEffective().listerLivreurs(undefined, villeId),
+      courses: this.sourceEffective().listerCourses(undefined, villeId),
     }).subscribe({
       next: ({ livreurs, courses }) => {
         this.chargementInitial.set(false);
@@ -137,6 +154,19 @@ export class CarteLivreurs implements AfterViewInit, OnDestroy {
 
   basculerPause(): void {
     this.enPause.update((v) => !v);
+  }
+
+  /** Coordonnateur uniquement : filtre les marqueurs affichés par ville. */
+  changerVille(valeur: string): void {
+    this.villeSelectionneeId.set(valeur ? Number(valeur) : null);
+    this.rafraichir(true);
+  }
+
+  private nomVille(villeId: number | undefined): string | undefined {
+    if (!this.modeMultiVille() || villeId === undefined) {
+      return undefined;
+    }
+    return this.departements().find((d) => d.id === villeId)?.nom;
   }
 
   /**
@@ -184,10 +214,10 @@ export class CarteLivreurs implements AfterViewInit, OnDestroy {
       if (existant) {
         existant.setLatLng(position);
         existant.setIcon(iconeLivreur(livreur.statut));
-        existant.setPopupContent(contenuPopupLivreur(livreur));
+        existant.setPopupContent(contenuPopupLivreur(livreur, this.nomVille(livreur.ville)));
       } else {
         const marqueur = L.marker(position, { icon: iconeLivreur(livreur.statut) }).bindPopup(
-          contenuPopupLivreur(livreur),
+          contenuPopupLivreur(livreur, this.nomVille(livreur.ville)),
         );
         marqueur.addTo(this.carte);
         this.marqueursLivreurs.set(livreur.id, marqueur);
@@ -233,10 +263,10 @@ export class CarteLivreurs implements AfterViewInit, OnDestroy {
     const existant = this.marqueursCourses.get(cle);
     if (existant) {
       existant.setLatLng(position);
-      existant.setPopupContent(contenuPopupPointCourse(course, lettre));
+      existant.setPopupContent(contenuPopupPointCourse(course, lettre, this.nomVille(course.ville)));
     } else {
       const marqueur = L.marker(position, { icon: iconePointCourse(lettre) }).bindPopup(
-        contenuPopupPointCourse(course, lettre),
+        contenuPopupPointCourse(course, lettre, this.nomVille(course.ville)),
       );
       marqueur.addTo(this.carte);
       this.marqueursCourses.set(cle, marqueur);

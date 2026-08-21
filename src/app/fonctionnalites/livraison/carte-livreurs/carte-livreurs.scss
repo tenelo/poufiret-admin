@@ -92,10 +92,14 @@
   }
 }
 
-.controle-fond-carte {
+.controles-superposes {
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
   // Au-dessus des contrôles internes de Leaflet (zoom, etc. à z-index 1000).
   z-index: 1000;
 

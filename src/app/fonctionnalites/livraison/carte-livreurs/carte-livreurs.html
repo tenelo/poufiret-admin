@@ -15,8 +15,16 @@
   <div class="zone-carte">
     <div #conteneurCarte class="conteneur-carte"></div>
 
-    <div class="controle-fond-carte">
-      <select [value]="fondActuelId()" (change)="changerFond($any($event.target).value)">
+    <div class="controles-superposes">
+      @if (modeMultiVille()) {
+        <select class="controle-ville" [value]="villeSelectionneeId() ?? ''" (change)="changerVille($any($event.target).value)">
+          <option value="">Toutes les villes</option>
+          @for (departement of departements(); track departement.id) {
+            <option [value]="departement.id">{{ departement.nom }}</option>
+          }
+        </select>
+      }
+      <select class="controle-fond" [value]="fondActuelId()" (change)="changerFond($any($event.target).value)">
         @for (fond of fondsCarte; track fond.id) {
           <option [value]="fond.id">{{ fond.libelle }}</option>
         }

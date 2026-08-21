@@ -1,0 +1,204 @@
+.stats-livraison {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.bloc-periode {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.9rem 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  .champ {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  input {
+    padding: 0.45rem 0.6rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.85rem;
+
+    &:focus {
+      outline: none;
+      border-color: #0369a1;
+    }
+  }
+}
+
+.bouton-principal {
+  padding: 0.5rem 1.1rem;
+  background: #0369a1;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  height: fit-content;
+
+  &:hover {
+    background: #075985;
+  }
+}
+
+.periode-affichee {
+  margin-left: auto;
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+.grille-kpi {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.9rem;
+}
+
+@media (max-width: 760px) {
+  .grille-kpi {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.carte-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.etiquette-kpi {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.valeur-kpi {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0369a1;
+}
+
+.bloc-graphique {
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  h2 {
+    margin: 0 0 0.85rem;
+    font-size: 1rem;
+    color: #1a1a1a;
+  }
+}
+
+.entete-bloc {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.85rem;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.bascule-unite {
+  display: flex;
+  gap: 0.3rem;
+
+  button {
+    padding: 0.35rem 0.75rem;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    color: #374151;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &.actif {
+      background: #0369a1;
+      border-color: #0369a1;
+      color: #ffffff;
+    }
+  }
+}
+
+.zone-graphique {
+  position: relative;
+  height: 280px;
+}
+
+.zone-graphique-courte {
+  height: 220px;
+  margin-bottom: 1rem;
+}
+
+.etat-vide {
+  color: #9ca3af;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.zone-table {
+  overflow-x: auto;
+}
+
+.table-livreurs {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+
+  th,
+  td {
+    padding: 0.5rem 0.6rem;
+    text-align: left;
+    border-bottom: 1px solid #f3f4f6;
+    white-space: nowrap;
+  }
+
+  th {
+    color: #6b7280;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  td {
+    color: #1a1a1a;
+  }
+}
+
+.grille-analyses {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.1rem;
+}
+
+@media (max-width: 860px) {
+  .grille-analyses {
+    grid-template-columns: 1fr;
+  }
+}
