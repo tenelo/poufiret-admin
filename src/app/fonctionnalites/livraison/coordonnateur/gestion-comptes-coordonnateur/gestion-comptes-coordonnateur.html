@@ -1,0 +1,217 @@
+<section class="page-comptes">
+  <h1>Gestion des comptes</h1>
+
+  <div class="bloc-selecteur-ville">
+    <label for="selecteur-ville">Ville</label>
+    @if (chargementDepartements()) {
+      <p class="indice">Chargement des villes…</p>
+    } @else if (erreurDepartements()) {
+      <p class="erreur-champ">
+        {{ erreurDepartements() }}
+        <button type="button" class="lien-reessayer" (click)="chargerDepartements()">Réessayer</button>
+      </p>
+    } @else {
+      <select id="selecteur-ville" [value]="villeSelectionneeId() ?? ''" (change)="changerVille($any($event.target).value)">
+        <option value="">— Choisir une ville —</option>
+        @for (departement of departements(); track departement.id) {
+          <option [value]="departement.id">{{ departement.nom }} ({{ departement.region }})</option>
+        }
+      </select>
+    }
+  </div>
+
+  @if (messageSucces()) {
+    <p class="message-succes">{{ messageSucces() }}</p>
+  }
+
+  @if (!villeSelectionneeId()) {
+    <div class="invite-ville">
+      <p>Choisissez une ville pour voir et gérer son équipe TeneLivr.</p>
+    </div>
+  } @else {
+    <div class="sections">
+      <!-- Superviseurs -->
+      <section class="section-equipe">
+        <div class="entete-section">
+          <h2>Superviseurs</h2>
+          <button type="button" class="bouton-ajouter" (click)="ouvrirCreation('superviseur')">+ Ajouter</button>
+        </div>
+
+        @if (chargementSuperviseurs()) {
+          <div class="etat-chargement"><span class="spinner"></span><p>Chargement…</p></div>
+        } @else if (erreurSuperviseurs()) {
+          <div class="etat-erreur">
+            <p>{{ erreurSuperviseurs() }}</p>
+            <button type="button" (click)="chargerSuperviseurs()">Réessayer</button>
+          </div>
+        } @else if (superviseurs().length === 0) {
+          <p class="etat-vide">Aucun superviseur dans cette ville.</p>
+        } @else {
+          <div class="liste-comptes">
+            @for (superviseur of superviseurs(); track superviseur.id) {
+              <div class="carte-compte">
+                <div class="identite-compte">
+                  <span class="nom-compte">{{ nomAfficheCompteEquipe(superviseur) }}</span>
+                  <a class="telephone-compte" [href]="telHref(superviseur.telephone)">{{ superviseur.telephone }}</a>
+                  @if (superviseur.nom_bureau) {
+                    <span class="info-compte">🏢 {{ superviseur.nom_bureau }}</span>
+                  }
+                </div>
+                <button
+                  type="button"
+                  class="bouton-desactiver"
+                  (click)="demanderDesactivation('superviseur', superviseur.id, nomAfficheCompteEquipe(superviseur))"
+                >
+                  Désactiver
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Gestionnaires -->
+      <section class="section-equipe">
+        <div class="entete-section">
+          <h2>Gestionnaires</h2>
+          <button type="button" class="bouton-ajouter" (click)="ouvrirCreation('gestionnaire')">+ Ajouter</button>
+        </div>
+
+        @if (chargementGestionnaires()) {
+          <div class="etat-chargement"><span class="spinner"></span><p>Chargement…</p></div>
+        } @else if (erreurGestionnaires()) {
+          <div class="etat-erreur">
+            <p>{{ erreurGestionnaires() }}</p>
+            <button type="button" (click)="chargerGestionnaires()">Réessayer</button>
+          </div>
+        } @else if (gestionnaires().length === 0) {
+          <p class="etat-vide">Aucun gestionnaire dans cette ville.</p>
+        } @else {
+          <div class="liste-comptes">
+            @for (gestionnaire of gestionnaires(); track gestionnaire.id) {
+              <div class="carte-compte">
+                <div class="identite-compte">
+                  <span class="nom-compte">{{ nomAfficheCompteEquipe(gestionnaire) }}</span>
+                  <a class="telephone-compte" [href]="telHref(gestionnaire.telephone)">{{ gestionnaire.telephone }}</a>
+                  @if (gestionnaire.nom_bureau) {
+                    <span class="info-compte">🏢 {{ gestionnaire.nom_bureau }}</span>
+                  }
+                </div>
+                <button
+                  type="button"
+                  class="bouton-desactiver"
+                  (click)="demanderDesactivation('gestionnaire', gestionnaire.id, nomAfficheCompteEquipe(gestionnaire))"
+                >
+                  Désactiver
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Livreurs -->
+      <section class="section-equipe">
+        <div class="entete-section">
+          <h2>Livreurs</h2>
+          <button type="button" class="bouton-ajouter" (click)="ouvrirCreation('livreur')">+ Ajouter</button>
+        </div>
+
+        @if (chargementLivreurs()) {
+          <div class="etat-chargement"><span class="spinner"></span><p>Chargement…</p></div>
+        } @else if (erreurLivreurs()) {
+          <div class="etat-erreur">
+            <p>{{ erreurLivreurs() }}</p>
+            <button type="button" (click)="chargerLivreurs()">Réessayer</button>
+          </div>
+        } @else if (livreurs().length === 0) {
+          <p class="etat-vide">Aucun livreur dans cette ville.</p>
+        } @else {
+          <div class="liste-comptes">
+            @for (livreur of livreurs(); track livreur.id) {
+              <div class="carte-compte">
+                <div class="identite-compte">
+                  <span class="nom-compte">{{ iconeVehicule(livreur.type_vehicule) }} {{ livreur.nom }}</span>
+                  <a class="telephone-compte" [href]="telHref(livreur.telephone)">{{ livreur.telephone }}</a>
+                  <span class="info-compte">
+                    {{ livreur.statut === 'en_ligne' ? 'En ligne' : 'Hors ligne' }}
+                    @if (livreur.immatriculation) {
+                      · {{ livreur.immatriculation }}
+                    }
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  class="bouton-desactiver"
+                  (click)="demanderDesactivation('livreur', livreur.id, livreur.nom)"
+                >
+                  Désactiver
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    </div>
+  }
+</section>
+
+@if (dialogTypeOuvert(); as type) {
+  @if (villeSelectionnee(); as ville) {
+    <app-dialog-creation-compte
+      [type]="type"
+      [ville]="ville"
+      [enregistrementEnCours]="creationEnCours()"
+      [messageErreur]="erreurCreation()"
+      (soumis)="soumettreCreation($event)"
+      (annule)="fermerCreation()"
+    />
+  }
+}
+
+@if (reponseSucces(); as reponse) {
+  <div class="voile-modale" (click)="fermerPanneauSucces()">
+    <div class="modale panneau-succes" (click)="$event.stopPropagation()">
+      <h2>Compte créé avec succès</h2>
+      <p class="recap">{{ reponse.telephone }}</p>
+
+      <div class="bloc-pin">
+        <span class="etiquette-pin">Code PIN généré</span>
+        <span class="valeur-pin">{{ reponse.pinClair }}</span>
+        <p class="avertissement-pin">
+          ⚠️ Notez ce code maintenant : il ne sera plus jamais affiché.
+        </p>
+        <button type="button" class="bouton-secondaire" (click)="copierPin()">
+          {{ pinCopie() ? 'Copié ✓' : 'Copier le PIN' }}
+        </button>
+      </div>
+
+      <button type="button" class="bouton-principal" (click)="fermerPanneauSucces()">Fermer</button>
+    </div>
+  </div>
+}
+
+@if (compteADesactiver(); as cible) {
+  <div class="voile-confirmation" (click)="annulerDesactivation()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p class="titre-dialog">Désactiver {{ cible.nom }} ?</p>
+      <p class="consequence-dialog">Le compte ne sera pas supprimé, seulement désactivé.</p>
+
+      @if (erreurDesactivation()) {
+        <p class="erreur-generale">{{ erreurDesactivation() }}</p>
+      }
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annulerDesactivation()">Annuler</button>
+        <button
+          type="button"
+          class="bouton-danger"
+          [disabled]="desactivationEnCours()"
+          (click)="confirmerDesactivation()"
+        >
+          {{ desactivationEnCours() ? '…' : 'Désactiver' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

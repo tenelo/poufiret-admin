@@ -225,12 +225,12 @@ export const routes: Routes = [
               ),
           },
           {
+            // Gestion des comptes (superviseurs/gestionnaires/livreurs) par ville.
             path: 'comptes',
-            data: { titre: 'Comptes livraison' },
             loadComponent: () =>
-              import('./fonctionnalites/livraison/ecran-a-venir-livraison/ecran-a-venir-livraison').then(
-                (m) => m.EcranAVenirLivraison,
-              ),
+              import(
+                './fonctionnalites/livraison/coordonnateur/gestion-comptes-coordonnateur/gestion-comptes-coordonnateur'
+              ).then((m) => m.GestionComptesCoordonnateur),
           },
         ],
       },

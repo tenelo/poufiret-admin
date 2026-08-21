@@ -1,0 +1,57 @@
+<div class="voile-modale" (click)="annule.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>{{ titre() }}</h2>
+    <p class="sous-titre">Ville : {{ ville().nom }}</p>
+
+    @if (messageErreur()) {
+      <p class="erreur-generale">{{ messageErreur() }}</p>
+    }
+
+    <form class="formulaire-compte" [formGroup]="formulaire" (ngSubmit)="soumettre()">
+      <label for="telephone-compte">Téléphone</label>
+      <input id="telephone-compte" type="tel" formControlName="telephone" placeholder="+225..." />
+      @if (formulaire.controls.telephone.invalid && formulaire.controls.telephone.touched) {
+        <p class="erreur-champ">
+          Le téléphone est requis et doit commencer par "+" suivi de chiffres (ex. +2250700000000).
+        </p>
+      }
+
+      <div class="ligne-champs">
+        <div class="champ">
+          <label for="prenom-compte">Prénom</label>
+          <input id="prenom-compte" type="text" formControlName="prenom" />
+        </div>
+        <div class="champ">
+          <label for="nom-compte">Nom</label>
+          <input id="nom-compte" type="text" formControlName="nom" />
+        </div>
+      </div>
+
+      @if (type() === 'superviseur' || type() === 'gestionnaire') {
+        <label for="nom_bureau-compte">Nom du bureau <span class="optionnel">(optionnel)</span></label>
+        <input id="nom_bureau-compte" type="text" formControlName="nom_bureau" />
+      } @else {
+        <div class="ligne-champs">
+          <div class="champ">
+            <label for="type_vehicule-compte">Véhicule</label>
+            <select id="type_vehicule-compte" formControlName="type_vehicule">
+              <option value="moto">🏍️ Moto</option>
+              <option value="voiture">🚗 Voiture</option>
+            </select>
+          </div>
+          <div class="champ">
+            <label for="immatriculation-compte">Immatriculation <span class="optionnel">(optionnel)</span></label>
+            <input id="immatriculation-compte" type="text" formControlName="immatriculation" />
+          </div>
+        </div>
+      }
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annule.emit()">Annuler</button>
+        <button type="submit" [disabled]="enregistrementEnCours()">
+          {{ enregistrementEnCours() ? 'Création en cours…' : 'Créer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
