@@ -1,5 +1,9 @@
 /* Styles globaux de l'application */
 
+// Leaflet crée son propre DOM en dehors du template Angular (tuiles, marqueurs,
+// popups) : son CSS doit être global, un style de composant scoppé ne l'atteindrait pas.
+@use 'leaflet/dist/leaflet.css';
+
 * {
   box-sizing: border-box;
 }

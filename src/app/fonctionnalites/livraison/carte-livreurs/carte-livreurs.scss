@@ -1,0 +1,165 @@
+.page-carte {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  height: 100%;
+}
+
+.entete-page {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1a1a1a;
+  }
+}
+
+.actions-entete {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.indice-maj {
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+.bouton-secondaire {
+  padding: 0.5rem 1rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: #f4f5f7;
+  }
+}
+
+.zone-carte {
+  position: relative;
+  flex: 1;
+  min-height: 420px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.conteneur-carte {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+}
+
+.voile-chargement,
+.voile-vide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.85);
+  color: #6b7280;
+  text-align: center;
+  padding: 1rem;
+  z-index: 400;
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #0369a1;
+    border-radius: 50%;
+    animation: rotation 0.8s linear infinite;
+  }
+}
+
+@keyframes rotation {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.controle-fond-carte {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  // Au-dessus des contrôles internes de Leaflet (zoom, etc. à z-index 1000).
+  z-index: 1000;
+
+  select {
+    padding: 0.45rem 0.65rem;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #374151;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+      border-color: #0369a1;
+    }
+  }
+}
+
+.toast-erreur {
+  position: absolute;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  background: #1a1a1a;
+  color: #ffffff;
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 500;
+  max-width: 90%;
+  text-align: center;
+}
+
+.bloc-sans-position {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.titre-sans-position {
+  font-weight: 600;
+}
+
+.chip-sans-position {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+@media (max-width: 640px) {
+  .zone-carte {
+    min-height: 320px;
+  }
+
+  .conteneur-carte {
+    min-height: 320px;
+  }
+}

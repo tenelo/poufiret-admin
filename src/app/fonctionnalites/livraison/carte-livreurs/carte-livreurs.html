@@ -1,0 +1,50 @@
+<section class="page-carte">
+  <div class="entete-page">
+    <h1>Carte des livreurs</h1>
+    <div class="actions-entete">
+      @if (derniereMiseAJour(); as maj) {
+        <span class="indice-maj">Mis à jour à {{ maj | date: 'HH:mm:ss' }}</span>
+      }
+      <button type="button" class="bouton-secondaire" (click)="basculerPause()">
+        {{ enPause() ? '▶ Reprendre' : '⏸ Pause' }}
+      </button>
+      <button type="button" class="bouton-secondaire" (click)="recentrer()">🎯 Recentrer</button>
+    </div>
+  </div>
+
+  <div class="zone-carte">
+    <div #conteneurCarte class="conteneur-carte"></div>
+
+    <div class="controle-fond-carte">
+      <select [value]="fondActuelId()" (change)="changerFond($any($event.target).value)">
+        @for (fond of fondsCarte; track fond.id) {
+          <option [value]="fond.id">{{ fond.libelle }}</option>
+        }
+      </select>
+    </div>
+
+    @if (chargementInitial()) {
+      <div class="voile-chargement">
+        <span class="spinner"></span>
+        <p>Chargement de la carte…</p>
+      </div>
+    } @else if (aucunMarqueur()) {
+      <div class="voile-vide">
+        <p>Aucun livreur positionné ni course active à afficher pour le moment.</p>
+      </div>
+    }
+
+    @if (messageErreurEphemere(); as message) {
+      <div class="toast-erreur">{{ message }}</div>
+    }
+  </div>
+
+  @if (livreursSansPosition().length > 0) {
+    <div class="bloc-sans-position">
+      <span class="titre-sans-position">Position inconnue :</span>
+      @for (livreur of livreursSansPosition(); track livreur.id) {
+        <span class="chip-sans-position">{{ livreur.nom }}</span>
+      }
+    </div>
+  }
+</section>

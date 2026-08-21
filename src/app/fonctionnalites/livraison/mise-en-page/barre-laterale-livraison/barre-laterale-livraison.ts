@@ -21,10 +21,12 @@ const ENTREES_PAR_NIVEAU: Record<NiveauLivraison, EntreeMenuLivraison[]> = {
   ],
   superviseur: [
     { libelle: 'Ma ville', lien: '/livraison/superviseur', icone: '🏙️' },
+    { libelle: 'Carte', lien: '/livraison/superviseur/carte', icone: '🗺️' },
     { libelle: 'Comptes de ma ville', lien: '/livraison/superviseur/comptes', icone: '👥' },
   ],
   gestionnaire: [
     { libelle: 'Courses', lien: '/livraison/gestionnaire', icone: '📦' },
+    { libelle: 'Carte', lien: '/livraison/gestionnaire/carte', icone: '🗺️' },
     { libelle: 'Livreurs', lien: '/livraison/gestionnaire/livreurs', icone: '🛵' },
   ],
 };

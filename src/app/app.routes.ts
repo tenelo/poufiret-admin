@@ -254,6 +254,13 @@ export const routes: Routes = [
                 (m) => m.EcranAVenirLivraison,
               ),
           },
+          {
+            path: 'carte',
+            loadComponent: () =>
+              import('./fonctionnalites/livraison/carte-livreurs/carte-livreurs').then(
+                (m) => m.CarteLivreurs,
+              ),
+          },
         ],
       },
       {
@@ -274,6 +281,13 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./fonctionnalites/livraison/ecran-a-venir-livraison/ecran-a-venir-livraison').then(
                 (m) => m.EcranAVenirLivraison,
+              ),
+          },
+          {
+            path: 'carte',
+            loadComponent: () =>
+              import('./fonctionnalites/livraison/carte-livreurs/carte-livreurs').then(
+                (m) => m.CarteLivreurs,
               ),
           },
         ],
