@@ -23,6 +23,14 @@ export class OngletPointsPublicites implements OnInit {
   readonly erreurChargement = signal<string | null>(null);
   readonly publicites = signal<StatistiquePublicite[]>([]);
 
+  readonly messageErreur = signal<string | null>(null);
+  readonly messageSucces = signal<string | null>(null);
+
+  // ---- Masquage (retrait des listes) ----
+  readonly publiciteASupprimer = signal<StatistiquePublicite | null>(null);
+  readonly suppressionEnCours = signal(false);
+  readonly erreurSuppression = signal<string | null>(null);
+
   readonly estDetaillee = estStatistiqueDetaillee;
 
   ngOnInit(): void {
@@ -53,5 +61,39 @@ export class OngletPointsPublicites implements OnInit {
   pourcentageBarre(valeur: number, impressions: Record<string, number>): number {
     const maxValeur = Math.max(1, ...Object.values(impressions));
     return Math.round((valeur / maxValeur) * 100);
+  }
+
+  // ---- Masquage (retrait des listes) ----
+
+  demanderSuppression(publicite: StatistiquePublicite): void {
+    this.erreurSuppression.set(null);
+    this.publiciteASupprimer.set(publicite);
+  }
+
+  annulerSuppression(): void {
+    this.publiciteASupprimer.set(null);
+  }
+
+  confirmerSuppression(): void {
+    const publicite = this.publiciteASupprimer();
+    if (!publicite || this.suppressionEnCours()) {
+      return;
+    }
+    this.suppressionEnCours.set(true);
+    this.erreurSuppression.set(null);
+    this.messageErreur.set(null);
+
+    this.service.masquerPublicite(publicite.id).subscribe({
+      next: () => {
+        this.suppressionEnCours.set(false);
+        this.publiciteASupprimer.set(null);
+        this.publicites.update((liste) => liste.filter((p) => p.id !== publicite.id));
+        this.messageSucces.set(`Campagne "${publicite.titre}" retirée de vos listes.`);
+      },
+      error: (erreur: unknown) => {
+        this.suppressionEnCours.set(false);
+        this.erreurSuppression.set(extraireMessageErreur(erreur));
+      },
+    });
   }
 }

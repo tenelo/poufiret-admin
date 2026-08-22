@@ -4,6 +4,9 @@
  */
 export interface MaCategorie {
   id: number;
+  // Id de la catégorie globale du catalogue liée (permet de savoir laquelle
+  // proposer/masquer dans le dialog d'ajout — comparer à CategorieGlobale.id).
+  categorie: number;
   categorie_nom: string;
   categorie_slug: string;
   categorie_icone: string | null;

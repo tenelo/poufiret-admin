@@ -63,6 +63,41 @@ export interface RequeteTransitionCommande {
   raison_refus?: string;
 }
 
+// Filtres de GET /orders/commandes/partenaire/ : statut (existant) + date,
+// en plus soit `date=today`, soit une plage `debut`/`fin` (YYYY-MM-DD).
+export interface FiltresCommandesPartenaire {
+  statut?: StatutCommande | '';
+  date?: 'today';
+  debut?: string;
+  fin?: string;
+}
+
+// Réponse de GET /orders/commandes/partenaire/resume/ : sans paramètre, compteurs
+// globaux (depuis le début) ; avec `?date=today` ou `?debut=&fin=`, compteurs
+// recalculés sur cette période.
+export interface ResumeCommandes {
+  nouvelles: number;
+  en_preparation: number;
+  acceptees: number;
+  total_aujourdhui: number;
+  total: number;
+  ca: number;
+}
+
+// Filtres de période seuls (sans statut), utilisés pour /resume/ qui n'accepte
+// pas de filtre statut contrairement à la liste des commandes.
+export type FiltresPeriode = Pick<FiltresCommandesPartenaire, 'date' | 'debut' | 'fin'>;
+
+// Statuts actifs (nécessitent un suivi) vs finaux (historique).
+export const ETATS_ACTIFS: StatutCommande[] = [
+  'nouvelle',
+  'acceptee',
+  'en_preparation',
+  'prete',
+  'en_livraison',
+];
+export const ETATS_FINAUX: StatutCommande[] = ['livree', 'refusee', 'annulee', 'expiree'];
+
 // Réponse de POST /orders/commandes/<id>/livreur/ : la commande n'y est pas renvoyée
 // telle quelle, on rafraîchit ensuite via GET /orders/commandes/<id>/.
 export interface ReponseCommanderLivreur {

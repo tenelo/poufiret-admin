@@ -1,0 +1,17 @@
+@if (chargementEnCours()) {
+  <div class="etat-chargement">
+    <span class="spinner"></span>
+    <p>Chargement des formules…</p>
+  </div>
+} @else if (erreurChargement()) {
+  <div class="etat-erreur">
+    <p>{{ erreurChargement() }}</p>
+    <button type="button" (click)="charger()">Réessayer</button>
+  </div>
+} @else if (formules().length === 0) {
+  <div class="etat-vide">
+    <p>Aucune formule publicitaire disponible pour le moment.</p>
+  </div>
+} @else {
+  <app-affiches-formules [formules]="formules()" />
+}

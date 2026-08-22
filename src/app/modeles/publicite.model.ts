@@ -37,12 +37,18 @@ export interface FormulePublicite {
 export interface MaPublicite {
   id: string;
   formule: number;
+  // Dénormalisation optionnelle côté backend : si absente, le nom/prix sont
+  // résolus côté front via la liste des formules (formule id → formule).
+  formule_nom?: string;
+  formule_prix?: number;
   titre: string;
   description: string;
   image_couverture: string | null;
   video: string | null;
   portee: PorteePublicite;
   statut: StatutPublicite;
+  debut_diffusion: string | null;
+  fin_diffusion: string | null;
 }
 
 // Corps de POST /publicites/mes-publicites/ (envoyé en multipart par le service).
@@ -59,6 +65,22 @@ export interface ReponseTransitionPublicite {
   statut: string;
   message: string;
 }
+
+export const LIBELLES_TYPE_AFFICHAGE: Record<TypeAffichagePublicite, string> = {
+  carrousel: 'Carrousel accueil',
+  interstitiel: 'Plein écran',
+  bandeau_bas: 'Bandeau bas',
+  page_publicites: 'Page publicités',
+};
+
+// Explications pédagogiques du placement de chaque type d'affichage dans
+// l'app mobile, pour les affiches de formules de l'onglet "Gérer mes publicités".
+export const DESCRIPTIONS_TYPE_AFFICHAGE: Record<TypeAffichagePublicite, string> = {
+  carrousel: "Carrousel défilant en haut de l'écran d'accueil, visible dès l'ouverture de l'app.",
+  interstitiel: 'Affichage plein écran entre deux actions du client (ex. après une validation).',
+  bandeau_bas: "Bandeau fixe en bas de l'écran, visible en permanence pendant la navigation.",
+  page_publicites: 'Page dédiée aux publicités, consultée volontairement par le client.',
+};
 
 export const LIBELLES_STATUT_PUBLICITE: Record<StatutPublicite, string> = {
   brouillon: 'Brouillon',

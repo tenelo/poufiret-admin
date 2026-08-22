@@ -97,41 +97,84 @@
 
 .grille-images {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   gap: 0.75rem;
   margin-bottom: 1.25rem;
 }
 
+.indice-glisser {
+  margin: 0 0 0.75rem;
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
 .carte-image {
   position: relative;
+  display: flex;
+  flex-direction: column;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   overflow: hidden;
+  background: #ffffff;
+
+  &.cdk-drag-animating {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.carte-image-principale {
+  border-color: #4f46e5;
+  border-width: 2px;
+}
+
+.poignee-drag {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(17, 24, 39, 0.55);
+  color: #ffffff;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+// Le clone suivant le pointeur pendant le drag : élévation + curseur "grabbing".
+::ng-deep .cdk-drag-preview {
+  cursor: grabbing;
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.25),
+    0 2px 6px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  opacity: 0.95;
+}
+
+// L'emplacement laissé vide pendant le déplacement.
+::ng-deep .cdk-drag-placeholder {
+  opacity: 0.35;
+  border: 2px dashed #4f46e5;
+  background: #eef2ff;
+}
+
+.zone-image-carte {
+  position: relative;
   aspect-ratio: 1 / 1;
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-  }
-
-  .bouton-supprimer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 0.3rem;
-    background: rgba(185, 28, 28, 0.85);
-    color: #ffffff;
-    border: none;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+    display: block;
   }
 }
 
@@ -140,11 +183,61 @@
   top: 0.35rem;
   left: 0.35rem;
   padding: 0.15rem 0.5rem;
-  background: rgba(79, 70, 229, 0.9);
+  background: rgba(79, 70, 229, 0.92);
   color: #ffffff;
   font-size: 0.65rem;
   font-weight: 600;
   border-radius: 999px;
+}
+
+.pied-carte-image {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.4rem;
+}
+
+.bouton-definir-principale {
+  padding: 0.3rem 0.4rem;
+  background: #eef2ff;
+  border: 1px solid #4f46e5;
+  border-radius: 6px;
+  color: #4f46e5;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &:hover:not(:disabled) {
+    background: #e0e7ff;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.bouton-supprimer {
+  padding: 0.3rem 0.4rem;
+  background: #ffffff;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #b91c1c;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: #fef2f2;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }
 
 .bloc-ajout {

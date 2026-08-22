@@ -1,18 +1,33 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { forkJoin } from 'rxjs';
 
 import { MesProduitsService } from './mes-produits.service';
 import { ProfilPartenaireService } from '../mon-profil/profil-partenaire.service';
+import { MesCategoriesService } from '../mes-categories/mes-categories.service';
 import { FormulaireArticle } from './formulaire-article/formulaire-article';
 import { GestionImages } from './gestion-images/gestion-images';
 import { extraireMessageErreur } from './extraire-message-erreur';
 import { ArticleDetail, ArticleListe, RequeteArticle } from '../../../modeles/article.model';
 import { ProfilPartenaire } from '../../../modeles/profil-partenaire.model';
-import { CategorieCatalogueAplatie, aplatirCategories } from '../../../modeles/categorie-catalogue.model';
+import { MaCategorie } from '../../../modeles/ma-categorie.model';
+import { CategorieCatalogueAplatie } from '../../../modeles/categorie-catalogue.model';
+
+// Identifiant fictif de l'onglet regroupant les articles sans catégorie du
+// partenaire correspondante (robustesse : ne jamais coïncider avec un id réel).
+const ID_ONGLET_SANS_CATEGORIE = -1;
+
+interface OngletProduits {
+  id: number;
+  libelle: string;
+  icone: string | null;
+  articles: ArticleListe[];
+}
 
 /**
  * Page "Mes produits" de l'espace partenaire : CRUD des articles du catalogue et
- * gestion de leurs images. Ne couvre pas les sous-ressources spécialisées (variantes,
- * suppléments, panoramas, vidéos, logement, véhicule) — écrans dédiés à venir.
+ * gestion de leurs images, regroupés en onglets par catégorie du partenaire. Ne
+ * couvre pas les sous-ressources spécialisées (variantes, suppléments, panoramas,
+ * vidéos, logement, véhicule) — écrans dédiés à venir.
  */
 @Component({
   selector: 'app-mes-produits',
@@ -23,6 +38,7 @@ import { CategorieCatalogueAplatie, aplatirCategories } from '../../../modeles/c
 export class MesProduits implements OnInit {
   private readonly profilPartenaireService = inject(ProfilPartenaireService);
   private readonly mesProduitsService = inject(MesProduitsService);
+  private readonly mesCategoriesService = inject(MesCategoriesService);
 
   readonly chargementEnCours = signal(true);
   readonly erreurChargement = signal<string | null>(null);
@@ -31,17 +47,67 @@ export class MesProduits implements OnInit {
   readonly messageSucces = signal<string | null>(null);
 
   readonly profil = signal<ProfilPartenaire | null>(null);
-  readonly categoriesAplaties = signal<CategorieCatalogueAplatie[]>([]);
-
+  readonly mesCategories = signal<MaCategorie[]>([]);
   readonly articles = signal<ArticleListe[]>([]);
-  readonly totalArticles = signal(0);
-  readonly pageCourante = signal(1);
-  readonly pagePrecedenteDisponible = signal(false);
-  readonly pageSuivanteDisponible = signal(false);
 
   readonly quotaArticlesAtteint = computed(() => {
     const profil = this.profil();
-    return profil !== null && this.totalArticles() >= profil.nb_articles_max;
+    return profil !== null && this.articles().length >= profil.nb_articles_max;
+  });
+
+  // ---- Onglets par catégorie ----
+
+  readonly onglets = computed<OngletProduits[]>(() => {
+    const categories = this.mesCategories();
+    const parCategorie = new Map<number, ArticleListe[]>();
+    const sansCategorie: ArticleListe[] = [];
+    const idsConnus = new Set(categories.map((c) => c.categorie));
+
+    for (const article of this.articles()) {
+      if (article.categorie !== null && idsConnus.has(article.categorie)) {
+        const liste = parCategorie.get(article.categorie) ?? [];
+        liste.push(article);
+        parCategorie.set(article.categorie, liste);
+      } else {
+        sansCategorie.push(article);
+      }
+    }
+
+    const items: OngletProduits[] = categories.map((c) => ({
+      id: c.categorie,
+      libelle: c.categorie_nom,
+      icone: c.categorie_icone,
+      articles: parCategorie.get(c.categorie) ?? [],
+    }));
+
+    // Onglet de robustesse, uniquement si des articles y sont effectivement rattachés.
+    if (sansCategorie.length > 0) {
+      items.push({
+        id: ID_ONGLET_SANS_CATEGORIE,
+        libelle: 'Sans catégorie',
+        icone: null,
+        articles: sansCategorie,
+      });
+    }
+
+    return items;
+  });
+
+  readonly ongletActifId = signal<number | null>(null);
+
+  readonly ongletActif = computed(
+    () => this.onglets().find((o) => o.id === this.ongletActifId()) ?? this.onglets()[0] ?? null,
+  );
+
+  /** Catégories du partenaire, au format attendu par le sélecteur du formulaire (pas d'arbre : une seule profondeur). */
+  readonly categoriesFormulaire = computed<CategorieCatalogueAplatie[]>(() =>
+    this.mesCategories().map((c) => ({ id: c.categorie, libelle: c.categorie_nom, profondeur: 0 })),
+  );
+
+  /** Catégorie à pré-sélectionner à la création, depuis l'onglet actif ("Sans catégorie" exclu). */
+  readonly categorieParDefaut = computed(() => {
+    const actif = this.ongletActif();
+    return actif && actif.id !== ID_ONGLET_SANS_CATEGORIE ? actif.id : null;
   });
 
   readonly formulaireOuvert = signal(false);
@@ -55,6 +121,17 @@ export class MesProduits implements OnInit {
 
   readonly articleImagesOuvert = signal<ArticleListe | null>(null);
 
+  constructor() {
+    // Sélectionne le premier onglet dès que les catégories/articles sont chargés
+    // (aucun onglet actif choisi explicitement pour l'instant).
+    effect(() => {
+      const onglets = this.onglets();
+      if (this.ongletActifId() === null && onglets.length > 0) {
+        this.ongletActifId.set(onglets[0].id);
+      }
+    });
+  }
+
   ngOnInit(): void {
     this.chargerDonneesInitiales();
   }
@@ -66,8 +143,7 @@ export class MesProduits implements OnInit {
     this.profilPartenaireService.chargerProfil().subscribe({
       next: (profil) => {
         this.profil.set(profil);
-        this.chargerArticles(1);
-        this.chargerCategories();
+        this.chargerArticlesEtCategories();
       },
       error: (erreur: unknown) => {
         this.chargementEnCours.set(false);
@@ -76,7 +152,7 @@ export class MesProduits implements OnInit {
     });
   }
 
-  chargerArticles(page: number): void {
+  chargerArticlesEtCategories(): void {
     const partenaireId = this.profil()?.id;
     if (!partenaireId) {
       return;
@@ -85,14 +161,14 @@ export class MesProduits implements OnInit {
     this.chargementEnCours.set(true);
     this.erreurChargement.set(null);
 
-    this.mesProduitsService.listerMesArticles(partenaireId, page).subscribe({
-      next: (reponse) => {
+    forkJoin({
+      articles: this.mesProduitsService.listerTousLesArticles(partenaireId),
+      categories: this.mesCategoriesService.listerMesCategories(),
+    }).subscribe({
+      next: ({ articles, categories }) => {
         this.chargementEnCours.set(false);
-        this.articles.set(reponse.results);
-        this.totalArticles.set(reponse.count);
-        this.pageCourante.set(page);
-        this.pagePrecedenteDisponible.set(reponse.previous !== null);
-        this.pageSuivanteDisponible.set(reponse.next !== null);
+        this.articles.set(articles);
+        this.mesCategories.set(categories);
       },
       error: (erreur: unknown) => {
         this.chargementEnCours.set(false);
@@ -101,26 +177,8 @@ export class MesProduits implements OnInit {
     });
   }
 
-  private chargerCategories(): void {
-    this.mesProduitsService.listerCategories().subscribe({
-      next: (categories) => this.categoriesAplaties.set(aplatirCategories(categories)),
-      error: () => {
-        // Non bloquant pour la liste des articles : le sélecteur de catégorie
-        // du formulaire sera simplement vide si cet appel échoue.
-      },
-    });
-  }
-
-  pagePrecedente(): void {
-    if (this.pagePrecedenteDisponible()) {
-      this.chargerArticles(this.pageCourante() - 1);
-    }
-  }
-
-  pageSuivante(): void {
-    if (this.pageSuivanteDisponible()) {
-      this.chargerArticles(this.pageCourante() + 1);
-    }
+  changerOnglet(id: number): void {
+    this.ongletActifId.set(id);
   }
 
   ouvrirCreation(): void {
@@ -172,7 +230,7 @@ export class MesProduits implements OnInit {
           enEdition ? 'Article modifié avec succès.' : 'Article créé avec succès.',
         );
         this.fermerFormulaire();
-        this.chargerArticles(enEdition ? this.pageCourante() : 1);
+        this.chargerArticlesEtCategories();
       },
       error: (erreur: unknown) => {
         this.enregistrementEnCours.set(false);
@@ -203,11 +261,7 @@ export class MesProduits implements OnInit {
         this.suppressionEnCours.set(false);
         this.articleAConfirmerSuppression.set(null);
         this.messageSucces.set('Article supprimé avec succès.');
-        const pageCible =
-          this.articles().length === 1 && this.pageCourante() > 1
-            ? this.pageCourante() - 1
-            : this.pageCourante();
-        this.chargerArticles(pageCible);
+        this.chargerArticlesEtCategories();
       },
       error: (erreur: unknown) => {
         this.suppressionEnCours.set(false);
@@ -222,6 +276,6 @@ export class MesProduits implements OnInit {
 
   fermerImages(): void {
     this.articleImagesOuvert.set(null);
-    this.chargerArticles(this.pageCourante());
+    this.chargerArticlesEtCategories();
   }
 }

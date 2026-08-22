@@ -67,4 +67,47 @@ export class OngletGestionPublicitesService {
       {},
     );
   }
+
+  /**
+   * POST /publicites/mes-publicites/<id>/reconduire/ (multipart) : copie une
+   * campagne terminée en nouvelle campagne brouillon, formule au choix (par
+   * défaut celle de la campagne d'origine si `formuleId` est omis) et image de
+   * couverture optionnelle (sinon l'ancienne est reprise par le backend).
+   */
+  reconduirePublicite(id: string, formuleId?: number, image?: File): Observable<MaPublicite> {
+    const formData = new FormData();
+    if (formuleId) formData.append('formule_id', String(formuleId));
+    if (image) formData.append('image_couverture', image);
+
+    return this.http.post<MaPublicite>(
+      `${this.configuration.apiUrl}/publicites/mes-publicites/${id}/reconduire/`,
+      formData,
+    );
+  }
+
+  /**
+   * POST /publicites/mes-publicites/<id>/image/ (multipart) : remplace l'image
+   * de couverture d'une campagne existante. Si elle était active, le backend
+   * la repasse en validation admin.
+   */
+  changerImagePublicite(id: string, image: File): Observable<MaPublicite> {
+    const formData = new FormData();
+    formData.append('image_couverture', image);
+
+    return this.http.post<MaPublicite>(
+      `${this.configuration.apiUrl}/publicites/mes-publicites/${id}/image/`,
+      formData,
+    );
+  }
+
+  /**
+   * POST /publicites/mes-publicites/<id>/masquer/ : retire la campagne des
+   * listes du partenaire (masquage — la donnée reste en base côté backend).
+   */
+  masquerPublicite(id: string): Observable<{ detail: string }> {
+    return this.http.post<{ detail: string }>(
+      `${this.configuration.apiUrl}/publicites/mes-publicites/${id}/masquer/`,
+      {},
+    );
+  }
 }

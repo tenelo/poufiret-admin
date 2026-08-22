@@ -18,6 +18,14 @@ export interface ProfilPartenaire {
   quartier: string;
   secteur: string;
   ville: string;
+  // departement (FK id) et latitude/longitude : non confirmés dans la doc API
+  // déjà vérifiée pour mon-profil-partenaire (voir reference_api_poufiret_auth) —
+  // ajoutés de façon défensive pour ce chantier (affichage "non renseigné" si
+  // absents, à vérifier lors du test manuel).
+  departement: number | null;
+  departement_nom?: string;
+  latitude: number | null;
+  longitude: number | null;
   description_acces: string;
   telephone_pro: string;
   whatsapp: string;
@@ -48,6 +56,9 @@ export type RequeteMiseAJourProfilPartenaire = Partial<
     | 'quartier'
     | 'secteur'
     | 'ville'
+    | 'departement'
+    | 'latitude'
+    | 'longitude'
     | 'description_acces'
     | 'telephone_pro'
     | 'whatsapp'

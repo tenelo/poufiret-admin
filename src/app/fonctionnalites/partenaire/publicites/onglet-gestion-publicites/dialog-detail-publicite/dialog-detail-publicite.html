@@ -1,0 +1,81 @@
+<div class="voile-modale" (click)="ferme.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <button type="button" class="bouton-fermer" (click)="ferme.emit()" aria-label="Fermer">×</button>
+
+    @if (apercuNouvelleImage(); as apercu) {
+      <img [src]="apercu" [alt]="publicite().titre" class="image-detail" />
+    } @else if (publicite().image_couverture) {
+      <img [src]="publicite().image_couverture" [alt]="publicite().titre" class="image-detail" />
+    } @else {
+      <div class="image-detail image-vide">Aucune image</div>
+    }
+
+    <div class="entete-detail">
+      <h2>{{ publicite().titre }}</h2>
+      <span class="badge badge-{{ publicite().statut }}">{{ libellesStatut[publicite().statut] }}</span>
+    </div>
+
+    <p class="formule-detail">Formule : {{ libelleFormule() }}</p>
+
+    <p class="periode-detail">
+      @if (publicite().debut_diffusion && publicite().fin_diffusion) {
+        Diffusion du {{ publicite().debut_diffusion | date: 'dd/MM/yyyy' }} au
+        {{ publicite().fin_diffusion | date: 'dd/MM/yyyy' }}
+      } @else {
+        Diffusion pas encore programmée
+      }
+    </p>
+
+    @if (publicite().description) {
+      <p class="description-detail">{{ publicite().description }}</p>
+    }
+
+    <div class="bloc-image">
+      @if (erreurImage()) {
+        <p class="erreur-generale">{{ erreurImage() }}</p>
+      }
+      @if (erreurLocaleImage()) {
+        <p class="erreur-generale">{{ erreurLocaleImage() }}</p>
+      }
+
+      @if (nouvelleImage(); as fichier) {
+        <p class="nom-fichier">Nouvelle image sélectionnée : {{ fichier.name }}</p>
+        <div class="actions-image">
+          <button type="button" class="bouton-secondaire" [disabled]="envoiImageEnCours()" (click)="annulerNouvelleImage()">
+            Annuler
+          </button>
+          <button type="button" class="bouton-principal" [disabled]="envoiImageEnCours()" (click)="demanderEnvoiImage()">
+            {{ envoiImageEnCours() ? 'Envoi en cours…' : 'Envoyer la nouvelle image' }}
+          </button>
+        </div>
+      } @else {
+        <input #entreeFichierImage type="file" accept="image/*" hidden (change)="selectionnerNouvelleImage($event)" />
+        <button type="button" class="bouton-secondaire" (click)="entreeFichierImage.click()">
+          Modifier l'image
+        </button>
+      }
+    </div>
+
+    <div class="bloc-suppression">
+      <button type="button" class="bouton-lien-supprimer" (click)="supprimer.emit()">
+        🗑 Retirer cette publicité de mes listes
+      </button>
+    </div>
+
+    @if (confirmationActiveOuverte()) {
+      <div class="voile-confirmation" (click)="annulerConfirmationActive()">
+        <div class="boite-confirmation" (click)="$event.stopPropagation()">
+          <p>
+            Cette campagne est <strong>active</strong>. Changer son image la fera repasser en
+            validation par l'administration : elle sortira temporairement de la diffusion.
+            Confirmer le changement ?
+          </p>
+          <div class="actions-confirmation">
+            <button type="button" class="bouton-secondaire" (click)="annulerConfirmationActive()">Annuler</button>
+            <button type="button" class="bouton-principal" (click)="confirmerEnvoiImageActive()">Confirmer</button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

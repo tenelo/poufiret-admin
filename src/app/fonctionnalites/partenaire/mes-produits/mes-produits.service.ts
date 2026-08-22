@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { EMPTY, Observable, expand, map, reduce } from 'rxjs';
 
 import { ConfigurationService } from '../../../noyau/config/configuration.service';
 import { ArticleDetail, ArticleListe, RequeteArticle } from '../../../modeles/article.model';
@@ -32,6 +32,30 @@ export class MesProduitsService {
       `${this.configuration.apiUrl}/catalogue/articles/`,
       { params },
     );
+  }
+
+  /**
+   * Récupère la totalité des articles du partenaire en bouclant sur les pages
+   * (`next`) — utilisé pour le regroupement par catégorie en onglets, qui a
+   * besoin de la liste complète plutôt que d'une page à la fois.
+   */
+  listerTousLesArticles(partenaireId: number): Observable<ArticleListe[]> {
+    return this.listerMesArticles(partenaireId, 1).pipe(
+      expand((reponse) => {
+        const pageSuivante = reponse.next ? this.extrairePage(reponse.next) : null;
+        return pageSuivante ? this.listerMesArticles(partenaireId, pageSuivante) : EMPTY;
+      }),
+      reduce<ReponsePaginee<ArticleListe>, ArticleListe[]>((tous, reponse) => [...tous, ...reponse.results], []),
+    );
+  }
+
+  private extrairePage(urlSuivante: string): number | null {
+    try {
+      const page = new URL(urlSuivante).searchParams.get('page');
+      return page ? Number(page) : null;
+    } catch {
+      return null;
+    }
   }
 
   /** GET /catalogue/articles/<slug>/ : détail complet d'un article. */
@@ -97,5 +121,17 @@ export class MesProduitsService {
   /** DELETE /catalogue/images/<pk>/ : supprime une image. */
   supprimerImage(pk: number): Observable<void> {
     return this.http.delete<void>(`${this.configuration.apiUrl}/catalogue/images/${pk}/`);
+  }
+
+  /** PATCH /catalogue/images/<pk>/ : bascule le statut "image principale" sans ré-uploader. */
+  definirEstPrincipale(pk: number, estPrincipale: boolean): Observable<ImageArticle> {
+    return this.http.patch<ImageArticle>(`${this.configuration.apiUrl}/catalogue/images/${pk}/`, {
+      est_principale: estPrincipale,
+    });
+  }
+
+  /** PATCH /catalogue/images/<pk>/ : met à jour l'ordre d'affichage d'une image (glisser-déposer). */
+  definirOrdre(pk: number, ordre: number): Observable<ImageArticle> {
+    return this.http.patch<ImageArticle>(`${this.configuration.apiUrl}/catalogue/images/${pk}/`, { ordre });
   }
 }

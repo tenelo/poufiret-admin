@@ -2,14 +2,16 @@ import { Component, computed, inject } from '@angular/core';
 
 import { AuthService } from '../../../noyau/auth/auth.service';
 import { PermissionsService } from '../../../noyau/permissions/permissions.service';
+import { ClocheNotifications } from '../cloche-notifications/cloche-notifications';
 
 /**
  * En-tête de la coquille applicative : affiche l'utilisateur connecté
- * et permet de se déconnecter.
+ * et permet de se déconnecter. Espace partenaire uniquement : cloche de
+ * notification des nouvelles commandes (voir ClocheNotifications).
  */
 @Component({
   selector: 'app-en-tete',
-  imports: [],
+  imports: [ClocheNotifications],
   templateUrl: './en-tete.html',
   styleUrl: './en-tete.scss',
 })
@@ -18,6 +20,8 @@ export class EnTete {
   private readonly permissionsService = inject(PermissionsService);
 
   readonly utilisateur = this.authService.utilisateur;
+
+  readonly estPartenaire = computed(() => this.authService.role() === 'partenaire');
 
   /** True pour un admin dont is_superuser=true (permissions déjà chargées par CoquilleApplication). */
   readonly estSuperadmin = computed(

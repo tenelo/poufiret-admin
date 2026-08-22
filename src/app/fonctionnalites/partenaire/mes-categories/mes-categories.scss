@@ -2,6 +2,15 @@
   max-width: 1080px;
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
+}
+
+.entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
 
   h1 {
     margin: 0;
@@ -10,9 +19,25 @@
   }
 
   .sous-titre {
-    margin: 0 0 1.5rem;
+    margin: 0;
     color: #6b7280;
     font-size: 0.9rem;
+  }
+}
+
+.bouton-principal {
+  padding: 0.6rem 1.2rem;
+  background: #4f46e5;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    background: #4338ca;
   }
 }
 
@@ -109,6 +134,14 @@
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   overflow: hidden;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+
+  &:hover {
+    border-color: #4f46e5;
+  }
 }
 
 .zone-image {
@@ -203,4 +236,220 @@
     opacity: 0.6;
     cursor: not-allowed;
   }
+}
+
+.bouton-danger {
+  padding: 0.45rem 0.9rem;
+  background: #ffffff;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: #fef2f2;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// ==================== Dialogs / panneaux ====================
+
+.voile-modale {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background: rgba(17, 24, 39, 0.5);
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.modale {
+  position: relative;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+
+  h2 {
+    margin: 0 0 1rem;
+    font-size: 1.2rem;
+    color: #1a1a1a;
+  }
+}
+
+.modale-detail {
+  max-width: 420px;
+
+  h2 {
+    margin: 0.9rem 0 1rem;
+  }
+}
+
+.modale-ajout {
+  max-width: 480px;
+}
+
+.entete-modale {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.bouton-fermer {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 999px;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: #374151;
+  cursor: pointer;
+
+  &:hover {
+    background: #e5e7eb;
+  }
+}
+
+.entete-modale .bouton-fermer {
+  position: static;
+}
+
+.zone-image-grande {
+  height: 220px;
+  border-radius: 10px;
+}
+
+.actions-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.voile-confirmation {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(17, 24, 39, 0.5);
+  z-index: 110;
+}
+
+.boite-confirmation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 380px;
+  width: 100%;
+}
+
+.titre-dialog {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.consequence-dialog {
+  margin: 0.1rem 0 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.actions-modale {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.indice-vide {
+  margin: 0;
+  padding: 1.5rem 0;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+
+.liste-categories-globales {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 420px) {
+  .liste-categories-globales {
+    grid-template-columns: 1fr;
+  }
+}
+
+.carte-categorie-globale {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.8rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: #1a1a1a;
+
+  &:hover:not(:disabled) {
+    border-color: #4f46e5;
+    background: #eef2ff;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.icone-categorie-globale {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.nom-categorie-globale {
+  flex: 1;
+}
+
+.spinner-petit {
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+  flex-shrink: 0;
 }

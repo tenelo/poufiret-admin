@@ -1,3 +1,10 @@
+@if (messageErreur()) {
+  <p class="erreur-generale">{{ messageErreur() }}</p>
+}
+@if (messageSucces()) {
+  <p class="message-succes">{{ messageSucces() }}</p>
+}
+
 @if (chargementEnCours()) {
   <div class="etat-chargement">
     <span class="spinner"></span>
@@ -18,7 +25,18 @@
       <div class="carte-publicite">
         <div class="entete-carte">
           <span class="titre">{{ pub.titre }}</span>
-          <span class="badge badge-{{ pub.statut }}">{{ pub.statut }}</span>
+          <div class="entete-carte-droite">
+            <span class="badge badge-{{ pub.statut }}">{{ pub.statut }}</span>
+            <button
+              type="button"
+              class="bouton-icone-supprimer"
+              title="Retirer cette publicité de vos listes"
+              aria-label="Retirer cette publicité de vos listes"
+              (click)="demanderSuppression(pub)"
+            >
+              🗑
+            </button>
+          </div>
         </div>
         <p class="formule">Formule : {{ pub.formule }}</p>
 
@@ -26,7 +44,7 @@
           <div class="grille-stats-pub">
             <div class="stat-pub">
               <span class="valeur">{{ pub.nb_impressions }}</span>
-              <span class="libelle">Impressions</span>
+              <span class="libelle">Affichages</span>
             </div>
             <div class="stat-pub">
               <span class="valeur">{{ pub.nb_clics }}</span>
@@ -78,14 +96,39 @@
           }
 
           <p class="periode">
-            {{ pub.debut_diffusion ? (pub.debut_diffusion | date: 'dd/MM/yyyy') : '—' }}
-            →
-            {{ pub.fin_diffusion ? (pub.fin_diffusion | date: 'dd/MM/yyyy') : '—' }}
+            @if (pub.debut_diffusion && pub.fin_diffusion) {
+              Diffusion du {{ pub.debut_diffusion | date: 'dd/MM/yyyy' }} au
+              {{ pub.fin_diffusion | date: 'dd/MM/yyyy' }}
+            } @else {
+              Diffusion pas encore programmée
+            }
           </p>
         } @else {
           <p class="message-restreint">{{ pub.message }}</p>
         }
       </div>
     }
+  </div>
+}
+
+@if (publiciteASupprimer(); as publicite) {
+  <div class="voile-confirmation" (click)="annulerSuppression()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>
+        Retirer « <strong>{{ publicite.titre }}</strong> » de vos listes ? Elle ne sera plus
+        affichée ici.
+      </p>
+      @if (erreurSuppression()) {
+        <p class="erreur-generale">{{ erreurSuppression() }}</p>
+      }
+      <div class="actions-confirmation">
+        <button type="button" class="bouton-secondaire" [disabled]="suppressionEnCours()" (click)="annulerSuppression()">
+          Annuler
+        </button>
+        <button type="button" class="bouton-danger" [disabled]="suppressionEnCours()" (click)="confirmerSuppression()">
+          {{ suppressionEnCours() ? 'Retrait en cours…' : 'Retirer' }}
+        </button>
+      </div>
+    </div>
   </div>
 }

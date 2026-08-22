@@ -40,6 +40,8 @@ export class FormulaireArticle {
 
   readonly categories = input.required<CategorieCatalogueAplatie[]>();
   readonly article = input<ArticleDetail | null>(null);
+  /** Catégorie pré-sélectionnée à la création (ex. depuis l'onglet catégorie actif). Ignorée en édition. */
+  readonly categorieParDefaut = input<number | null>(null);
   readonly enregistrementEnCours = input(false);
   readonly messageErreur = input<string | null>(null);
 
@@ -90,7 +92,7 @@ export class FormulaireArticle {
         this.formulaire.reset({
           nom: '',
           type: 'produit',
-          categorie: null,
+          categorie: this.categorieParDefaut(),
           prix: 0,
           prix_promotion: null,
           unite: '',

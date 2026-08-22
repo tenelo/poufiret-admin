@@ -19,4 +19,15 @@ export class OngletPointsPublicitesService {
       )
       .pipe(map((reponse) => reponse.publicites));
   }
+
+  /**
+   * POST /publicites/mes-publicites/<id>/masquer/ : retire la campagne des
+   * listes du partenaire (masquage — la donnée reste en base côté backend).
+   */
+  masquerPublicite(id: string): Observable<{ detail: string }> {
+    return this.http.post<{ detail: string }>(
+      `${this.configuration.apiUrl}/publicites/mes-publicites/${id}/masquer/`,
+      {},
+    );
+  }
 }

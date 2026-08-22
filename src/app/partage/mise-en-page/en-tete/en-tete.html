@@ -2,6 +2,9 @@
   <span class="nom-app">Poufiret</span>
 
   <div class="zone-utilisateur">
+    @if (estPartenaire()) {
+      <app-cloche-notifications />
+    }
     @if (utilisateur(); as u) {
       <span class="telephone">{{ u.username }}</span>
       <span class="role" [class.role-superadmin]="estSuperadmin()">{{ libelleRole() }}</span>

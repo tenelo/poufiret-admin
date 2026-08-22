@@ -23,21 +23,47 @@
       @if (images().length === 0) {
         <p class="etat-vide">Aucune image pour cet article.</p>
       } @else {
-        <div class="grille-images">
-          @for (image of images(); track image.id) {
-            <div class="carte-image">
-              <img [src]="image.image" [alt]="image.legende ?? nomArticle()" />
-              @if (image.est_principale) {
-                <span class="badge-principale">Principale</span>
-              }
-              <button
-                type="button"
-                class="bouton-supprimer"
-                [disabled]="suppressionEnCoursId() === image.id"
-                (click)="demanderSuppression(image)"
-              >
-                Supprimer
-              </button>
+        @if (images().length > 1) {
+          <p class="indice-glisser">Glissez une image par sa poignée ⠿ pour changer son ordre d'affichage.</p>
+        }
+        <div
+          class="grille-images"
+          cdkDropList
+          cdkDropListOrientation="mixed"
+          [cdkDropListDisabled]="reordonnancementEnCours()"
+          (cdkDropListDropped)="surDepot($event)"
+        >
+          @for (image of imagesOrdonnees(); track image.id) {
+            <div class="carte-image" cdkDrag [class.carte-image-principale]="image.est_principale">
+              <span class="poignee-drag" cdkDragHandle aria-label="Glisser pour réordonner">⠿</span>
+
+              <div class="zone-image-carte">
+                <img [src]="image.image" [alt]="image.legende ?? nomArticle()" />
+                @if (image.est_principale) {
+                  <span class="badge-principale">★ Principale</span>
+                }
+              </div>
+
+              <div class="pied-carte-image">
+                @if (!image.est_principale) {
+                  <button
+                    type="button"
+                    class="bouton-definir-principale"
+                    [disabled]="changementPrincipaleEnCoursId() !== null"
+                    (click)="definirPrincipale(image)"
+                  >
+                    {{ changementPrincipaleEnCoursId() === image.id ? 'Envoi…' : '★ Définir comme principale' }}
+                  </button>
+                }
+                <button
+                  type="button"
+                  class="bouton-supprimer"
+                  [disabled]="suppressionEnCoursId() === image.id"
+                  (click)="demanderSuppression(image)"
+                >
+                  Supprimer
+                </button>
+              </div>
             </div>
           }
         </div>

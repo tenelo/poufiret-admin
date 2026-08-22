@@ -3,6 +3,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { ProfilPartenaireService } from './profil-partenaire.service';
+import { Departement } from '../../../modeles/departement.model';
 import {
   OPTIONS_TYPE_PARTENAIRE,
   ProfilPartenaire,
@@ -37,6 +38,11 @@ export class MonProfil implements OnInit, OnDestroy {
 
   readonly profil = signal<ProfilPartenaire | null>(null);
 
+  /** false = carte en lecture (défaut), true = formulaire d'édition. */
+  readonly modeEdition = signal(false);
+
+  readonly departements = signal<Departement[]>([]);
+
   // Aperçus locaux (URL.createObjectURL) des images sélectionnées mais pas encore envoyées.
   readonly apercuLogo = signal<string | null>(null);
   readonly apercuCouverture = signal<string | null>(null);
@@ -62,6 +68,9 @@ export class MonProfil implements OnInit, OnDestroy {
     quartier: [''],
     secteur: [''],
     ville: [''],
+    departement: [''],
+    latitude: [''],
+    longitude: [''],
     description_acces: [''],
     telephone_pro: [''],
     whatsapp: [''],
@@ -70,6 +79,7 @@ export class MonProfil implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.chargerProfil();
+    this.chargerDepartements();
   }
 
   ngOnDestroy(): void {
@@ -92,13 +102,44 @@ export class MonProfil implements OnInit, OnDestroy {
     });
   }
 
+  chargerDepartements(): void {
+    this.profilPartenaireService.listerDepartements().subscribe({
+      next: (departements) => this.departements.set(departements),
+      error: () => {
+        // Non bloquant : sans départements, le sélecteur du formulaire reste
+        // vide mais la carte en lecture et le reste du formulaire fonctionnent.
+      },
+    });
+  }
+
+  /** Bascule vers le formulaire d'édition (les champs reflètent déjà le profil chargé). */
+  activerEdition(): void {
+    this.messageErreur.set(null);
+    this.messageSucces.set(null);
+    this.modeEdition.set(true);
+  }
+
+  /** Repasse en lecture sans sauvegarder : restaure le formulaire et abandonne les images en attente. */
+  annulerEdition(): void {
+    const profil = this.profil();
+    if (profil) {
+      this.appliquerProfil(profil);
+    }
+    this.revoquerApercus();
+    this.messageErreur.set(null);
+    this.messageSucces.set(null);
+    this.messageErreurImages.set(null);
+    this.messageSuccesImages.set(null);
+    this.modeEdition.set(false);
+  }
+
   soumettre(): void {
     if (this.formulaire.invalid || this.enregistrementEnCours()) {
       this.formulaire.markAllAsTouched();
       return;
     }
 
-    const donnees: RequeteMiseAJourProfilPartenaire = this.formulaire.getRawValue();
+    const donnees = this.construirePayload();
 
     this.enregistrementEnCours.set(true);
     this.messageErreur.set(null);
@@ -108,6 +149,7 @@ export class MonProfil implements OnInit, OnDestroy {
       next: (profil) => {
         this.enregistrementEnCours.set(false);
         this.appliquerProfil(profil);
+        this.modeEdition.set(false);
         this.messageSucces.set('Profil mis à jour avec succès.');
       },
       error: (erreur: unknown) => {
@@ -115,6 +157,45 @@ export class MonProfil implements OnInit, OnDestroy {
         this.messageErreur.set(this.extraireMessageErreur(erreur));
       },
     });
+  }
+
+  private construirePayload(): RequeteMiseAJourProfilPartenaire {
+    const v = this.formulaire.getRawValue();
+    return {
+      nom_commerce: v.nom_commerce,
+      description: v.description,
+      type_partenaire: v.type_partenaire,
+      adresse: v.adresse,
+      quartier: v.quartier,
+      secteur: v.secteur,
+      ville: v.ville,
+      departement: v.departement ? Number(v.departement) : null,
+      latitude: v.latitude !== '' ? Number(v.latitude) : null,
+      longitude: v.longitude !== '' ? Number(v.longitude) : null,
+      description_acces: v.description_acces,
+      telephone_pro: v.telephone_pro,
+      whatsapp: v.whatsapp,
+      email_pro: v.email_pro,
+    };
+  }
+
+  /** Nom du département affiché en lecture : préfère departement_nom, sinon retombe sur la liste chargée. */
+  nomDepartement(profil: ProfilPartenaire): string {
+    if (profil.departement_nom) {
+      return profil.departement_nom;
+    }
+    if (profil.departement === null) {
+      return 'non renseigné';
+    }
+    return this.departements().find((d) => d.id === profil.departement)?.nom ?? `Département #${profil.departement}`;
+  }
+
+  /** Point GPS affiché en lecture. */
+  pointGpsAffiche(profil: ProfilPartenaire): string {
+    if (profil.latitude === null || profil.longitude === null) {
+      return 'non défini';
+    }
+    return `${profil.latitude}, ${profil.longitude}`;
   }
 
   /** Appelé lors du choix d'un fichier pour le logo ou la photo de couverture. */
@@ -207,6 +288,9 @@ export class MonProfil implements OnInit, OnDestroy {
       quartier: profil.quartier,
       secteur: profil.secteur,
       ville: profil.ville,
+      departement: profil.departement !== null ? String(profil.departement) : '',
+      latitude: profil.latitude !== null ? String(profil.latitude) : '',
+      longitude: profil.longitude !== null ? String(profil.longitude) : '',
       description_acces: profil.description_acces,
       telephone_pro: profil.telephone_pro,
       whatsapp: profil.whatsapp,

@@ -1,6 +1,11 @@
 <section class="page-mes-categories">
-  <h1>Mes catégories</h1>
-  <p class="sous-titre">Gérez l'image de couverture affichée pour chacune de vos catégories.</p>
+  <div class="entete">
+    <div>
+      <h1>Mes catégories</h1>
+      <p class="sous-titre">Choisissez vos catégories et gérez leur image de couverture.</p>
+    </div>
+    <button type="button" class="bouton-principal" (click)="ouvrirAjout()">+ Ajouter une catégorie</button>
+  </div>
 
   @if (messageErreur()) {
     <p class="erreur-generale">{{ messageErreur() }}</p>
@@ -26,7 +31,7 @@
   } @else {
     <div class="grille-categories">
       @for (etat of categories(); track etat.categorie.id) {
-        <div class="carte-categorie">
+        <button type="button" class="carte-categorie" (click)="ouvrirDetail(etat)">
           <div class="zone-image">
             @if (etat.apercu) {
               <img [src]="etat.apercu" [alt]="etat.categorie.categorie_nom" class="image-couverture" />
@@ -59,25 +64,138 @@
 
           <div class="corps-carte">
             <span class="nom-categorie">{{ etat.categorie.categorie_nom }}</span>
-
-            <input
-              #entreeFichier
-              type="file"
-              accept="image/*"
-              hidden
-              (change)="selectionnerImage($event, etat.categorie.id)"
-            />
-            <button
-              type="button"
-              class="bouton-secondaire"
-              [disabled]="etat.enCours"
-              (click)="entreeFichier.click()"
-            >
-              Changer l'image
-            </button>
           </div>
-        </div>
+        </button>
       }
     </div>
   }
 </section>
+
+@if (detailOuvert(); as etat) {
+  <div class="voile-modale" (click)="fermerDetail()">
+    <div class="modale modale-detail" (click)="$event.stopPropagation()">
+      <button type="button" class="bouton-fermer" (click)="fermerDetail()" aria-label="Fermer">×</button>
+
+      <div class="zone-image zone-image-grande">
+        @if (etat.apercu) {
+          <img [src]="etat.apercu" [alt]="etat.categorie.categorie_nom" class="image-couverture" />
+        } @else if (etat.categorie.image_couverture) {
+          <img
+            [src]="etat.categorie.image_couverture"
+            [alt]="etat.categorie.categorie_nom"
+            class="image-couverture"
+          />
+        } @else if (etat.categorie.categorie_icone) {
+          <div class="image-vide">
+            <img [src]="etat.categorie.categorie_icone" [alt]="etat.categorie.categorie_nom" class="icone-vide" />
+          </div>
+        } @else {
+          <div class="image-vide">
+            <span>Aucune image</span>
+          </div>
+        }
+
+        @if (etat.categorie.est_principale) {
+          <span class="badge-principale">Principale</span>
+        }
+
+        @if (etat.enCours) {
+          <div class="voile-chargement">
+            <span class="spinner"></span>
+          </div>
+        }
+      </div>
+
+      <h2>{{ etat.categorie.categorie_nom }}</h2>
+
+      <div class="actions-detail">
+        <input
+          #entreeFichier
+          type="file"
+          accept="image/*"
+          hidden
+          (change)="selectionnerImage($event, etat.categorie.id)"
+        />
+        <button
+          type="button"
+          class="bouton-secondaire"
+          [disabled]="etat.enCours"
+          (click)="entreeFichier.click()"
+        >
+          Changer l'image
+        </button>
+        <button type="button" class="bouton-danger" (click)="demanderRetrait(etat)">
+          Retirer cette catégorie
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (categorieARetirer(); as etat) {
+  <div class="voile-confirmation" (click)="annulerRetrait()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p class="titre-dialog">Retirer « {{ etat.categorie.categorie_nom }} » ?</p>
+      <p class="consequence-dialog">Cette catégorie ne sera plus proposée sur votre vitrine.</p>
+
+      @if (erreurRetrait()) {
+        <p class="erreur-generale">{{ erreurRetrait() }}</p>
+      }
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annulerRetrait()">Annuler</button>
+        <button type="button" class="bouton-danger" [disabled]="retraitEnCours()" (click)="confirmerRetrait()">
+          {{ retraitEnCours() ? '…' : 'Retirer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (dialogAjoutOuvert()) {
+  <div class="voile-modale" (click)="fermerAjout()">
+    <div class="modale modale-ajout" (click)="$event.stopPropagation()">
+      <div class="entete-modale">
+        <h2>Ajouter une catégorie</h2>
+        <button type="button" class="bouton-fermer" (click)="fermerAjout()" aria-label="Fermer">×</button>
+      </div>
+
+      @if (erreurAjout()) {
+        <p class="erreur-generale">{{ erreurAjout() }}</p>
+      }
+
+      @if (chargementGlobales()) {
+        <div class="etat-chargement">
+          <span class="spinner"></span>
+          <p>Chargement des catégories…</p>
+        </div>
+      } @else if (erreurGlobales()) {
+        <div class="etat-erreur">
+          <p>{{ erreurGlobales() }}</p>
+          <button type="button" (click)="chargerCategoriesGlobales()">Réessayer</button>
+        </div>
+      } @else if (categoriesGlobalesDisponibles().length === 0) {
+        <p class="indice-vide">Vous avez déjà toutes les catégories disponibles.</p>
+      } @else {
+        <div class="liste-categories-globales">
+          @for (categorie of categoriesGlobalesDisponibles(); track categorie.id) {
+            <button
+              type="button"
+              class="carte-categorie-globale"
+              [disabled]="ajoutEnCoursId() === categorie.id"
+              (click)="ajouterCategorie(categorie)"
+            >
+              @if (categorie.icone) {
+                <img [src]="categorie.icone" [alt]="categorie.nom" class="icone-categorie-globale" />
+              }
+              <span class="nom-categorie-globale">{{ categorie.nom }}</span>
+              @if (ajoutEnCoursId() === categorie.id) {
+                <span class="spinner spinner-petit"></span>
+              }
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

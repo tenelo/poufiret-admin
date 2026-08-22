@@ -1,0 +1,47 @@
+<div class="cloche-notifications">
+  <button
+    type="button"
+    class="bouton-cloche"
+    [class.en-animation]="enAnimation()"
+    (click)="basculerPanneau()"
+    [attr.aria-label]="nbNouvelles() > 0 ? nbNouvelles() + ' nouvelle(s) commande(s)' : 'Notifications'"
+  >
+    <span class="icone-cloche">🔔</span>
+    @if (badgeVisible()) {
+      <span class="badge-cloche">{{ nbNouvelles() }}</span>
+    }
+  </button>
+
+  @if (panneauOuvert()) {
+    <div class="voile-panneau" (click)="fermerPanneau()">
+      <div class="panneau-notifications" (click)="$event.stopPropagation()">
+        <h3>Commandes</h3>
+
+        @if (resumeActuel(); as resume) {
+          <div class="lignes-resume">
+            <div class="ligne-resume">
+              <span class="etiquette">Nouvelles</span>
+              <span class="valeur valeur-attention">{{ resume.nouvelles }}</span>
+            </div>
+            <div class="ligne-resume">
+              <span class="etiquette">Acceptées</span>
+              <span class="valeur">{{ resume.acceptees }}</span>
+            </div>
+            <div class="ligne-resume">
+              <span class="etiquette">En préparation</span>
+              <span class="valeur">{{ resume.en_preparation }}</span>
+            </div>
+          </div>
+        } @else {
+          <p class="indice-chargement">Chargement…</p>
+        }
+
+        <button type="button" class="bouton-voir-commandes" (click)="voirCommandes()">
+          Voir les commandes
+        </button>
+      </div>
+    </div>
+  }
+
+  <audio #lecteurAudio [src]="cheminSon" preload="auto"></audio>
+</div>

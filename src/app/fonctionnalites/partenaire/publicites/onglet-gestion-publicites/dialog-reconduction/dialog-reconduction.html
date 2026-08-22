@@ -1,0 +1,64 @@
+<div class="voile-modale" (click)="annule.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>Reconduire « {{ publicite().titre }} »</h2>
+    <p class="sous-titre">Une nouvelle campagne en brouillon sera créée, à soumettre ensuite.</p>
+
+    <label for="formule-reconduction">Formule</label>
+    <select
+      id="formule-reconduction"
+      [value]="formuleId() ?? ''"
+      (change)="selectionnerFormule($any($event.target).value)"
+    >
+      @for (formule of formules(); track formule.id) {
+        <option [value]="formule.id">{{ formule.nom }} — {{ formule.prix }} FCFA</option>
+      }
+    </select>
+
+    @if (formuleSelectionnee(); as formule) {
+      <div class="details-formule">
+        <div class="detail">
+          <span class="etiquette">Durée</span>
+          <span class="valeur">{{ formule.duree_jours }} j</span>
+        </div>
+        <div class="detail">
+          <span class="etiquette">Emplacements</span>
+          <span class="valeur">{{ formule.types_affichage.join(', ') }}</span>
+        </div>
+      </div>
+    }
+
+    <label>Image de couverture</label>
+    @if (nouvelleImage(); as fichier) {
+      <div class="apercu-image">
+        @if (apercuNouvelleImage(); as apercu) {
+          <img [src]="apercu" alt="Aperçu de la nouvelle image" />
+        }
+        <div class="info-image">
+          <span class="nom-fichier">{{ fichier.name }}</span>
+          <button type="button" class="bouton-secondaire" (click)="annulerNouvelleImage()">Retirer</button>
+        </div>
+      </div>
+    } @else {
+      <input #entreeFichierImage type="file" accept="image/*" hidden (change)="selectionnerNouvelleImage($event)" />
+      <button type="button" class="bouton-secondaire" (click)="entreeFichierImage.click()">
+        Choisir une nouvelle image (optionnel)
+      </button>
+      <p class="note-image">Sans nouvelle image, l'image actuelle de la campagne sera reprise.</p>
+    }
+
+    @if (erreurLocaleImage()) {
+      <p class="erreur-generale">{{ erreurLocaleImage() }}</p>
+    }
+
+    @if (messageErreur()) {
+      <p class="erreur-generale">{{ messageErreur() }}</p>
+    }
+
+    <div class="actions-modale">
+      <button type="button" class="bouton-secondaire" (click)="annule.emit()">Annuler</button>
+      <button type="button" [disabled]="enregistrementEnCours()" (click)="soumettre()">
+        {{ enregistrementEnCours() ? 'Envoi en cours…' : 'Reconduire' }}
+      </button>
+    </div>
+  </div>
+</div>

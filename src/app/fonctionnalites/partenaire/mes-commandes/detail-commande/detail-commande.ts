@@ -102,8 +102,11 @@ export class DetailCommande {
     this.mesCommandesService.changerStatut(this.commande().id, cible, raisonRefus).subscribe({
       next: (commande) => {
         this.transitionEnCours.set(false);
-        this.messageSucces.set('Commande mise à jour avec succès.');
+        // Corrige le bug où la fenêtre restait ouverte après une transition
+        // réussie : on referme systématiquement, la confirmation est reprise
+        // par l'écran parent (bandeau éphémère) pour rester visible.
         this.commandeMiseAJour.emit(commande);
+        this.ferme.emit();
       },
       error: (erreur: unknown) => {
         this.transitionEnCours.set(false);
@@ -140,6 +143,21 @@ export class DetailCommande {
         this.messageErreur.set(this.extraireMessageErreurLivreur(erreur));
       },
     });
+  }
+
+  /** `supplements` est un snapshot JSON libre (forme non documentée côté API) : on
+   *  se contente de détecter s'il y a quelque chose à afficher, sans supposer sa forme. */
+  aDesSupplements(supplements: unknown): boolean {
+    if (!supplements) {
+      return false;
+    }
+    if (Array.isArray(supplements)) {
+      return supplements.length > 0;
+    }
+    if (typeof supplements === 'object') {
+      return Object.keys(supplements).length > 0;
+    }
+    return true;
   }
 
   private extraireMessageErreurLivreur(erreur: unknown): string {

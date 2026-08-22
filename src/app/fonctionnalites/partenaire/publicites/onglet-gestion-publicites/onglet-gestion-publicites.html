@@ -34,7 +34,7 @@
 } @else {
   <div class="grille-publicites">
     @for (publicite of publicites(); track publicite.id) {
-      <div class="carte-publicite">
+      <div class="carte-publicite" (click)="ouvrirDetail(publicite)">
         @if (publicite.image_couverture) {
           <img [src]="publicite.image_couverture" [alt]="publicite.titre" class="image-couverture" />
         } @else {
@@ -44,20 +44,42 @@
         <div class="corps-carte">
           <div class="entete-carte">
             <span class="titre">{{ publicite.titre }}</span>
-            <span class="badge badge-{{ publicite.statut }}">{{ libellesStatut[publicite.statut] }}</span>
+            <div class="entete-carte-droite">
+              <span class="badge badge-{{ publicite.statut }}">{{ libellesStatut[publicite.statut] }}</span>
+              <button
+                type="button"
+                class="bouton-icone-supprimer"
+                title="Retirer cette publicité de vos listes"
+                aria-label="Retirer cette publicité de vos listes"
+                (click)="$event.stopPropagation(); demanderSuppression(publicite)"
+              >
+                🗑
+              </button>
+            </div>
           </div>
-          <p class="formule">Formule : {{ nomFormule(publicite.formule) }}</p>
+          <p class="formule">Formule : {{ libelleFormule(publicite) }}</p>
 
-          @if (peutSoumettre(publicite)) {
-            <button
-              type="button"
-              class="bouton-secondaire"
-              [disabled]="soumissionEnCoursId() === publicite.id"
-              (click)="soumettre(publicite)"
-            >
-              {{ soumissionEnCoursId() === publicite.id ? 'Envoi en cours…' : 'Soumettre' }}
-            </button>
-          }
+          <div class="actions-carte">
+            @if (peutSoumettre(publicite)) {
+              <button
+                type="button"
+                class="bouton-secondaire"
+                [disabled]="soumissionEnCoursId() === publicite.id"
+                (click)="$event.stopPropagation(); soumettre(publicite)"
+              >
+                {{ soumissionEnCoursId() === publicite.id ? 'Envoi en cours…' : 'Soumettre' }}
+              </button>
+            }
+            @if (peutReconduire(publicite)) {
+              <button
+                type="button"
+                class="bouton-secondaire"
+                (click)="$event.stopPropagation(); demanderReconduction(publicite)"
+              >
+                Reconduire
+              </button>
+            }
+          </div>
         </div>
       </div>
     }
@@ -72,4 +94,49 @@
     (soumis)="creerCampagne($event)"
     (annule)="fermerCreation()"
   />
+}
+
+@if (publiciteDetail(); as publicite) {
+  <app-dialog-detail-publicite
+    [publicite]="publicite"
+    [libelleFormule]="libelleFormule(publicite)"
+    [envoiImageEnCours]="envoiImageEnCoursId() === publicite.id"
+    [erreurImage]="erreurImage()"
+    (ferme)="fermerDetail()"
+    (imageModifiee)="modifierImage($event)"
+    (supprimer)="demanderSuppression(publicite)"
+  />
+}
+
+@if (publiciteAReconduire(); as publicite) {
+  <app-dialog-reconduction
+    [publicite]="publicite"
+    [formules]="formules()"
+    [enregistrementEnCours]="reconductionEnCours()"
+    [messageErreur]="erreurReconduction()"
+    (soumis)="confirmerReconduction($event)"
+    (annule)="annulerReconduction()"
+  />
+}
+
+@if (publiciteASupprimer(); as publicite) {
+  <div class="voile-confirmation" (click)="annulerSuppression()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>
+        Retirer « <strong>{{ publicite.titre }}</strong> » de vos listes ? Elle ne sera plus
+        affichée ici.
+      </p>
+      @if (erreurSuppression()) {
+        <p class="erreur-generale">{{ erreurSuppression() }}</p>
+      }
+      <div class="actions-confirmation">
+        <button type="button" class="bouton-secondaire" [disabled]="suppressionEnCours()" (click)="annulerSuppression()">
+          Annuler
+        </button>
+        <button type="button" class="bouton-danger" [disabled]="suppressionEnCours()" (click)="confirmerSuppression()">
+          {{ suppressionEnCours() ? 'Retrait en cours…' : 'Retirer' }}
+        </button>
+      </div>
+    </div>
+  </div>
 }

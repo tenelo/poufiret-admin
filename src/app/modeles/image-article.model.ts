@@ -6,4 +6,5 @@ export interface ImageArticle {
   legende: string | null;
   ordre: number;
   est_principale: boolean;
+  est_active: boolean;
 }

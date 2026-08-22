@@ -1,12 +1,20 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 import { ConfigurationService } from '../../../noyau/config/configuration.service';
+import { Departement } from '../../../modeles/departement.model';
 import {
   ProfilPartenaire,
   RequeteMiseAJourProfilPartenaire,
 } from '../../../modeles/profil-partenaire.model';
+
+// DRF peut renvoyer soit un tableau brut, soit une page paginée {results: [...]}.
+type ReponseListe<T> = T[] | { results: T[] };
+
+function normaliserListe<T>(reponse: ReponseListe<T>): T[] {
+  return Array.isArray(reponse) ? reponse : reponse.results;
+}
 
 /**
  * Service d'accès au profil du partenaire connecté (vitrine affichée aux clients).
@@ -21,6 +29,13 @@ export class ProfilPartenaireService {
     return this.http.get<ProfilPartenaire>(
       `${this.configuration.apiUrl}/auth/mon-profil-partenaire/`,
     );
+  }
+
+  /** GET /geo/departements/ : pour le sélecteur de département du formulaire d'édition. */
+  listerDepartements(): Observable<Departement[]> {
+    return this.http
+      .get<ReponseListe<Departement>>(`${this.configuration.apiUrl}/geo/departements/`)
+      .pipe(map(normaliserListe));
   }
 
   /** PATCH /auth/mon-profil-partenaire/ : met à jour les champs autorisés du profil. */

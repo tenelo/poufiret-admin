@@ -4,6 +4,76 @@
       <h1>Mes commandes</h1>
       <p class="sous-titre">Suivez et traitez les commandes reçues de vos clients.</p>
     </div>
+    <button type="button" class="bouton-secondaire" (click)="rafraichirTout()">↻ Rafraîchir</button>
+  </div>
+
+  @if (messageEphemere(); as message) {
+    <p class="message-succes message-ephemere">{{ message }}</p>
+  }
+
+  <!-- Récap chiffré : rangée "période active" + rangée "global" (12 cartes cliquables) -->
+  <div class="section-recap">
+    <div class="entete-section-recap">
+      <span class="titre-section-recap">Sur la période sélectionnée</span>
+      <span class="libelle-periode">{{ libellePeriodeActive() }}</span>
+    </div>
+    <div class="grille-recap">
+      @for (carte of cartesRecap; track carte.groupe) {
+        <button
+          type="button"
+          class="carte-recap"
+          [class.carte-recap-attention]="carte.groupe === 'nouvelle'"
+          [class.actif]="carteSelectionnee()?.rangee === 'periode' && carteSelectionnee()?.groupe === carte.groupe"
+          (click)="ouvrirTable('periode', carte.groupe)"
+        >
+          <span class="etiquette-recap">{{ carte.libelle }}</span>
+          <span class="valeur-recap">{{ valeurCarte(resumePeriode(), carte.groupe) }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="section-recap">
+    <div class="entete-section-recap">
+      <span class="titre-section-recap">Global</span>
+      <span class="libelle-periode">Depuis le début</span>
+    </div>
+    <div class="grille-recap">
+      @for (carte of cartesRecap; track carte.groupe) {
+        <button
+          type="button"
+          class="carte-recap"
+          [class.actif]="carteSelectionnee()?.rangee === 'globale' && carteSelectionnee()?.groupe === carte.groupe"
+          (click)="ouvrirTable('globale', carte.groupe)"
+        >
+          <span class="etiquette-recap">{{ carte.libelle }}</span>
+          <span class="valeur-recap">{{ valeurCarte(resumeGlobal(), carte.groupe) }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Filtres : période + statut (agissent sur la rangée du haut, et sur le tableau s'il est ouvert sur cette rangée) -->
+  <div class="barre-filtres">
+    <div class="bascule-periode">
+      <button type="button" [class.actif]="modePeriode() === 'aujourdhui'" (click)="changerModePeriode('aujourdhui')">
+        Aujourd'hui
+      </button>
+      <button type="button" [class.actif]="modePeriode() === 'plage'" (click)="changerModePeriode('plage')">
+        Choisir des dates
+      </button>
+      <button type="button" [class.actif]="modePeriode() === 'tout'" (click)="changerModePeriode('tout')">
+        Tout
+      </button>
+    </div>
+
+    @if (modePeriode() === 'plage') {
+      <div class="champs-plage">
+        <input type="date" [value]="dateDebut()" (change)="changerDateDebut($any($event.target).value)" />
+        <span>→</span>
+        <input type="date" [value]="dateFin()" (change)="changerDateFin($any($event.target).value)" />
+      </div>
+    }
 
     <select
       class="filtre-statut"
@@ -14,57 +84,238 @@
         <option [value]="option.valeur">{{ option.libelle }}</option>
       }
     </select>
+
+    <button type="button" class="bouton-secondaire bouton-reinitialiser" (click)="reinitialiserFiltres()">
+      Réinitialiser
+    </button>
   </div>
 
-  @if (chargementEnCours()) {
-    <div class="etat-chargement">
-      <span class="spinner"></span>
-      <p>Chargement de vos commandes…</p>
+  @if (!vueTableau()) {
+    <!-- Onglets -->
+    <div class="onglets">
+      <button type="button" [class.actif]="onglet() === 'suivi'" (click)="changerOnglet('suivi')">
+        Suivi
+      </button>
+      <button type="button" [class.actif]="onglet() === 'historique'" (click)="changerOnglet('historique')">
+        Historique ({{ commandesHistorique().length }})
+      </button>
     </div>
-  } @else if (erreurChargement()) {
-    <div class="etat-erreur">
-      <p>{{ erreurChargement() }}</p>
-      <button type="button" (click)="chargerCommandes()">Réessayer</button>
-    </div>
-  } @else if (commandes().length === 0) {
-    <div class="etat-vide">
-      <p>Aucune commande pour le moment.</p>
-    </div>
+
+    @if (chargementEnCours()) {
+      <div class="etat-chargement">
+        <span class="spinner"></span>
+        <p>Chargement de vos commandes…</p>
+      </div>
+    } @else if (erreurChargement()) {
+      <div class="etat-erreur">
+        <p>{{ erreurChargement() }}</p>
+        <button type="button" (click)="chargerCommandes()">Réessayer</button>
+      </div>
+    } @else if (commandes().length === 0) {
+      <div class="etat-vide">
+        <p>Aucune commande pour ce filtre.</p>
+      </div>
+    } @else if (onglet() === 'suivi') {
+      <!-- Tableau de suivi : une colonne par statut actif -->
+      <div class="colonnes-suivi">
+        @for (colonne of colonnes(); track colonne.statut) {
+          <div class="colonne-statut" [class.colonne-prioritaire]="colonne.statut === 'nouvelle'">
+            <div class="entete-colonne">
+              <span class="libelle-colonne">{{ colonne.libelle }}</span>
+              <span class="compteur-colonne">{{ colonne.commandes.length }}</span>
+            </div>
+
+            @if (colonne.commandes.length === 0) {
+              <p class="colonne-vide">Aucune commande</p>
+            } @else {
+              <div class="liste-colonne">
+                @for (commande of colonne.commandes; track commande.id) {
+                  <button
+                    type="button"
+                    class="carte-commande"
+                    [class.carte-nouvelle]="commande.statut === 'nouvelle'"
+                    (click)="ouvrirDetail(commande.id)"
+                  >
+                    <div class="ligne-haut">
+                      <span class="numero">{{ commande.numero }}</span>
+                      <span class="total">{{ commande.total }} FCFA</span>
+                    </div>
+                    <div class="infos-client">
+                      <span class="client-nom">{{ commande.client_nom }}</span>
+                      <span class="client-telephone">{{ commande.client_telephone }}</span>
+                    </div>
+                    <div class="ligne-bas">
+                      <span class="mode-livraison">{{ libellesModeLivraison[commande.mode_livraison] }}</span>
+                      <span class="date-relative">{{ formaterDateRelative(commande.created_at) }}</span>
+                    </div>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    } @else {
+      <!-- Historique : états finaux, liste chronologique -->
+      @if (commandesHistorique().length === 0) {
+        <div class="etat-vide">
+          <p>Aucune commande dans l'historique pour cette période.</p>
+        </div>
+      } @else {
+        <div class="grille-commandes">
+          @for (commande of commandesHistorique(); track commande.id) {
+            <button type="button" class="carte-commande" (click)="ouvrirDetail(commande.id)">
+              <div class="ligne-haut">
+                <span class="numero">{{ commande.numero }}</span>
+                <span class="badge badge-{{ commande.statut }}">{{ libellesStatut[commande.statut] }}</span>
+              </div>
+              <div class="infos-client">
+                <span class="client-nom">{{ commande.client_nom }}</span>
+                <span class="client-telephone">{{ commande.client_telephone }}</span>
+              </div>
+              <div class="ligne-bas">
+                <span class="mode-livraison">{{ libellesModeLivraison[commande.mode_livraison] }}</span>
+                <span class="total">{{ commande.total }} FCFA</span>
+              </div>
+              <span class="date-relative">{{ formaterDateRelative(commande.created_at) }}</span>
+            </button>
+          }
+        </div>
+      }
+    }
   } @else {
-    <div class="grille-commandes">
-      @for (commande of commandes(); track commande.id) {
+    <!-- Vue tableau, ouverte depuis une carte de récap -->
+    <div class="entete-tableau">
+      <button type="button" class="bouton-secondaire" (click)="fermerTable()">← Retour à la vue colonnes</button>
+      <h2>{{ titreTableau() }}</h2>
+    </div>
+
+    @if (chargementTable()) {
+      <div class="etat-chargement">
+        <span class="spinner"></span>
+        <p>Chargement des commandes…</p>
+      </div>
+    } @else if (erreurTable()) {
+      <div class="etat-erreur">
+        <p>{{ erreurTable() }}</p>
+        <button type="button" (click)="chargerTable()">Réessayer</button>
+      </div>
+    } @else if (commandesTableTriees().length === 0) {
+      <div class="etat-vide">
+        <p>Aucune commande pour ce groupe.</p>
+      </div>
+    } @else {
+      <div class="zone-table-scroll">
+        <table class="table-commandes">
+          <thead>
+            <tr>
+              <th (click)="changerTri('numero')" [class.tri-actif]="colonneTri() === 'numero'">
+                Numéro {{ colonneTri() === 'numero' ? (directionTri() === 'asc' ? '▲' : '▼') : '' }}
+              </th>
+              <th (click)="changerTri('client')" [class.tri-actif]="colonneTri() === 'client'">
+                Client {{ colonneTri() === 'client' ? (directionTri() === 'asc' ? '▲' : '▼') : '' }}
+              </th>
+              <th (click)="changerTri('mode')" [class.tri-actif]="colonneTri() === 'mode'">
+                Mode {{ colonneTri() === 'mode' ? (directionTri() === 'asc' ? '▲' : '▼') : '' }}
+              </th>
+              <th (click)="changerTri('statut')" [class.tri-actif]="colonneTri() === 'statut'">
+                Statut {{ colonneTri() === 'statut' ? (directionTri() === 'asc' ? '▲' : '▼') : '' }}
+              </th>
+              <th (click)="changerTri('total')" [class.tri-actif]="colonneTri() === 'total'">
+                Total {{ colonneTri() === 'total' ? (directionTri() === 'asc' ? '▲' : '▼') : '' }}
+              </th>
+              <th (click)="changerTri('date')" [class.tri-actif]="colonneTri() === 'date'">
+                Date {{ colonneTri() === 'date' ? (directionTri() === 'asc' ? '▲' : '▼') : '' }}
+              </th>
+              <th class="colonne-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (commande of commandesPageTable(); track commande.id) {
+              <tr (click)="ouvrirDetail(commande.id)">
+                <td>{{ commande.numero }}</td>
+                <td>
+                  <div class="cellule-client">
+                    <span class="client-nom">{{ commande.client_nom }}</span>
+                    <a class="client-telephone" [href]="'tel:' + commande.client_telephone" (click)="$event.stopPropagation()">
+                      {{ commande.client_telephone }}
+                    </a>
+                  </div>
+                </td>
+                <td>{{ libellesModeLivraison[commande.mode_livraison] }}</td>
+                <td>
+                  <span class="badge badge-{{ commande.statut }}">{{ libellesStatut[commande.statut] }}</span>
+                </td>
+                <td>{{ commande.total }} FCFA</td>
+                <td>{{ formaterDateRelative(commande.created_at) }}</td>
+                <td class="colonne-actions" (click)="$event.stopPropagation()">
+                  <div class="actions-ligne">
+                    @for (action of actionsInlineDisponibles(commande); track action.cible) {
+                      <button
+                        type="button"
+                        class="bouton-action-ligne"
+                        [disabled]="transitionInlineEnCoursId() === commande.id"
+                        (click)="appliquerTransitionInline(commande, action)"
+                      >
+                        {{ action.libelle }}
+                      </button>
+                    }
+                    <button type="button" class="bouton-secondaire" (click)="ouvrirDetail(commande.id)">
+                      Voir
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination-table">
+        <button type="button" class="bouton-secondaire" [disabled]="pageTableIndex() === 0" (click)="pageTablePrecedente()">
+          ← Précédent
+        </button>
+        <span class="info-pagination">
+          Page {{ pageTableIndex() + 1 }} / {{ totalPagesTable() }} · {{ commandesTableTriees().length }} commandes
+        </span>
         <button
           type="button"
-          class="carte-commande"
-          [class.carte-nouvelle]="commande.statut === 'nouvelle'"
-          (click)="ouvrirDetail(commande)"
+          class="bouton-secondaire"
+          [disabled]="pageTableIndex() >= totalPagesTable() - 1"
+          (click)="pageTableSuivante()"
         >
-          <div class="ligne-haut">
-            <span class="numero">{{ commande.numero }}</span>
-            <span class="badge badge-{{ commande.statut }}">{{ libellesStatut[commande.statut] }}</span>
-          </div>
-
-          <div class="infos-client">
-            <span class="client-nom">{{ commande.client_nom }}</span>
-            <span class="client-telephone">{{ commande.client_telephone }}</span>
-          </div>
-
-          <div class="ligne-bas">
-            <span class="mode-livraison">{{ libellesModeLivraison[commande.mode_livraison] }}</span>
-            <span class="total">{{ commande.total }} FCFA</span>
-          </div>
-
-          <span class="date-relative">{{ formaterDateRelative(commande.created_at) }}</span>
+          Suivant →
         </button>
-      }
-    </div>
+      </div>
+    }
   }
 
-  @if (commandeSelectionnee(); as commande) {
-    <app-detail-commande
-      [commande]="commande"
-      (ferme)="fermerDetail()"
-      (commandeMiseAJour)="surCommandeMiseAJour($event)"
-    />
+  @if (detailCommandeId()) {
+    @if (chargementDetail()) {
+      <div class="voile-modale" (click)="fermerDetail()">
+        <div class="modale modale-etat" (click)="$event.stopPropagation()">
+          <div class="etat-chargement">
+            <span class="spinner"></span>
+            <p>Chargement du détail…</p>
+          </div>
+        </div>
+      </div>
+    } @else if (erreurDetail()) {
+      <div class="voile-modale" (click)="fermerDetail()">
+        <div class="modale modale-etat" (click)="$event.stopPropagation()">
+          <div class="etat-erreur">
+            <p>{{ erreurDetail() }}</p>
+            <button type="button" (click)="ouvrirDetail(detailCommandeId()!)">Réessayer</button>
+          </div>
+          <button type="button" class="bouton-secondaire" (click)="fermerDetail()">Fermer</button>
+        </div>
+      </div>
+    } @else if (detailCommande(); as commande) {
+      <app-detail-commande
+        [commande]="commande"
+        (ferme)="fermerDetail()"
+        (commandeMiseAJour)="surCommandeMiseAJour($event)"
+      />
+    }
   }
 </section>

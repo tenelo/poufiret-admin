@@ -12,156 +12,93 @@
       <p>{{ erreurChargement() }}</p>
       <button type="button" (click)="chargerProfil()">Réessayer</button>
     </div>
-  } @else {
-    <form class="formulaire-profil" [formGroup]="formulaire" (ngSubmit)="soumettre()">
-      <section class="section">
-        <h2>Identité du commerce</h2>
-
-        <label for="nom_commerce">Nom du commerce</label>
-        <input id="nom_commerce" type="text" formControlName="nom_commerce" />
-        @if (formulaire.controls.nom_commerce.invalid && formulaire.controls.nom_commerce.touched) {
-          <p class="erreur-champ">Le nom du commerce est requis.</p>
-        }
-
-        <label for="type_partenaire">Type de partenaire</label>
-        <select id="type_partenaire" formControlName="type_partenaire">
-          @for (
-            option of optionsAvecValeurCourante(formulaire.controls.type_partenaire.value);
-            track option.valeur
-          ) {
-            <option [value]="option.valeur">{{ option.libelle }}</option>
-          }
-        </select>
-        @if (
-          formulaire.controls.type_partenaire.invalid && formulaire.controls.type_partenaire.touched
-        ) {
-          <p class="erreur-champ">Le type de partenaire est requis.</p>
-        }
-
-        <label for="description">Description</label>
-        <textarea id="description" formControlName="description" rows="4"></textarea>
-      </section>
-
-      <section class="section">
-        <h2>Images de la vitrine</h2>
-
-        <div class="bloc-image">
-          <span class="etiquette-image">Logo</span>
-          @if (apercuLogo()) {
-            <img [src]="apercuLogo()" alt="Aperçu du nouveau logo" class="apercu-image apercu-logo" />
-          } @else if (profil()?.logo) {
-            <img [src]="profil()!.logo" alt="Logo du commerce" class="apercu-image apercu-logo" />
+  } @else if (profil(); as profilActuel) {
+    @if (!modeEdition()) {
+      <!-- ==================== MODE LECTURE ==================== -->
+      <div class="carte-profil">
+        <div class="banniere-couverture">
+          @if (profilActuel.photo_couverture) {
+            <img [src]="profilActuel.photo_couverture" alt="Photo de couverture du commerce" />
           } @else {
-            <div class="apercu-image apercu-vide apercu-logo">Aucun logo</div>
+            <div class="banniere-vide">Aucune photo de couverture</div>
           }
-          <input
-            #entreeLogo
-            type="file"
-            accept="image/*"
-            hidden
-            (change)="selectionnerImage($event, 'logo')"
-          />
-          <button type="button" class="bouton-secondaire" (click)="entreeLogo.click()">
-            Changer le logo
-          </button>
+
+          <div class="logo-flottant">
+            @if (profilActuel.logo) {
+              <img [src]="profilActuel.logo" alt="Logo du commerce" />
+            } @else {
+              <div class="logo-vide">Aucun logo</div>
+            }
+          </div>
         </div>
 
-        <div class="bloc-image">
-          <span class="etiquette-image">Photo de couverture</span>
-          @if (apercuCouverture()) {
-            <img
-              [src]="apercuCouverture()"
-              alt="Aperçu de la nouvelle photo de couverture"
-              class="apercu-image apercu-couverture"
-            />
-          } @else if (profil()?.photo_couverture) {
-            <img
-              [src]="profil()!.photo_couverture"
-              alt="Photo de couverture du commerce"
-              class="apercu-image apercu-couverture"
-            />
-          } @else {
-            <div class="apercu-image apercu-vide apercu-couverture">Aucune photo de couverture</div>
+        <div class="corps-carte">
+          <div class="entete-corps-carte">
+            <h2>{{ profilActuel.nom_commerce || '—' }}</h2>
+            <button type="button" class="bouton-principal" (click)="activerEdition()">✏️ Modifier</button>
+          </div>
+
+          @if (messageSucces()) {
+            <p class="message-succes">{{ messageSucces() }}</p>
           }
-          <input
-            #entreeCouverture
-            type="file"
-            accept="image/*"
-            hidden
-            (change)="selectionnerImage($event, 'photo_couverture')"
-          />
-          <button type="button" class="bouton-secondaire" (click)="entreeCouverture.click()">
-            Changer la photo de couverture
+
+          <div class="grille-lecture">
+            <div class="champ-lecture">
+              <span class="etiquette">Type de partenaire</span>
+              <span class="valeur">{{ profilActuel.type_partenaire_libelle || '—' }}</span>
+            </div>
+            <div class="champ-lecture champ-pleine-largeur">
+              <span class="etiquette">Description</span>
+              <span class="valeur">{{ profilActuel.description || '—' }}</span>
+            </div>
+            <div class="champ-lecture">
+              <span class="etiquette">Adresse</span>
+              <span class="valeur">{{ profilActuel.adresse || '—' }}</span>
+            </div>
+            <div class="champ-lecture">
+              <span class="etiquette">Quartier</span>
+              <span class="valeur">{{ profilActuel.quartier || '—' }}</span>
+            </div>
+            <div class="champ-lecture">
+              <span class="etiquette">Secteur</span>
+              <span class="valeur">{{ profilActuel.secteur || '—' }}</span>
+            </div>
+            <div class="champ-lecture">
+              <span class="etiquette">Ville</span>
+              <span class="valeur">{{ profilActuel.ville || '—' }}</span>
+            </div>
+            <div class="champ-lecture">
+              <span class="etiquette">Département</span>
+              <span class="valeur">{{ nomDepartement(profilActuel) }}</span>
+            </div>
+            <div class="champ-lecture">
+              <span class="etiquette">Point GPS</span>
+              <span class="valeur">{{ pointGpsAffiche(profilActuel) }}</span>
+            </div>
+            <div class="champ-lecture">
+              <span class="etiquette">Téléphone professionnel</span>
+              <span class="valeur">{{ profilActuel.telephone_pro || 'non renseigné' }}</span>
+            </div>
+            <div class="champ-lecture">
+              <span class="etiquette">WhatsApp</span>
+              <span class="valeur">{{ profilActuel.whatsapp || 'non renseigné' }}</span>
+            </div>
+            <div class="champ-lecture">
+              <span class="etiquette">Email professionnel</span>
+              <span class="valeur">{{ profilActuel.email_pro || 'non renseigné' }}</span>
+            </div>
+            <div class="champ-lecture champ-pleine-largeur">
+              <span class="etiquette">Comment accéder au commerce</span>
+              <span class="valeur">{{ profilActuel.description_acces || '—' }}</span>
+            </div>
+          </div>
+
+          <button type="button" class="bouton-principal bouton-modifier-pied" (click)="activerEdition()">
+            ✏️ Modifier
           </button>
         </div>
+      </div>
 
-        @if (messageErreurImages()) {
-          <p class="erreur-generale">{{ messageErreurImages() }}</p>
-        }
-        @if (messageSuccesImages()) {
-          <p class="message-succes">{{ messageSuccesImages() }}</p>
-        }
-
-        @if (imagesModifiees) {
-          <button
-            type="button"
-            class="bouton-secondaire bouton-enregistrer-images"
-            [disabled]="televersementImagesEnCours()"
-            (click)="enregistrerImages()"
-          >
-            {{ televersementImagesEnCours() ? 'Envoi en cours…' : 'Enregistrer les images' }}
-          </button>
-        }
-      </section>
-
-      <section class="section">
-        <h2>Contacts</h2>
-
-        <label for="telephone_pro">Téléphone professionnel</label>
-        <input id="telephone_pro" type="tel" formControlName="telephone_pro" />
-
-        <label for="whatsapp">WhatsApp</label>
-        <input id="whatsapp" type="tel" formControlName="whatsapp" />
-
-        <label for="email_pro">Email professionnel</label>
-        <input id="email_pro" type="email" formControlName="email_pro" />
-        @if (formulaire.controls.email_pro.invalid && formulaire.controls.email_pro.touched) {
-          <p class="erreur-champ">L'adresse email n'est pas valide.</p>
-        }
-      </section>
-
-      <section class="section">
-        <h2>Localisation</h2>
-
-        <label for="ville">Ville</label>
-        <input id="ville" type="text" formControlName="ville" />
-
-        <label for="quartier">Quartier</label>
-        <input id="quartier" type="text" formControlName="quartier" />
-
-        <label for="secteur">Secteur</label>
-        <input id="secteur" type="text" formControlName="secteur" />
-
-        <label for="adresse">Adresse</label>
-        <input id="adresse" type="text" formControlName="adresse" />
-
-        <label for="description_acces">Comment accéder au commerce</label>
-        <textarea id="description_acces" formControlName="description_acces" rows="3"></textarea>
-      </section>
-
-      @if (messageErreur()) {
-        <p class="erreur-generale">{{ messageErreur() }}</p>
-      }
-      @if (messageSucces()) {
-        <p class="message-succes">{{ messageSucces() }}</p>
-      }
-
-      <button type="submit" [disabled]="enregistrementEnCours()">
-        {{ enregistrementEnCours() ? 'Enregistrement en cours…' : 'Enregistrer' }}
-      </button>
-    </form>
-
-    @if (profil(); as profilActuel) {
       <section class="section section-lecture-seule">
         <h2>Informations gérées par l'administration</h2>
         <p class="note-a-venir">
@@ -172,11 +109,6 @@
           <div class="champ-lecture-seule">
             <span class="etiquette">Statut</span>
             <span class="valeur">{{ profilActuel.statut_libelle }}</span>
-          </div>
-
-          <div class="champ-lecture-seule">
-            <span class="etiquette">Type (libellé)</span>
-            <span class="valeur">{{ profilActuel.type_partenaire_libelle }}</span>
           </div>
 
           <div class="champ-lecture-seule">
@@ -220,6 +152,174 @@
           </div>
         </div>
       </section>
+    } @else {
+      <!-- ==================== MODE ÉDITION ==================== -->
+      <form class="formulaire-profil" [formGroup]="formulaire" (ngSubmit)="soumettre()">
+        <section class="section">
+          <h2>Identité du commerce</h2>
+
+          <label for="nom_commerce">Nom du commerce</label>
+          <input id="nom_commerce" type="text" formControlName="nom_commerce" />
+          @if (formulaire.controls.nom_commerce.invalid && formulaire.controls.nom_commerce.touched) {
+            <p class="erreur-champ">Le nom du commerce est requis.</p>
+          }
+
+          <label for="type_partenaire">Type de partenaire</label>
+          <select id="type_partenaire" formControlName="type_partenaire">
+            @for (
+              option of optionsAvecValeurCourante(formulaire.controls.type_partenaire.value);
+              track option.valeur
+            ) {
+              <option [value]="option.valeur">{{ option.libelle }}</option>
+            }
+          </select>
+          @if (
+            formulaire.controls.type_partenaire.invalid && formulaire.controls.type_partenaire.touched
+          ) {
+            <p class="erreur-champ">Le type de partenaire est requis.</p>
+          }
+
+          <label for="description">Description</label>
+          <textarea id="description" formControlName="description" rows="4"></textarea>
+        </section>
+
+        <section class="section">
+          <h2>Images de la vitrine</h2>
+
+          <div class="bloc-image">
+            <span class="etiquette-image">Logo</span>
+            @if (apercuLogo()) {
+              <img [src]="apercuLogo()" alt="Aperçu du nouveau logo" class="apercu-image apercu-logo" />
+            } @else if (profil()?.logo) {
+              <img [src]="profil()!.logo" alt="Logo du commerce" class="apercu-image apercu-logo" />
+            } @else {
+              <div class="apercu-image apercu-vide apercu-logo">Aucun logo</div>
+            }
+            <input
+              #entreeLogo
+              type="file"
+              accept="image/*"
+              hidden
+              (change)="selectionnerImage($event, 'logo')"
+            />
+            <button type="button" class="bouton-secondaire" (click)="entreeLogo.click()">
+              Changer le logo
+            </button>
+          </div>
+
+          <div class="bloc-image">
+            <span class="etiquette-image">Photo de couverture</span>
+            @if (apercuCouverture()) {
+              <img
+                [src]="apercuCouverture()"
+                alt="Aperçu de la nouvelle photo de couverture"
+                class="apercu-image apercu-couverture"
+              />
+            } @else if (profil()?.photo_couverture) {
+              <img
+                [src]="profil()!.photo_couverture"
+                alt="Photo de couverture du commerce"
+                class="apercu-image apercu-couverture"
+              />
+            } @else {
+              <div class="apercu-image apercu-vide apercu-couverture">Aucune photo de couverture</div>
+            }
+            <input
+              #entreeCouverture
+              type="file"
+              accept="image/*"
+              hidden
+              (change)="selectionnerImage($event, 'photo_couverture')"
+            />
+            <button type="button" class="bouton-secondaire" (click)="entreeCouverture.click()">
+              Changer la photo de couverture
+            </button>
+          </div>
+
+          @if (messageErreurImages()) {
+            <p class="erreur-generale">{{ messageErreurImages() }}</p>
+          }
+          @if (messageSuccesImages()) {
+            <p class="message-succes">{{ messageSuccesImages() }}</p>
+          }
+
+          @if (imagesModifiees) {
+            <button
+              type="button"
+              class="bouton-secondaire bouton-enregistrer-images"
+              [disabled]="televersementImagesEnCours()"
+              (click)="enregistrerImages()"
+            >
+              {{ televersementImagesEnCours() ? 'Envoi en cours…' : 'Enregistrer les images' }}
+            </button>
+          }
+        </section>
+
+        <section class="section">
+          <h2>Contacts</h2>
+
+          <label for="telephone_pro">Téléphone professionnel</label>
+          <input id="telephone_pro" type="tel" formControlName="telephone_pro" />
+
+          <label for="whatsapp">WhatsApp</label>
+          <input id="whatsapp" type="tel" formControlName="whatsapp" />
+
+          <label for="email_pro">Email professionnel</label>
+          <input id="email_pro" type="email" formControlName="email_pro" />
+          @if (formulaire.controls.email_pro.invalid && formulaire.controls.email_pro.touched) {
+            <p class="erreur-champ">L'adresse email n'est pas valide.</p>
+          }
+        </section>
+
+        <section class="section">
+          <h2>Localisation</h2>
+
+          <label for="ville">Ville</label>
+          <input id="ville" type="text" formControlName="ville" />
+
+          <label for="departement">Département</label>
+          <select id="departement" formControlName="departement">
+            <option value="">— Non renseigné —</option>
+            @for (departement of departements(); track departement.id) {
+              <option [value]="departement.id">{{ departement.nom }} ({{ departement.region }})</option>
+            }
+          </select>
+
+          <label for="quartier">Quartier</label>
+          <input id="quartier" type="text" formControlName="quartier" />
+
+          <label for="secteur">Secteur</label>
+          <input id="secteur" type="text" formControlName="secteur" />
+
+          <label for="adresse">Adresse</label>
+          <input id="adresse" type="text" formControlName="adresse" />
+
+          <div class="ligne-champs">
+            <div class="champ">
+              <label for="latitude">Latitude</label>
+              <input id="latitude" type="number" step="any" formControlName="latitude" />
+            </div>
+            <div class="champ">
+              <label for="longitude">Longitude</label>
+              <input id="longitude" type="number" step="any" formControlName="longitude" />
+            </div>
+          </div>
+
+          <label for="description_acces">Comment accéder au commerce</label>
+          <textarea id="description_acces" formControlName="description_acces" rows="3"></textarea>
+        </section>
+
+        @if (messageErreur()) {
+          <p class="erreur-generale">{{ messageErreur() }}</p>
+        }
+
+        <div class="actions-formulaire">
+          <button type="button" class="bouton-secondaire" (click)="annulerEdition()">Annuler</button>
+          <button type="submit" [disabled]="enregistrementEnCours()">
+            {{ enregistrementEnCours() ? 'Enregistrement en cours…' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
     }
   }
 </div>

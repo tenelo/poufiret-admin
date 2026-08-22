@@ -1,0 +1,41 @@
+<section class="affiches-formules" aria-label="Formules publicitaires disponibles">
+  <h2>Formules disponibles</h2>
+  <p class="sous-titre-affiches">Ce que vous achetez, et où votre publicité apparaît dans l'app.</p>
+
+  <div class="grille-affiches">
+    @for (formule of formules(); track formule.id) {
+      <article class="affiche-formule">
+        <div class="entete-affiche">
+          <span class="nom-formule">{{ formule.nom }}</span>
+          <span class="prix-formule">{{ formule.prix }} FCFA</span>
+        </div>
+        <span class="duree-formule">
+          {{ formule.duree_jours }} jours de diffusion · {{ formule.passages_par_jour }} passages/jour
+        </span>
+
+        <div class="caracteristiques-formule">
+          <span class="caracteristique">📷 {{ formule.nb_images_max }} image{{ formule.nb_images_max > 1 ? 's' : '' }} max</span>
+          <span class="caracteristique">
+            {{ formule.video_autorisee ? '🎬 Vidéo autorisée' : '🚫 Vidéo non autorisée' }}
+          </span>
+        </div>
+
+        <div class="emplacements">
+          @for (type of formule.types_affichage; track type) {
+            <div class="emplacement">
+              <div class="schema-telephone" [class]="'schema-' + type">
+                <div class="ecran">
+                  <div class="zone-pub"></div>
+                </div>
+              </div>
+              <div class="texte-emplacement">
+                <span class="libelle-emplacement">{{ libellesType[type] }}</span>
+                <span class="description-emplacement">{{ descriptionsType[type] }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </article>
+    }
+  </div>
+</section>

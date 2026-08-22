@@ -26,8 +26,12 @@
               <span class="nom-article">{{ ligne.nom_article }}</span>
               <span class="prix-ligne">{{ ligne.prix_ligne }} FCFA</span>
             </div>
+            <p class="detail-ligne">Prix unitaire : {{ ligne.prix_unitaire }} FCFA</p>
             @if (ligne.variante_nom) {
               <p class="detail-ligne">Variante : {{ ligne.variante_nom }}</p>
+            }
+            @if (aDesSupplements(ligne.supplements)) {
+              <p class="detail-ligne">Suppléments : {{ ligne.supplements | json }}</p>
             }
             @if (ligne.note_speciale) {
               <p class="detail-ligne note-speciale">Note : {{ ligne.note_speciale }}</p>
