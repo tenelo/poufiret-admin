@@ -37,7 +37,7 @@ export interface ArticleDetail extends ArticleListe {
   details: string | null;
   est_actif: boolean;
   temps_preparation_min: number | null;
-  section_menu: string | null;
+  section_menu: number | null;
 }
 
 /** Corps de la requête POST/PATCH /catalogue/articles/ : slug et partenaire posés par le serveur. */
@@ -54,7 +54,9 @@ export interface RequeteArticle {
   est_en_promotion: boolean;
   temps_preparation_min: number | null;
   categorie: number;
-  section_menu: string;
+  // FK (id de SectionMenu) ou null — jamais du texte libre. Omis tant qu'aucun
+  // endpoint de liste des sections n'est confirmé.
+  section_menu?: number | null;
 }
 
 export const OPTIONS_TYPE_ARTICLE: { valeur: TypeArticle; libelle: string }[] = [

@@ -21,6 +21,16 @@ export class EnTete {
 
   readonly utilisateur = this.authService.utilisateur;
 
+  /** Nom complet (prénom + nom) si renseigné, sinon le téléphone. */
+  readonly nomAffiche = computed(() => {
+    const u = this.utilisateur();
+    if (!u) {
+      return '';
+    }
+    const nomComplet = [u.first_name, u.last_name].filter(Boolean).join(' ').trim();
+    return nomComplet || u.telephone;
+  });
+
   readonly estPartenaire = computed(() => this.authService.role() === 'partenaire');
 
   /** True pour un admin dont is_superuser=true (permissions déjà chargées par CoquilleApplication). */

@@ -91,12 +91,12 @@
   cursor: pointer;
 
   &:hover {
-    border-color: #4f46e5;
+    box-shadow: 0 0 0 1px #0ddc60;
   }
 
   &.actif {
-    border-color: #4f46e5;
-    border-width: 2px;
+    border-color: #0ddc60;
+    border-width: 1px;
     box-shadow: 0 0 0 1px #4f46e5;
   }
 }

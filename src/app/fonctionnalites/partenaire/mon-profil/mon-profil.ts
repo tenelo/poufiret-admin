@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { ProfilPartenaireService } from './profil-partenaire.service';
 import { Departement } from '../../../modeles/departement.model';
+import { CarteMonCompte } from '../../../partage/mon-compte/carte-mon-compte/carte-mon-compte';
 import {
   OPTIONS_TYPE_PARTENAIRE,
   ProfilPartenaire,
@@ -16,12 +17,14 @@ const TAILLE_MAX_IMAGE_OCTETS = 5 * 1024 * 1024;
 type ChampImage = 'logo' | 'photo_couverture';
 
 /**
- * Page "Mon profil" de l'espace partenaire : consultation et modification
- * des informations de la vitrine (GET/PATCH /auth/mon-profil-partenaire/).
+ * Page "Mon profil" de l'espace partenaire : identité du compte (carte
+ * partagée CarteMonCompte, GET/PATCH /auth/moi/) + consultation et
+ * modification des informations de la vitrine (GET/PATCH
+ * /auth/mon-profil-partenaire/).
  */
 @Component({
   selector: 'app-mon-profil',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, CarteMonCompte],
   templateUrl: './mon-profil.html',
   styleUrl: './mon-profil.scss',
 })

@@ -86,6 +86,23 @@
       <div class="grille-publicites">
         @for (pub of d.publicites; track pub.id) {
           <div class="carte-publicite">
+            <div
+              class="vignette-media"
+              [class.vignette-cliquable]="aUnVisuel(pub)"
+              (click)="ouvrirMedia(pub)"
+            >
+              @if (imageValide(pub) && pub.image_couverture; as urlImage) {
+                <img [src]="urlImage" [alt]="pub.titre" (error)="surErreurImage(pub.id)" />
+              } @else {
+                <div class="vignette-vide">
+                  <span>Aucun visuel</span>
+                </div>
+              }
+              @if (pub.video) {
+                <span class="badge-video">🎬 Vidéo</span>
+              }
+            </div>
+
             <div class="entete-carte">
               <span class="titre">{{ pub.titre }}</span>
               <span class="badge badge-{{ pub.statut }}">{{ libellesStatut[pub.statut] }}</span>
@@ -177,7 +194,14 @@
 @if (actionAConfirmer(); as attente) {
   <div class="voile-confirmation" (click)="annulerAction()">
     <div class="boite-confirmation" (click)="$event.stopPropagation()">
-      <p>Confirmer « {{ attente.action.libelle }} » pour « {{ attente.publicite.titre }} » ?</p>
+      @if (attente.action.cible === 'terminer') {
+        <p>
+          Arrêter définitivement la publicité « {{ attente.publicite.titre }} » ? Elle ne sera plus
+          diffusée dans l'application.
+        </p>
+      } @else {
+        <p>Confirmer « {{ attente.action.libelle }} » pour « {{ attente.publicite.titre }} » ?</p>
+      }
       <div class="actions-modale">
         <button type="button" class="bouton-secondaire" (click)="annulerAction()">Annuler</button>
         <button
@@ -186,9 +210,37 @@
           [class.bouton-action]="!attente.action.dangereuse"
           (click)="confirmerAction()"
         >
-          Confirmer
+          {{ attente.action.cible === 'terminer' ? 'Arrêter la pub' : 'Confirmer' }}
         </button>
       </div>
+    </div>
+  </div>
+}
+
+@if (mediaAgrandi(); as pub) {
+  <div class="voile-lightbox" (click)="fermerMedia()">
+    <div class="boite-lightbox" (click)="$event.stopPropagation()">
+      <button type="button" class="bouton-fermer-lightbox" (click)="fermerMedia()" aria-label="Fermer">
+        ×
+      </button>
+      <h3>{{ pub.titre }}</h3>
+
+      @if (imageValide(pub) && pub.image_couverture; as urlImage) {
+        <img class="image-agrandie" [src]="urlImage" [alt]="pub.titre" (error)="surErreurImage(pub.id)" />
+      }
+
+      @if (pub.video) {
+        <div class="bloc-video">
+          <video class="video-agrandie" [src]="pub.video" controls></video>
+          <a class="lien-video" [href]="pub.video" target="_blank" rel="noopener">
+            Ouvrir la vidéo dans un nouvel onglet
+          </a>
+        </div>
+      }
+
+      @if (!(imageValide(pub) && pub.image_couverture) && !pub.video) {
+        <p class="aucun-visuel-lightbox">Aucun visuel disponible pour cette campagne.</p>
+      }
     </div>
   </div>
 }

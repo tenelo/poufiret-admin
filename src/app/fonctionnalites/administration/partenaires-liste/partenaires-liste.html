@@ -1,0 +1,168 @@
+<section class="page-partenaires-liste">
+  <div class="entete">
+    <div>
+      <h1>Partenaires</h1>
+      @if (!chargementEnCours() && !erreurChargement()) {
+        <span class="compteur">{{ total() }} partenaire{{ total() > 1 ? 's' : '' }}</span>
+      }
+    </div>
+    <div class="actions-entete">
+      <button type="button" class="bouton-secondaire" [disabled]="chargementEnCours()" (click)="charger()">
+        {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
+      </button>
+      <button type="button" class="bouton-principal" [disabled]="exportEnCours()" (click)="exporter()">
+        {{ exportEnCours() ? 'Export en cours…' : '⭳ Exporter CSV' }}
+      </button>
+    </div>
+  </div>
+
+  @if (erreurExport()) {
+    <p class="erreur-generale">{{ erreurExport() }}</p>
+  }
+
+  <div class="barre-filtres">
+    <input
+      type="text"
+      class="champ-recherche"
+      placeholder="Rechercher un commerce, un numéro…"
+      [value]="rechercheTexte()"
+      (input)="changerRecherche($any($event.target).value)"
+    />
+    <select class="filtre" [value]="filtreType()" (change)="changerFiltreType($any($event.target).value)">
+      <option value="">Tous les types</option>
+      @for (option of optionsType; track option.valeur) {
+        <option [value]="option.valeur">{{ option.libelle }}</option>
+      }
+    </select>
+    <select class="filtre" [value]="filtreStatut()" (change)="changerFiltreStatut($any($event.target).value)">
+      @for (option of optionsStatut; track option.valeur) {
+        <option [value]="option.valeur">{{ option.libelle }}</option>
+      }
+    </select>
+    <select
+      class="filtre"
+      [value]="filtreDepartement()"
+      (change)="changerFiltreDepartement($any($event.target).value)"
+    >
+      <option value="">Tous les départements</option>
+      @for (departement of departements(); track departement.id) {
+        <option [value]="departement.id">{{ departement.nom }}</option>
+      }
+    </select>
+  </div>
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement des partenaires…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (partenaires().length === 0) {
+    <div class="etat-vide">
+      <p>Aucun partenaire pour ces filtres.</p>
+    </div>
+  } @else {
+    <div class="conteneur-tableau">
+      <table class="tableau-partenaires">
+        <thead>
+          <tr>
+            <th>Commerce</th>
+            <th>Catégorie</th>
+            <th>Localité</th>
+            <th>Numéro</th>
+            <th>Statut</th>
+            <th>Plan</th>
+            <th>Vues</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (partenaire of partenaires(); track partenaire.id) {
+            <tr
+              class="ligne-partenaire"
+              [class.ligne-ouverte]="partenaireOuvertId() === partenaire.id"
+              (click)="basculerDetail(partenaire)"
+            >
+              <td>
+                <div class="cellule-commerce">
+                  <span class="nom">{{ partenaire.nom_commerce }}</span>
+                  <div class="badges-commerce">
+                    @if (partenaire.badge_certifie) {
+                      <span class="badge badge-certifie">Certifié</span>
+                    }
+                    @if (partenaire.est_faveur) {
+                      <span class="badge badge-faveur">Faveur</span>
+                    }
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="cellule-categorie">
+                  <span class="type">{{ partenaire.type_partenaire_libelle }}</span>
+                  @if (partenaire.categories.length > 0) {
+                    <div class="puces-categorie">
+                      @for (categorie of partenaire.categories; track categorie) {
+                        <span class="puce">{{ categorie }}</span>
+                      }
+                    </div>
+                  }
+                </div>
+              </td>
+              <td>{{ localite(partenaire) }}</td>
+              <td>
+                <div class="cellule-numero">
+                  <a
+                    class="telephone-principal"
+                    [href]="'tel:' + partenaire.telephone_compte"
+                    (click)="$event.stopPropagation()"
+                  >
+                    {{ partenaire.telephone_compte }}
+                  </a>
+                  @for (secondaire of numerosSecondaires(partenaire); track secondaire.libelle) {
+                    <span class="telephone-secondaire">{{ secondaire.libelle }} : {{ secondaire.valeur }}</span>
+                  }
+                </div>
+              </td>
+              <td>
+                <span class="badge {{ classeChipStatut(partenaire.statut) }}">
+                  {{ partenaire.statut_libelle }}
+                </span>
+              </td>
+              <td>{{ partenaire.plan_libelle || '—' }}</td>
+              <td>{{ partenaire.nb_vues }}</td>
+            </tr>
+            @if (partenaireOuvertId() === partenaire.id) {
+              <tr class="ligne-detail">
+                <td colspan="7">
+                  <div class="panneau-detail">
+                    <div class="champ-detail">
+                      <span class="etiquette">Localité complète</span>
+                      <p class="valeur">{{ localite(partenaire) }}</p>
+                    </div>
+                    <div class="champ-detail">
+                      <span class="etiquette">Visible sur l'application</span>
+                      <p class="valeur">{{ partenaire.est_visible ? 'Oui' : 'Non' }}</p>
+                    </div>
+                    <div class="champ-detail">
+                      <span class="etiquette">Fin d'abonnement</span>
+                      <p class="valeur">
+                        {{ partenaire.abonnement_fin ? formaterDateCourte(partenaire.abonnement_fin) : '—' }}
+                      </p>
+                    </div>
+                    <div class="champ-detail">
+                      <span class="etiquette">Inscrit le</span>
+                      <p class="valeur">{{ formaterDateComplete(partenaire.created_at) }}</p>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

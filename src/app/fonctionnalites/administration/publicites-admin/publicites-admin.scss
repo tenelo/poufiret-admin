@@ -235,6 +235,48 @@
   border-radius: 12px;
 }
 
+.vignette-media {
+  position: relative;
+  width: 100%;
+  height: 130px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f4f5f7;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.vignette-cliquable {
+  cursor: pointer;
+}
+
+.vignette-vide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #9ca3af;
+  font-size: 0.78rem;
+}
+
+.badge-video {
+  position: absolute;
+  bottom: 0.4rem;
+  right: 0.4rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.7);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
 .entete-carte {
   display: flex;
   align-items: flex-start;
@@ -458,4 +500,88 @@
     cursor: pointer;
     border: none;
   }
+}
+
+.voile-lightbox {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background: rgba(17, 24, 39, 0.75);
+  overflow-y: auto;
+  z-index: 120;
+}
+
+.boite-lightbox {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+
+  h3 {
+    margin: 0 0 1rem;
+    font-size: 1.05rem;
+    color: #1a1a1a;
+    padding-right: 2rem;
+  }
+}
+
+.bouton-fermer-lightbox {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 999px;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: #374151;
+  cursor: pointer;
+
+  &:hover {
+    background: #e5e7eb;
+  }
+}
+
+.image-agrandie {
+  width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #f4f5f7;
+}
+
+.bloc-video {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.video-agrandie {
+  width: 100%;
+  max-height: 420px;
+  border-radius: 8px;
+  background: #000000;
+}
+
+.lien-video {
+  align-self: flex-start;
+  font-size: 0.82rem;
+  color: #4f46e5;
+}
+
+.aucun-visuel-lightbox {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 0.9rem;
 }

@@ -82,12 +82,30 @@ export const routes: Routes = [
       // Écrans admin : chaque route déclare la capacité qui la protège (data.capacite,
       // vérifiée par capaciteGuard).
       {
+        // Commun admin + super-admin, pas de capacité fine : chacun gère son propre compte.
+        path: 'administration/mon-profil',
+        canActivate: [roleGuard(['admin'])],
+        loadComponent: () =>
+          import('./fonctionnalites/administration/mon-profil-admin/mon-profil-admin').then(
+            (m) => m.MonProfilAdmin,
+          ),
+      },
+      {
         path: 'administration/indicateurs-partenaires',
         canActivate: [roleGuard(['admin']), capaciteGuard],
         data: { capacite: 'voir_indicateurs' },
         loadComponent: () =>
           import('./fonctionnalites/administration/indicateurs-partenaires/indicateurs-partenaires').then(
             (m) => m.IndicateursPartenairesComponent,
+          ),
+      },
+      {
+        path: 'administration/partenaires-liste',
+        canActivate: [roleGuard(['admin']), capaciteGuard],
+        data: { capacite: 'voir_indicateurs' },
+        loadComponent: () =>
+          import('./fonctionnalites/administration/partenaires-liste/partenaires-liste').then(
+            (m) => m.PartenairesListe,
           ),
       },
       {
@@ -106,6 +124,24 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./fonctionnalites/administration/journal-audit/journal-audit').then(
             (m) => m.JournalAudit,
+          ),
+      },
+      {
+        path: 'administration/interventions',
+        canActivate: [roleGuard(['admin']), capaciteGuard],
+        data: { capacite: 'voir_interventions' },
+        loadComponent: () =>
+          import('./fonctionnalites/administration/interventions/interventions').then(
+            (m) => m.Interventions,
+          ),
+      },
+      {
+        path: 'administration/connexions-admin',
+        canActivate: [roleGuard(['admin']), capaciteGuard],
+        data: { capacite: 'lire_journal' },
+        loadComponent: () =>
+          import('./fonctionnalites/administration/connexions-admin/connexions-admin').then(
+            (m) => m.ConnexionsAdmin,
           ),
       },
       {

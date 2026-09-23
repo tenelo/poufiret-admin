@@ -20,6 +20,10 @@ interface EntreeMenuAdmin {
   lien: string;
   icone: string;
   capacite?: NomCapacite;
+  // Sans `capacite` : visible pour tout admin connecté (ex. Mon profil), à la
+  // différence d'une entrée sans `capacite` ET sans ce flag, réservée au
+  // super-admin (ex. Modération de comptes).
+  toujoursVisible?: boolean;
 }
 
 const ENTREES_PARTENAIRE: EntreeMenuPartenaire[] = [
@@ -34,9 +38,21 @@ const ENTREES_PARTENAIRE: EntreeMenuPartenaire[] = [
 const ENTREES_ADMIN: EntreeMenuAdmin[] = [
   { libelle: 'Tableau de bord', lien: '/tableau-de-bord', icone: '📊', capacite: 'voir_stats' },
   {
+    libelle: 'Mon profil',
+    lien: '/administration/mon-profil',
+    icone: '👤',
+    toujoursVisible: true,
+  },
+  {
     libelle: 'Indicateurs partenaires',
     lien: '/administration/indicateurs-partenaires',
     icone: '📈',
+    capacite: 'voir_indicateurs',
+  },
+  {
+    libelle: 'Partenaires',
+    lien: '/administration/partenaires-liste',
+    icone: '🏪',
     capacite: 'voir_indicateurs',
   },
   {
@@ -50,6 +66,18 @@ const ENTREES_ADMIN: EntreeMenuAdmin[] = [
     lien: '/administration/journal',
     icone: '📜',
     capacite: 'lire_journal',
+  },
+  {
+    libelle: 'Connexions admin',
+    lien: '/administration/connexions-admin',
+    icone: '🔐',
+    capacite: 'lire_journal',
+  },
+  {
+    libelle: "Demandes d'intervention",
+    lien: '/administration/interventions',
+    icone: '🛠️',
+    capacite: 'voir_interventions',
   },
   {
     libelle: 'Engagement clients',
@@ -131,10 +159,14 @@ export class BarreLaterale {
   readonly entreesPartenaire = ENTREES_PARTENAIRE;
 
   readonly entreesAdmin = computed<EntreeMenuAdmin[]>(() =>
-    ENTREES_ADMIN.filter((entree) =>
-      entree.capacite
-        ? this.permissionsService.aLaCapacite(entree.capacite)
-        : (this.permissionsService.permissionsActuelles()?.isSuperuser ?? false),
-    ),
+    ENTREES_ADMIN.filter((entree) => {
+      if (entree.capacite) {
+        return this.permissionsService.aLaCapacite(entree.capacite);
+      }
+      if (entree.toujoursVisible) {
+        return true;
+      }
+      return this.permissionsService.permissionsActuelles()?.isSuperuser ?? false;
+    }),
   );
 }

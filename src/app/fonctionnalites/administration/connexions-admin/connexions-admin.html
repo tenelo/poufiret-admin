@@ -1,0 +1,100 @@
+<section class="page-connexions-admin">
+  <div class="entete">
+    <div>
+      <h1>Connexions admin</h1>
+      @if (!chargementEnCours() && !erreurChargement()) {
+        <span class="compteur">{{ total() }} connexion{{ total() > 1 ? 's' : '' }}</span>
+      }
+    </div>
+    <div class="actions-entete">
+      <button type="button" class="bouton-secondaire" [disabled]="chargementEnCours()" (click)="charger()">
+        {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
+      </button>
+      <button type="button" class="bouton-principal" [disabled]="exportEnCours()" (click)="exporter()">
+        {{ exportEnCours() ? 'Export en cours…' : '⭳ Exporter CSV' }}
+      </button>
+    </div>
+  </div>
+
+  @if (erreurExport()) {
+    <p class="erreur-generale">{{ erreurExport() }}</p>
+  }
+
+  <div class="barre-filtres">
+    <input
+      type="text"
+      class="champ-recherche"
+      placeholder="Rechercher un téléphone, un nom…"
+      [value]="rechercheTexte()"
+      (input)="changerRecherche($any($event.target).value)"
+    />
+    <input
+      type="number"
+      class="champ-jours"
+      min="1"
+      step="1"
+      placeholder="N derniers jours (tout)"
+      [value]="joursInput()"
+      (input)="changerJours($any($event.target).value)"
+    />
+  </div>
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement des connexions…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (connexionsTriees().length === 0) {
+    <div class="etat-vide">
+      <p>Aucune connexion pour ces filtres.</p>
+    </div>
+  } @else {
+    <div class="conteneur-tableau">
+      <table class="tableau-connexions">
+        <thead>
+          <tr>
+            <th>Date / heure</th>
+            <th>Utilisateur</th>
+            <th>Adresse IP</th>
+            <th>Plateforme</th>
+            <th>Appareil</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (connexion of connexionsTriees(); track connexion.id) {
+            <tr>
+              <td>{{ formaterDate(connexion.date_connexion) }}</td>
+              <td>
+                <div class="cellule-utilisateur">
+                  <span class="nom">{{ connexion.nom || '—' }}</span>
+                  <span class="telephone">{{ connexion.telephone }}</span>
+                  @if (connexion.is_superuser) {
+                    <span class="badge badge-superadmin">Super-admin</span>
+                  }
+                </div>
+              </td>
+              <td>{{ connexion.adresse_ip }}</td>
+              <td>{{ connexion.plateforme_libelle }}</td>
+              <td>{{ connexion.appareil_nom || '—' }}</td>
+              <td>
+                <span
+                  class="badge"
+                  [class.badge-active]="connexion.est_active"
+                  [class.badge-terminee]="!connexion.est_active"
+                >
+                  {{ connexion.est_active ? 'Active' : 'Terminée' }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

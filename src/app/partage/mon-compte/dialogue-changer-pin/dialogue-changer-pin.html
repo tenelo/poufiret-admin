@@ -1,0 +1,59 @@
+<div class="voile-modale" (click)="ferme.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>Changer mon PIN</h2>
+    <p class="sous-titre">Le PIN doit contenir exactement 4 chiffres.</p>
+
+    <form [formGroup]="formulaire" (ngSubmit)="soumettre()">
+      <label for="ancien_pin">PIN actuel</label>
+      <input
+        id="ancien_pin"
+        type="password"
+        inputmode="numeric"
+        maxlength="4"
+        formControlName="ancien_pin"
+      />
+      @if (formulaire.controls.ancien_pin.invalid && formulaire.controls.ancien_pin.touched) {
+        <p class="erreur-champ">Le PIN actuel doit contenir exactement 4 chiffres.</p>
+      }
+      @if (erreurAncienPin()) {
+        <p class="erreur-champ">{{ erreurAncienPin() }}</p>
+      }
+
+      <label for="nouveau_pin">Nouveau PIN</label>
+      <input
+        id="nouveau_pin"
+        type="password"
+        inputmode="numeric"
+        maxlength="4"
+        formControlName="nouveau_pin"
+      />
+      @if (formulaire.controls.nouveau_pin.invalid && formulaire.controls.nouveau_pin.touched) {
+        <p class="erreur-champ">Le nouveau PIN doit contenir exactement 4 chiffres.</p>
+      }
+      @if (formulaire.hasError('nouveauIdentique') && formulaire.controls.nouveau_pin.touched) {
+        <p class="erreur-champ">Le nouveau PIN doit être différent de l'ancien.</p>
+      }
+
+      <label for="confirmation_pin">Confirmer le nouveau PIN</label>
+      <input
+        id="confirmation_pin"
+        type="password"
+        inputmode="numeric"
+        maxlength="4"
+        formControlName="confirmation_pin"
+      />
+      @if (
+        formulaire.hasError('confirmationDifferente') && formulaire.controls.confirmation_pin.touched
+      ) {
+        <p class="erreur-champ">La confirmation ne correspond pas au nouveau PIN.</p>
+      }
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Annuler</button>
+        <button type="submit" [disabled]="enregistrementEnCours()">
+          {{ enregistrementEnCours() ? 'Enregistrement en cours…' : 'Changer le PIN' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

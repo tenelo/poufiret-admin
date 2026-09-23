@@ -38,6 +38,7 @@ export type NomCapacite =
   | 'modifier_plans_formules'
   | 'voir_stats'
   | 'voir_indicateurs'
+  | 'voir_interventions'
   | 'lire_journal'
   | 'exporter_csv'
   | 'gerer_admins';
@@ -60,3 +61,43 @@ export interface PermissionsAdmin {
   isSuperuser: boolean;
   capacites: Record<string, boolean>;
 }
+
+// Libellés français des capacités, pour la section "Mes droits" de Mon profil
+// (affichage lecture seule). Une clé absente de ce dictionnaire est affichée
+// telle quelle, `_` remplacés par des espaces.
+export const LIBELLES_CAPACITE: Record<NomCapacite, string> = {
+  suspendre_client: 'Suspendre un client',
+  suspendre_partenaire: 'Suspendre un partenaire',
+  suspendre_admin: 'Suspendre un admin',
+  reactiver_client: 'Réactiver un client',
+  reactiver_partenaire: 'Réactiver un partenaire',
+  reactiver_admin: 'Réactiver un admin',
+  bannir_client: 'Bannir un client',
+  bannir_partenaire: 'Bannir un partenaire',
+  bannir_admin: 'Bannir un admin',
+  supprimer_soft_client: 'Supprimer (soft) un client',
+  supprimer_soft_partenaire: 'Supprimer (soft) un partenaire',
+  supprimer_soft_admin: 'Supprimer (soft) un admin',
+  supprimer_hard_client: 'Supprimer (définitif) un client',
+  supprimer_hard_partenaire: 'Supprimer (définitif) un partenaire',
+  supprimer_hard_admin: 'Supprimer (définitif) un admin',
+  restaurer_client: 'Restaurer un client',
+  restaurer_partenaire: 'Restaurer un partenaire',
+  restaurer_admin: 'Restaurer un admin',
+  masquer_partenaire: 'Masquer un partenaire',
+  certifier_partenaire: 'Certifier un partenaire',
+  accorder_faveur: 'Accorder une faveur de plan',
+  valider_devenir_partenaire: 'Valider une demande de partenariat',
+  creer_partenaire: 'Créer un partenaire',
+  valider_publicite: 'Valider une publicité',
+  offrir_campagne: 'Offrir une campagne publicitaire',
+  valider_commande: 'Valider une commande',
+  valider_paiement: 'Valider un paiement',
+  modifier_plans_formules: 'Modifier les plans et formules',
+  voir_stats: 'Voir les statistiques',
+  voir_indicateurs: 'Voir les indicateurs partenaires',
+  voir_interventions: "Voir les demandes d'intervention",
+  lire_journal: "Lire le journal d'audit",
+  exporter_csv: 'Exporter des données (CSV)',
+  gerer_admins: 'Gérer les administrateurs',
+};

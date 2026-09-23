@@ -5,15 +5,18 @@ import { StatsConnexionService } from './stats-connexion.service';
 import { PermissionsService } from '../../../noyau/permissions/permissions.service';
 import { Graphique } from '../../../partage/graphique/graphique';
 import { extraireMessageErreur } from '../tableau-de-bord-admin/extraire-message-erreur';
-import { formaterNombre } from '../tableau-de-bord-admin/palette-graphiques';
+import { formaterDuree, formaterNombre } from '../tableau-de-bord-admin/palette-graphiques';
 import { StatsConnexion } from '../../../modeles/stats-connexion.model';
 import { OuverturesPeriodeAdmin } from '../../../modeles/tableau-bord-admin.model';
+import { DureeParUtilisateur, DureeSessions } from '../../../modeles/duree-sessions.model';
 
 interface CartePeriode {
   libelle: string;
   connexionsDistinctes: number;
   ouvertures: OuverturesPeriodeAdmin;
 }
+
+type ColonneTriDurees = 'duree_totale_secondes' | 'nb_sessions';
 
 /**
  * Écran "Stats de connexion" : résumé synthétique (GET /analytics/admin/stats-connexion/)
@@ -44,6 +47,51 @@ export class StatsConnexionComponent implements OnInit {
   readonly infobulleExport = computed(() =>
     this.peutExporter() ? '' : "Vous n'avez pas la capacité exporter_csv.",
   );
+
+  // ---- Section "Durée des sessions" (GET /analytics/admin/duree-sessions/) ----
+  // Réutilise le même filtre `joursInput`/`parseJours()` que l'export ci-dessus.
+  readonly chargementDureesEnCours = signal(true);
+  readonly erreurDurees = signal<string | null>(null);
+  readonly durees = signal<DureeSessions | null>(null);
+
+  readonly exportDureesEnCours = signal(false);
+  readonly erreurExportDurees = signal<string | null>(null);
+
+  readonly formaterDuree = formaterDuree;
+
+  readonly triColonneDurees = signal<ColonneTriDurees>('duree_totale_secondes');
+  readonly triDirectionDurees = signal<'asc' | 'desc'>('desc');
+
+  readonly parUtilisateurTrie = computed<DureeParUtilisateur[]>(() => {
+    const liste = [...(this.durees()?.par_utilisateur ?? [])];
+    const colonne = this.triColonneDurees();
+    const sens = this.triDirectionDurees() === 'asc' ? 1 : -1;
+    return liste.sort((a, b) => (a[colonne] - b[colonne]) * sens);
+  });
+
+  readonly optionsCourbeDurees: ChartConfiguration['options'] = {
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, title: { display: true, text: 'Durée moyenne (minutes)' } },
+    },
+  };
+
+  readonly donneesCourbeDurees = computed<ChartConfiguration['data']>(() => {
+    const parJour = this.durees()?.par_jour ?? [];
+    return {
+      labels: parJour.map((point) => this.formaterDateCourte(point.date)),
+      datasets: [
+        {
+          label: 'Durée moyenne (min)',
+          data: parJour.map((point) => Math.round((point.duree_moyenne_secondes / 60) * 10) / 10),
+          borderColor: '#1B5E20',
+          backgroundColor: 'rgba(27, 94, 32, 0.15)',
+          fill: true,
+          tension: 0.3,
+        },
+      ],
+    };
+  });
 
   readonly optionsBarres: ChartConfiguration['options'] = {
     plugins: { legend: { display: false } },
@@ -88,6 +136,7 @@ export class StatsConnexionComponent implements OnInit {
 
   ngOnInit(): void {
     this.charger();
+    this.chargerDurees();
   }
 
   charger(): void {
@@ -144,5 +193,53 @@ export class StatsConnexionComponent implements OnInit {
     }
     const nombre = Number(brut);
     return Number.isInteger(nombre) && nombre > 0 ? nombre : undefined;
+  }
+
+  // ---- Section "Durée des sessions" ----
+
+  chargerDurees(): void {
+    this.chargementDureesEnCours.set(true);
+    this.erreurDurees.set(null);
+
+    this.service.chargerDurees(this.parseJours()).subscribe({
+      next: (durees) => {
+        this.chargementDureesEnCours.set(false);
+        this.durees.set(durees);
+      },
+      error: (erreur: unknown) => {
+        this.chargementDureesEnCours.set(false);
+        this.erreurDurees.set(extraireMessageErreur(erreur));
+      },
+    });
+  }
+
+  changerTriDurees(colonne: ColonneTriDurees): void {
+    if (this.triColonneDurees() === colonne) {
+      this.triDirectionDurees.update((direction) => (direction === 'asc' ? 'desc' : 'asc'));
+    } else {
+      this.triColonneDurees.set(colonne);
+      this.triDirectionDurees.set('desc');
+    }
+  }
+
+  exporterDurees(): void {
+    if (!this.peutExporter() || this.exportDureesEnCours()) {
+      return;
+    }
+    this.exportDureesEnCours.set(true);
+    this.erreurExportDurees.set(null);
+
+    this.service.exporterDurees(this.parseJours()).subscribe({
+      next: () => this.exportDureesEnCours.set(false),
+      error: (erreur: unknown) => {
+        this.exportDureesEnCours.set(false);
+        this.erreurExportDurees.set(extraireMessageErreur(erreur));
+      },
+    });
+  }
+
+  private formaterDateCourte(iso: string): string {
+    const [, mois, jour] = iso.split('-');
+    return jour && mois ? `${jour}/${mois}` : iso;
   }
 }

@@ -18,3 +18,11 @@ export interface ReponseRafraichissement {
   access: string;
   refresh?: string;
 }
+
+// Réponse de POST /auth/pin/changer/ : nouveaux jetons (le mot de passe/PIN a
+// changé, les anciens jetons doivent être remplacés) + utilisateur à jour.
+export interface ReponsePin {
+  access: string;
+  refresh: string;
+  utilisateur: UtilisateurBrut;
+}

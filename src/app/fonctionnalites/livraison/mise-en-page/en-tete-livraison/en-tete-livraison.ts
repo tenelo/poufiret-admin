@@ -18,6 +18,16 @@ export class EnTeteLivraison {
 
   readonly utilisateur = this.authService.utilisateur;
 
+  /** Nom complet (prénom + nom) si renseigné, sinon le téléphone. */
+  readonly nomAffiche = computed(() => {
+    const u = this.utilisateur();
+    if (!u) {
+      return '';
+    }
+    const nomComplet = [u.first_name, u.last_name].filter(Boolean).join(' ').trim();
+    return nomComplet || u.telephone;
+  });
+
   readonly libelleNiveau = computed(() => {
     const niveau = niveauDepuisEspace(this.utilisateur()?.espace);
     return niveau ? LIBELLES_NIVEAU[niveau] : '';

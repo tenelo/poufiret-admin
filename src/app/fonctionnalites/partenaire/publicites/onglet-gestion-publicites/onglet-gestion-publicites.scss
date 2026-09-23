@@ -192,19 +192,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 27px;
+  height: 27px;
   padding: 0;
   background: #ffffff;
-  border: 1px solid #fecaca;
+  border: 1px solid #dc2626;
   border-radius: 999px;
-  color: #b91c1c;
+  color: #dc2626;
   font-size: 0.8rem;
   line-height: 1;
   cursor: pointer;
 
   &:hover {
-    background: #fef2f2;
+    background: #f79494;
+    border-color: #b91c1c;
+    color: #ffffff;
   }
 }
 

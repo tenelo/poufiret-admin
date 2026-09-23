@@ -1,0 +1,121 @@
+<section class="page-interventions">
+  <div class="entete">
+    <div>
+      <h1>Demandes d'intervention</h1>
+      @if (!chargementEnCours() && !erreurChargement()) {
+        <span class="compteur">{{ total() }} demande{{ total() > 1 ? 's' : '' }}</span>
+      }
+    </div>
+    <div class="actions-entete">
+      <button type="button" class="bouton-secondaire" [disabled]="chargementEnCours()" (click)="charger()">
+        {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
+      </button>
+      <button type="button" class="bouton-principal" [disabled]="exportEnCours()" (click)="exporter()">
+        {{ exportEnCours() ? 'Export en cours…' : '⭳ Exporter CSV' }}
+      </button>
+    </div>
+  </div>
+
+  @if (erreurExport()) {
+    <p class="erreur-generale">{{ erreurExport() }}</p>
+  }
+
+  <div class="barre-filtres">
+    <input
+      type="text"
+      class="champ-recherche"
+      placeholder="Rechercher un client, un artisan, un numéro…"
+      [value]="rechercheTexte()"
+      (input)="changerRecherche($any($event.target).value)"
+    />
+    <select
+      class="filtre-statut"
+      [value]="filtreStatut()"
+      (change)="changerFiltreStatut($any($event.target).value)"
+    >
+      @for (option of optionsStatut; track option.valeur) {
+        <option [value]="option.valeur">{{ option.libelle }}</option>
+      }
+    </select>
+  </div>
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement des demandes…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (interventions().length === 0) {
+    <div class="etat-vide">
+      <p>Aucune demande d'intervention pour ces filtres.</p>
+    </div>
+  } @else {
+    <div class="conteneur-tableau">
+      <table class="tableau-interventions">
+        <thead>
+          <tr>
+            <th>Numéro</th>
+            <th>Client</th>
+            <th>Artisan</th>
+            <th>Type</th>
+            <th>Urgence</th>
+            <th>Statut</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (intervention of interventions(); track intervention.id) {
+            <tr
+              class="ligne-intervention"
+              [class.ligne-ouverte]="interventionOuverteId() === intervention.id"
+              (click)="basculerDetail(intervention)"
+            >
+              <td>{{ intervention.numero }}</td>
+              <td>
+                <div class="cellule-client">
+                  <span class="nom">{{ intervention.client_nom }}</span>
+                  <a
+                    class="telephone"
+                    [href]="'tel:' + intervention.client_telephone"
+                    (click)="$event.stopPropagation()"
+                  >
+                    {{ intervention.client_telephone }}
+                  </a>
+                </div>
+              </td>
+              <td>{{ intervention.artisan_nom || '—' }}</td>
+              <td>{{ libelleType(intervention) }}</td>
+              <td>{{ intervention.urgence_libelle }}</td>
+              <td>
+                <span class="badge {{ classeChipStatut(intervention.statut) }}">
+                  {{ intervention.statut_libelle }}
+                </span>
+              </td>
+              <td>{{ formaterDate(intervention.created_at) }}</td>
+            </tr>
+            @if (interventionOuverteId() === intervention.id) {
+              <tr class="ligne-detail">
+                <td colspan="7">
+                  <div class="panneau-detail">
+                    <div class="champ-detail">
+                      <span class="etiquette">Description</span>
+                      <p class="valeur">{{ intervention.description || '—' }}</p>
+                    </div>
+                    <div class="champ-detail">
+                      <span class="etiquette">Adresse</span>
+                      <p class="valeur">{{ intervention.adresse_snapshot || '—' }}</p>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

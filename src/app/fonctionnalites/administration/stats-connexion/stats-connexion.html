@@ -101,4 +101,125 @@
       </div>
     </section>
   }
+
+  <!-- Section indépendante : gère son propre chargement, pas conditionnée par
+       la réussite des stats de connexion ci-dessus. -->
+  <section class="bloc bloc-durees">
+    <h2>Durée des sessions</h2>
+
+    <div class="entete-durees">
+      <p class="explication">
+        Durées calculées sur la même période que le filtre « N derniers jours » ci-dessus (vide = tout).
+      </p>
+      <div class="actions-durees">
+        <button
+          type="button"
+          class="bouton-rafraichir"
+          [disabled]="chargementDureesEnCours()"
+          (click)="chargerDurees()"
+        >
+          {{ chargementDureesEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
+        </button>
+        <button
+          type="button"
+          class="bouton-exporter"
+          [disabled]="!peutExporter() || exportDureesEnCours()"
+          [title]="infobulleExport()"
+          (click)="exporterDurees()"
+        >
+          {{ exportDureesEnCours() ? 'Export en cours…' : '⭳ Exporter CSV (durées)' }}
+        </button>
+      </div>
+    </div>
+
+    @if (erreurExportDurees()) {
+      <p class="erreur-generale">{{ erreurExportDurees() }}</p>
+    }
+
+    @if (chargementDureesEnCours()) {
+      <div class="etat-chargement">
+        <span class="spinner"></span>
+        <p>Chargement des durées de sessions…</p>
+      </div>
+    } @else if (erreurDurees()) {
+      <div class="etat-erreur">
+        <p>{{ erreurDurees() }}</p>
+        <button type="button" (click)="chargerDurees()">Réessayer</button>
+      </div>
+    } @else if (durees(); as d) {
+      @if (d.nb_sessions === 0) {
+        <div class="etat-vide">
+          <p>Aucune session sur cette période.</p>
+        </div>
+      } @else {
+        <div class="grille-kpi">
+          <div class="carte-kpi">
+            <span class="valeur">{{ formaterDuree(d.duree_moyenne_globale_secondes) }}</span>
+            <span class="libelle">Durée moyenne</span>
+          </div>
+          <div class="carte-kpi">
+            <span class="valeur">{{ formaterDuree(d.duree_mediane_globale_secondes) }}</span>
+            <span class="libelle">Durée médiane</span>
+          </div>
+          <div class="carte-kpi">
+            <span class="valeur">{{ formaterNombre(d.nb_sessions) }}</span>
+            <span class="libelle">Sessions</span>
+          </div>
+        </div>
+
+        @if (d.par_jour.length > 0) {
+          <div class="carte-graphique">
+            <h3>Durée moyenne par jour (en minutes)</h3>
+            <app-graphique type="line" [data]="donneesCourbeDurees()" [options]="optionsCourbeDurees" />
+          </div>
+        }
+
+        @if (d.par_utilisateur.length === 0) {
+          <div class="etat-vide">
+            <p>Aucune session détaillée par utilisateur sur cette période.</p>
+          </div>
+        } @else {
+          <div class="conteneur-tableau">
+            <div class="entete-tableau-durees">
+              <span class="compteur">
+                {{ d.par_utilisateur.length }} utilisateur{{ d.par_utilisateur.length > 1 ? 's' : '' }}
+              </span>
+            </div>
+            <table class="tableau-durees">
+              <thead>
+                <tr>
+                  <th>Téléphone</th>
+                  <th>Nom</th>
+                  <th class="triable" (click)="changerTriDurees('nb_sessions')">
+                    Nb sessions
+                    {{ triColonneDurees() === 'nb_sessions' ? (triDirectionDurees() === 'asc' ? '▲' : '▼') : '' }}
+                  </th>
+                  <th>Durée moyenne</th>
+                  <th class="triable" (click)="changerTriDurees('duree_totale_secondes')">
+                    Durée totale
+                    {{
+                      triColonneDurees() === 'duree_totale_secondes'
+                        ? (triDirectionDurees() === 'asc' ? '▲' : '▼')
+                        : ''
+                    }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (ligne of parUtilisateurTrie(); track ligne.utilisateur_id) {
+                  <tr>
+                    <td>{{ ligne.telephone }}</td>
+                    <td>{{ ligne.nom || '—' }}</td>
+                    <td>{{ formaterNombre(ligne.nb_sessions) }}</td>
+                    <td>{{ formaterDuree(ligne.duree_moyenne_secondes) }}</td>
+                    <td>{{ formaterDuree(ligne.duree_totale_secondes) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+    }
+  </section>
 </section>

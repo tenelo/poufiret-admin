@@ -120,6 +120,7 @@ export const GROUPES_CAPACITES: GroupeCapacites[] = [
     capacites: [
       { nom: 'voir_stats', libelle: 'Voir les statistiques' },
       { nom: 'voir_indicateurs', libelle: 'Voir les indicateurs partenaires' },
+      { nom: 'voir_interventions', libelle: "Voir les demandes d'intervention" },
       { nom: 'lire_journal', libelle: "Lire le journal d'audit" },
       { nom: 'exporter_csv', libelle: 'Exporter en CSV' },
     ],

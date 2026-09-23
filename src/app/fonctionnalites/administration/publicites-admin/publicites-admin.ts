@@ -56,6 +56,11 @@ export class PublicitesAdmin implements OnInit {
   readonly messageSucces = signal<string | null>(null);
   readonly actionAConfirmer = signal<ActionEnAttenteConfirmation | null>(null);
 
+  // ---- Visuel (image/vidéo) de la campagne, agrandi dans une lightbox maison ----
+  readonly mediaAgrandi = signal<PubliciteAdmin | null>(null);
+  // Ids des campagnes dont l'image a échoué au chargement (repli sur le placeholder).
+  private readonly imagesEnErreur = signal<ReadonlySet<string>>(new Set());
+
   readonly peutExporter = computed(() => this.permissionsService.aLaCapacite('exporter_csv'));
   readonly infobulleExport = computed(() =>
     this.peutExporter() ? '' : "Vous n'avez pas la capacité exporter_csv.",
@@ -106,6 +111,31 @@ export class PublicitesAdmin implements OnInit {
 
   actionsDisponibles(publicite: PubliciteAdmin): ActionTransitionPubliciteAdmin[] {
     return TRANSITIONS_ADMIN_PUBLICITE[publicite.statut];
+  }
+
+  // ---- Visuel (image/vidéo) ----
+
+  /** Image utilisable : présente et pas déjà signalée en échec de chargement. */
+  imageValide(publicite: PubliciteAdmin): boolean {
+    return !!publicite.image_couverture && !this.imagesEnErreur().has(publicite.id);
+  }
+
+  aUnVisuel(publicite: PubliciteAdmin): boolean {
+    return this.imageValide(publicite) || !!publicite.video;
+  }
+
+  surErreurImage(id: string): void {
+    this.imagesEnErreur.update((ensemble) => new Set(ensemble).add(id));
+  }
+
+  ouvrirMedia(publicite: PubliciteAdmin): void {
+    if (this.aUnVisuel(publicite)) {
+      this.mediaAgrandi.set(publicite);
+    }
+  }
+
+  fermerMedia(): void {
+    this.mediaAgrandi.set(null);
   }
 
   entreesImpressionsParType(impressions: Record<string, number> | undefined): { type: string; valeur: number }[] {

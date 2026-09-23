@@ -1,0 +1,101 @@
+<div class="carte-mon-compte">
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement du compte…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (utilisateur(); as u) {
+    @if (messageSucces()) {
+      <p class="message-succes">{{ messageSucces() }}</p>
+    }
+
+    @if (!modeEdition()) {
+      <!-- ==================== MODE LECTURE ==================== -->
+      <div class="section section-lecture">
+        <div class="entete-carte">
+          <div>
+            <h2>Mon compte</h2>
+            <span class="role">{{ libelleRoleAffiche() }}</span>
+          </div>
+          <button type="button" class="bouton-principal" (click)="activerEdition()">✏️ Modifier</button>
+        </div>
+
+        <div class="grille-lecture">
+          <div class="champ-lecture">
+            <span class="etiquette">Prénom</span>
+            <span class="valeur">{{ u.first_name || '—' }}</span>
+          </div>
+          <div class="champ-lecture">
+            <span class="etiquette">Nom</span>
+            <span class="valeur">{{ u.last_name || '—' }}</span>
+          </div>
+          <div class="champ-lecture">
+            <span class="etiquette">Email</span>
+            <span class="valeur">{{ u.email || 'non renseigné' }}</span>
+          </div>
+          <div class="champ-lecture">
+            <span class="etiquette">Téléphone</span>
+            <span class="valeur">{{ u.telephone }}</span>
+          </div>
+          <div class="champ-lecture">
+            <span class="etiquette">Rôle</span>
+            <span class="valeur">{{ libelleRoleAffiche() }}</span>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <!-- ==================== MODE ÉDITION ==================== -->
+      <form class="section formulaire-compte" [formGroup]="formulaire" (ngSubmit)="soumettre()">
+        <h2>Mon compte</h2>
+
+        <div class="grille-lecture grille-lecture-seule-edition">
+          <div class="champ-lecture">
+            <span class="etiquette">Téléphone</span>
+            <span class="valeur">{{ u.telephone }}</span>
+          </div>
+          <div class="champ-lecture">
+            <span class="etiquette">Rôle</span>
+            <span class="valeur">{{ libelleRoleAffiche() }}</span>
+          </div>
+        </div>
+
+        <label for="first_name">Prénom</label>
+        <input id="first_name" type="text" formControlName="first_name" />
+
+        <label for="last_name">Nom</label>
+        <input id="last_name" type="text" formControlName="last_name" />
+
+        <label for="email">Email</label>
+        <input id="email" type="email" formControlName="email" />
+        @if (formulaire.controls.email.invalid && formulaire.controls.email.touched) {
+          <p class="erreur-champ">L'adresse email n'est pas valide.</p>
+        }
+
+        @if (messageErreur()) {
+          <p class="erreur-generale">{{ messageErreur() }}</p>
+        }
+
+        <div class="actions-formulaire">
+          <button type="button" class="bouton-secondaire" (click)="annulerEdition()">Annuler</button>
+          <button type="submit" [disabled]="enregistrementEnCours()">
+            {{ enregistrementEnCours() ? 'Enregistrement en cours…' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
+    }
+
+    <section class="section">
+      <h2>Sécurité</h2>
+      <button type="button" class="bouton-secondaire" (click)="ouvrirDialoguePin()">🔒 Changer mon PIN</button>
+    </section>
+  }
+
+  @if (pinDialogueOuvert()) {
+    <app-dialogue-changer-pin (ferme)="fermerDialoguePin()" (succes)="surPinChange()" />
+  }
+</div>

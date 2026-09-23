@@ -5,8 +5,8 @@
     @if (estPartenaire()) {
       <app-cloche-notifications />
     }
-    @if (utilisateur(); as u) {
-      <span class="telephone">{{ u.username }}</span>
+    @if (utilisateur()) {
+      <span class="telephone">{{ nomAffiche() }}</span>
       <span class="role" [class.role-superadmin]="estSuperadmin()">{{ libelleRole() }}</span>
     }
     <button type="button" (click)="deconnexion()">Déconnexion</button>

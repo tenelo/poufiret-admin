@@ -21,9 +21,9 @@ export type EspaceUtilisateur =
 export interface Utilisateur {
   id: number;
   telephone: string;
-  username?: string;
   first_name?: string;
   last_name?: string;
+  email?: string;
   role: RoleUtilisateur;
   est_verifie: boolean;
   pin_par_defaut: boolean;
@@ -46,6 +46,15 @@ export interface UtilisateurBrut
   livraison_departement_id?: number | null;
   livraison_departement_nom?: string;
   livraison_nom_bureau?: string;
+}
+
+// Corps de PATCH /auth/moi/ — seuls ces 3 champs sont éditables, tout autre
+// champ envoyé est ignoré côté serveur (role/telephone/est_verifie/etc. sont
+// en lecture seule).
+export interface RequeteMiseAJourMonProfil {
+  first_name: string;
+  last_name: string;
+  email: string;
 }
 
 export function versUtilisateurModele(brut: UtilisateurBrut): Utilisateur {

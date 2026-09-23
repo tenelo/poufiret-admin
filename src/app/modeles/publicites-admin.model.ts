@@ -37,6 +37,9 @@ export interface PubliciteAdmin {
   cible_atteinte?: boolean;
   debut_diffusion?: string | null;
   fin_diffusion?: string | null;
+  // URLs absolues, fournies par le backend telles quelles.
+  image_couverture?: string | null;
+  video?: string | null;
 }
 
 export interface StatsPublicitesAdmin {
@@ -68,7 +71,8 @@ export const TRANSITIONS_ADMIN_PUBLICITE: Record<StatutPubliciteAdmin, ActionTra
     { cible: 'valider', libelle: 'Valider' },
     { cible: 'rejeter', libelle: 'Rejeter', dangereuse: true },
   ],
-  active: [{ cible: 'terminer', libelle: 'Terminer' }],
+  // Libellé affiché seulement : l'action envoyée au backend reste "terminer".
+  active: [{ cible: 'terminer', libelle: 'Arrêter la pub' }],
   rejetee: [],
   terminee: [],
 };

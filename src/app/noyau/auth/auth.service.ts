@@ -7,10 +7,12 @@ import { ConfigurationService } from '../config/configuration.service';
 import { PermissionsService } from '../permissions/permissions.service';
 import {
   ReponseConnexion,
+  ReponsePin,
   ReponseRafraichissement,
   RequeteConnexion,
 } from '../../modeles/auth.model';
 import {
+  RequeteMiseAJourMonProfil,
   RoleUtilisateur,
   Utilisateur,
   UtilisateurBrut,
@@ -86,6 +88,39 @@ export class AuthService {
         this.utilisateurCourant.set(utilisateur);
       }),
     );
+  }
+
+  /**
+   * PATCH /auth/moi/ : met à jour les champs éditables du profil (first_name,
+   * last_name, email — les seuls acceptés côté serveur, le reste est ignoré).
+   * Met à jour la session locale avec la réponse, comme `rafraichirUtilisateur`.
+   */
+  mettreAJourMonProfil(payload: RequeteMiseAJourMonProfil): Observable<Utilisateur> {
+    return this.http.patch<UtilisateurBrut>(`${this.configuration.apiUrl}/auth/moi/`, payload).pipe(
+      map((brut) => versUtilisateurModele(brut)),
+      tap((utilisateur) => {
+        localStorage.setItem(CLE_UTILISATEUR, JSON.stringify(utilisateur));
+        this.utilisateurCourant.set(utilisateur);
+      }),
+    );
+  }
+
+  /**
+   * POST /auth/pin/changer/ : change le PIN de connexion. Le mot de passe
+   * ayant changé, le backend renvoie de nouveaux jetons qui remplacent les
+   * anciens (comme à la connexion).
+   */
+  changerPin(ancienPin: string, nouveauPin: string): Observable<Utilisateur> {
+    return this.http
+      .post<ReponsePin>(`${this.configuration.apiUrl}/auth/pin/changer/`, {
+        ancien_pin: ancienPin,
+        nouveau_pin: nouveauPin,
+      })
+      .pipe(
+        map((reponse) => ({ ...reponse, utilisateur: versUtilisateurModele(reponse.utilisateur) })),
+        tap((reponse) => this.enregistrerSession(reponse)),
+        map((reponse) => reponse.utilisateur),
+      );
   }
 
   /** Efface la session locale et redirige vers la page de connexion. */

@@ -60,7 +60,6 @@ export class FormulaireArticle {
       unite: [''],
       description: [''],
       details: [''],
-      section_menu: [''],
       temps_preparation_min: [null as number | null, [Validators.min(0)]],
       est_actif: [true],
       est_disponible: [true],
@@ -82,7 +81,6 @@ export class FormulaireArticle {
           unite: article.unite ?? '',
           description: article.description ?? '',
           details: article.details ?? '',
-          section_menu: article.section_menu ?? '',
           temps_preparation_min: article.temps_preparation_min,
           est_actif: article.est_actif,
           est_disponible: article.est_disponible,
@@ -98,7 +96,6 @@ export class FormulaireArticle {
           unite: '',
           description: '',
           details: '',
-          section_menu: '',
           temps_preparation_min: null,
           est_actif: true,
           est_disponible: true,
@@ -115,20 +112,22 @@ export class FormulaireArticle {
     }
 
     const valeurs = this.formulaire.getRawValue();
+    // Champs numériques optionnels : null (jamais "") quand vides. `section_menu` est une FK
+    // côté backend (id de SectionMenu, aucun endpoint de liste connu) : volontairement omis
+    // du payload — jamais de texte libre.
     const donnees: RequeteArticle = {
       nom: valeurs.nom!,
       description: valeurs.description ?? '',
       type: valeurs.type!,
       prix: valeurs.prix!,
-      prix_promotion: valeurs.prix_promotion,
+      prix_promotion: valeurs.prix_promotion ?? null,
       unite: valeurs.unite ?? '',
       details: valeurs.details ?? '',
       est_actif: valeurs.est_actif!,
       est_disponible: valeurs.est_disponible!,
       est_en_promotion: valeurs.est_en_promotion!,
-      temps_preparation_min: valeurs.temps_preparation_min,
+      temps_preparation_min: valeurs.temps_preparation_min ?? null,
       categorie: valeurs.categorie!,
-      section_menu: valeurs.section_menu ?? '',
     };
 
     this.soumis.emit(donnees);
