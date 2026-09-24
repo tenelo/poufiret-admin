@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 
 import { AuthService } from '../../../noyau/auth/auth.service';
 import { PermissionsService } from '../../../noyau/permissions/permissions.service';
@@ -8,6 +8,8 @@ import { ClocheNotifications } from '../cloche-notifications/cloche-notification
  * En-tête de la coquille applicative : affiche l'utilisateur connecté
  * et permet de se déconnecter. Espace partenaire uniquement : cloche de
  * notification des nouvelles commandes (voir ClocheNotifications).
+ * Sur mobile/tablette (< 992px), porte le bouton hamburger qui ouvre/ferme
+ * le tiroir de navigation géré par la coquille.
  */
 @Component({
   selector: 'app-en-tete',
@@ -18,6 +20,10 @@ import { ClocheNotifications } from '../cloche-notifications/cloche-notification
 export class EnTete {
   private readonly authService = inject(AuthService);
   private readonly permissionsService = inject(PermissionsService);
+
+  /** État du tiroir, pour aria-expanded du bouton hamburger. */
+  readonly menuOuvert = input(false);
+  readonly menuBascule = output<void>();
 
   readonly utilisateur = this.authService.utilisateur;
 

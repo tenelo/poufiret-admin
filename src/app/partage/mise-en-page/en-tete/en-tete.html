@@ -1,5 +1,17 @@
 <header class="en-tete">
-  <span class="nom-app">Poufiret</span>
+  <div class="zone-gauche">
+    <button
+      type="button"
+      class="bouton-menu"
+      aria-label="Ouvrir ou fermer le menu"
+      aria-controls="menu-lateral"
+      [attr.aria-expanded]="menuOuvert()"
+      (click)="menuBascule.emit()"
+    >
+      ☰
+    </button>
+    <span class="nom-app">ADMINISTRATION</span>
+  </div>
 
   <div class="zone-utilisateur">
     @if (estPartenaire()) {

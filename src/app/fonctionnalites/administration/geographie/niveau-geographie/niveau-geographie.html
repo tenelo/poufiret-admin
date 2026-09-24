@@ -1,0 +1,167 @@
+<div class="entete-niveau">
+  <span class="compteur">{{ total() }} {{ config().libellePluriel.toLowerCase() }}</span>
+  <div class="actions-entete">
+    <button type="button" class="bouton-secondaire" [disabled]="exportEnCours()" (click)="exporter()">
+      {{ exportEnCours() ? 'Export en cours…' : '⭳ Exporter CSV' }}
+    </button>
+    <button type="button" class="bouton-principal" (click)="ouvrirCreation()">+ Ajouter</button>
+  </div>
+</div>
+
+<div class="barre-filtres">
+  <input
+    type="text"
+    class="champ-recherche"
+    placeholder="Rechercher par nom…"
+    [value]="recherche()"
+    (input)="changerRecherche($any($event.target).value)"
+  />
+  <select class="filtre" [value]="filtreActif()" (change)="changerFiltreActif($any($event.target).value)">
+    <option value="">Tous les statuts</option>
+    <option value="true">Actifs</option>
+    <option value="false">Inactifs</option>
+  </select>
+
+  @for (etape of cascade.etapes; track etape; let i = $index) {
+    <select
+      class="filtre"
+      [attr.aria-label]="cascade.libelle(i)"
+      [disabled]="i > 0 && cascade.valeurs()[i - 1] === null"
+      (change)="changerCascade(i, $any($event.target).value)"
+    >
+      <option value="">{{ cascade.libelle(i) }} : tous</option>
+      @for (option of cascade.options()[i]; track option.id) {
+        <option [value]="option.id" [selected]="option.id === cascade.valeurs()[i]">{{ option.nom }}</option>
+      }
+    </select>
+  }
+
+  <button type="button" class="bouton-lien" (click)="reinitialiserFiltres()">Réinitialiser</button>
+</div>
+
+@if (cascade.erreur(); as erreurCascade) {
+  <p class="erreur-generale">{{ erreurCascade }}</p>
+}
+
+@if (chargementEnCours()) {
+  <div class="etat-vide">
+    <span class="spinner"></span>
+    <p>Chargement…</p>
+  </div>
+} @else if (erreurChargement()) {
+  <div class="etat-erreur">
+    <p>{{ erreurChargement() }}</p>
+    <button type="button" class="bouton-secondaire" (click)="charger()">Réessayer</button>
+  </div>
+} @else if (lignes().length === 0) {
+  <div class="etat-vide">
+    <p>Aucun élément pour ces filtres.</p>
+  </div>
+} @else {
+  <div class="conteneur-tableau">
+    <table class="tableau-geo">
+      <thead>
+        <tr>
+          <th>Nom</th>
+          @for (etape of cascade.etapes; track etape; let i = $index) {
+            <th>{{ cascade.libelle(i) }}</th>
+          }
+          @if (config().libelleEnfants; as libelleEnfants) {
+            <th class="colonne-nombre">{{ libelleEnfants }}</th>
+          }
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (ligne of lignes(); track ligne.id) {
+          <tr>
+            <td class="cellule-nom">{{ ligne.nom }}</td>
+            @for (etape of cascade.etapes; track etape; let i = $index) {
+              <td>{{ nomAncetre(ligne, i) }}</td>
+            }
+            @if (config().libelleEnfants) {
+              <td class="colonne-nombre">{{ ligne.nb_enfants }}</td>
+            }
+            <td>
+              <span class="badge" [class.badge-actif]="ligne.actif">{{ ligne.actif ? 'Actif' : 'Inactif' }}</span>
+            </td>
+            <td>
+              <div class="actions-ligne">
+                <button type="button" class="bouton-action" (click)="ouvrirEdition(ligne)">Modifier</button>
+                <button type="button" class="bouton-action" (click)="demanderBascule(ligne)">
+                  {{ ligne.actif ? 'Désactiver' : 'Activer' }}
+                </button>
+                <button type="button" class="bouton-action bouton-danger" (click)="demanderSuppression(ligne)">
+                  Supprimer
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (nombrePages() > 1) {
+    <div class="pagination">
+      <button type="button" [disabled]="page() === 1" (click)="pagePrecedente()">← Précédent</button>
+      <span>Page {{ page() }} / {{ nombrePages() }}</span>
+      <button type="button" [disabled]="page() === nombrePages()" (click)="pageSuivante()">Suivant →</button>
+    </div>
+  }
+}
+
+@if (dialogOuvert()) {
+  <app-dialog-geographie
+    [niveau]="niveau()"
+    [ligne]="ligneEnEdition()"
+    [enregistrementEnCours]="enregistrementEnCours()"
+    [erreurs]="erreursDialog()"
+    (soumis)="enregistrer($event)"
+    (annule)="fermerDialog()"
+  />
+}
+
+@if (confirmation(); as attente) {
+  <div class="voile-confirmation" (click)="annulerConfirmation()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      @if (attente.type === 'supprimer') {
+        <p>Supprimer « {{ attente.ligne.nom }} » ? Cette action est irréversible.</p>
+      } @else if (attente.ligne.actif) {
+        <p>Désactiver « {{ attente.ligne.nom }} » ? Il ne sera plus proposé dans les listes.</p>
+      } @else {
+        <p>Activer « {{ attente.ligne.nom }} » ?</p>
+      }
+
+      @if (conflitSuppression(); as conflit) {
+        <p class="erreur-generale">{{ conflit }}</p>
+      }
+      @if (erreurConfirmation(); as erreurAction) {
+        <p class="erreur-generale">{{ erreurAction }}</p>
+      }
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annulerConfirmation()">Annuler</button>
+        @if (conflitSuppression() && attente.ligne.actif) {
+          <button type="button" class="bouton-principal" [disabled]="actionEnCours()" (click)="desactiverALaPlace()">
+            Désactiver à la place
+          </button>
+        } @else if (!conflitSuppression()) {
+          <button
+            type="button"
+            [class]="attente.type === 'supprimer' ? 'bouton-supprimer' : 'bouton-principal'"
+            [disabled]="actionEnCours()"
+            (click)="confirmer()"
+          >
+            {{ attente.type === 'supprimer' ? 'Supprimer' : attente.ligne.actif ? 'Désactiver' : 'Activer' }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+@if (message(); as msg) {
+  <div class="snackbar" [class.snackbar-erreur]="msg.erreur" role="status">{{ msg.texte }}</div>
+}

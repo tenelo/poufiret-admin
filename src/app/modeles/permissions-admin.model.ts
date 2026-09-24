@@ -41,7 +41,8 @@ export type NomCapacite =
   | 'voir_interventions'
   | 'lire_journal'
   | 'exporter_csv'
-  | 'gerer_admins';
+  | 'gerer_admins'
+  | 'gerer_geographie';
 
 // Corps brut renvoyé par le backend (snake_case).
 export interface ReponsePermissionsAdmin {
@@ -100,4 +101,5 @@ export const LIBELLES_CAPACITE: Record<NomCapacite, string> = {
   lire_journal: "Lire le journal d'audit",
   exporter_csv: 'Exporter des données (CSV)',
   gerer_admins: 'Gérer les administrateurs',
+  gerer_geographie: 'Gérer la géographie',
 };

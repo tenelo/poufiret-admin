@@ -42,7 +42,7 @@ export interface RequeteModifierCapacites {
 export interface CapaciteDescriptor {
   nom: NomCapacite;
   libelle: string;
-  // true uniquement pour `gerer_admins` : non modifiable par un admin-gestionnaire non-superuser.
+  // true pour `gerer_admins` et `gerer_geographie` : non modifiable par un admin non-superuser.
   privilegiee?: boolean;
 }
 
@@ -128,6 +128,12 @@ export const GROUPES_CAPACITES: GroupeCapacites[] = [
   {
     titre: 'Gestion des admins',
     capacites: [{ nom: 'gerer_admins', libelle: 'Gérer les administrateurs', privilegiee: true }],
+  },
+  {
+    titre: 'Géographie',
+    // Privilégiée comme gerer_admins : seul un super-admin peut la modifier
+    // (case verrouillée pour les autres, le backend l'impose déjà).
+    capacites: [{ nom: 'gerer_geographie', libelle: 'Gérer la géographie', privilegiee: true }],
   },
 ];
 

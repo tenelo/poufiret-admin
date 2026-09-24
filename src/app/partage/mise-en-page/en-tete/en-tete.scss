@@ -7,9 +7,37 @@
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
 
+  .zone-gauche {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
   .nom-app {
     font-weight: 700;
     color: #1f2937;
+  }
+
+  // Hamburger : visible uniquement en mode tiroir (< 992px).
+  .bouton-menu {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: none;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    color: #1f2937;
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover {
+      background: #f3f4f6;
+    }
   }
 
   .zone-utilisateur {
@@ -47,5 +75,26 @@
         background: #e5e7eb;
       }
     }
+  }
+}
+
+@media (max-width: 991.98px) {
+  .en-tete {
+    padding: 0 0.75rem;
+
+    .bouton-menu {
+      display: flex;
+    }
+
+    .zone-utilisateur {
+      gap: 0.5rem;
+    }
+  }
+}
+
+// Très petit écran : on garde rôle + déconnexion, on masque le nom pour éviter le débordement.
+@media (max-width: 575.98px) {
+  .en-tete .zone-utilisateur .telephone {
+    display: none;
   }
 }

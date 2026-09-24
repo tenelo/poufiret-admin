@@ -108,10 +108,15 @@
   }
 }
 
-@media (max-width: 480px) {
+// Mobile : panneau calé sur la largeur de l'écran (sous l'en-tête de 56px) pour ne
+// jamais déborder horizontalement, quelle que soit la position de la cloche.
+@media (max-width: 575.98px) {
   .panneau-notifications {
-    left: -0.5rem;
-    width: 240px;
+    position: fixed;
+    top: 60px;
+    left: 0.5rem;
+    right: 0.5rem;
+    width: auto;
   }
 }
 

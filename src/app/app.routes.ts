@@ -195,6 +195,14 @@ export const routes: Routes = [
           ),
       },
       {
+        // Super-admin (le backend renvoie toutes les capacités à true) OU capacité gerer_geographie.
+        path: 'administration/geographie',
+        canActivate: [roleGuard(['admin']), capaciteGuard],
+        data: { capacite: 'gerer_geographie' },
+        loadComponent: () =>
+          import('./fonctionnalites/administration/geographie/geographie').then((m) => m.Geographie),
+      },
+      {
         // Réservé super-admin : is_superuser, pas une capacité fine.
         path: 'administration/moderation',
         canActivate: [roleGuard(['admin']), superAdminGuard],

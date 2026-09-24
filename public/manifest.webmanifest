@@ -1,6 +1,6 @@
 {
-  "name": "Poufiret Admin",
-  "short_name": "Poufiret",
+  "name": "Admin Poufiret",
+  "short_name": "Admin Poufiret",
   "description": "Plateforme d'administration et espace partenaire Poufiret",
   "lang": "fr",
   "display": "standalone",

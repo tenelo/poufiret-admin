@@ -122,6 +122,13 @@ const ENTREES_ADMIN: EntreeMenuAdmin[] = [
     capacite: 'voir_stats',
   },
   {
+    // Super-admin (toutes capacités à true côté backend) OU capacité gerer_geographie.
+    libelle: 'Géographie',
+    lien: '/administration/geographie',
+    icone: '🗺️',
+    capacite: 'gerer_geographie',
+  },
+  {
     // Pas de capacité : réservé au super-admin, voir le filtre ci-dessous.
     libelle: 'Modération de comptes',
     lien: '/administration/moderation',

@@ -1,0 +1,23 @@
+<section class="page-geographie">
+  <h1>Géographie</h1>
+
+  <nav class="barre-onglets">
+    @for (onglet of onglets; track onglet.valeur) {
+      <button
+        type="button"
+        class="onglet"
+        [class.onglet-actif]="niveauActif() === onglet.valeur"
+        (click)="changerNiveau(onglet.valeur)"
+      >
+        {{ onglet.libelle }}
+      </button>
+    }
+  </nav>
+
+  <!-- Une seule instance à la fois : changer d'onglet recrée le composant, donc recharge et filtres frais. -->
+  @for (onglet of onglets; track onglet.valeur) {
+    @if (niveauActif() === onglet.valeur) {
+      <app-niveau-geographie [niveau]="onglet.valeur" />
+    }
+  }
+</section>

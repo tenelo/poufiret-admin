@@ -1,0 +1,59 @@
+<div class="voile-modale" (click)="annule.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>{{ ligne() ? 'Modifier' : 'Ajouter' }} : {{ config().libelle }}</h2>
+
+    <form (submit)="$event.preventDefault(); soumettre()">
+      @for (etape of cascade.etapes; track etape; let i = $index; let dernier = $last) {
+        <label [for]="'etape-' + etape">{{ cascade.libelle(i) }}</label>
+        <select
+          [id]="'etape-' + etape"
+          [disabled]="i > 0 && cascade.valeurs()[i - 1] === null"
+          (change)="cascade.changer(i, versId($any($event.target).value))"
+        >
+          <option value="">Choisir…</option>
+          @for (option of cascade.options()[i]; track option.id) {
+            <option [value]="option.id" [selected]="option.id === cascade.valeurs()[i]">
+              {{ option.nom }}
+            </option>
+          }
+        </select>
+        @if (dernier) {
+          @if (touche() && cascade.parentId() === null) {
+            <p class="erreur-champ">Ce choix est requis.</p>
+          }
+          @if (erreurs()?.parent; as messageParent) {
+            <p class="erreur-champ">{{ messageParent }}</p>
+          }
+        }
+      }
+
+      <label for="nom-geo">Nom</label>
+      <input
+        id="nom-geo"
+        type="text"
+        [value]="nom()"
+        (input)="nom.set($any($event.target).value)"
+      />
+      @if (touche() && !nom().trim()) {
+        <p class="erreur-champ">Le nom est requis.</p>
+      }
+      @if (erreurs()?.nom; as messageNom) {
+        <p class="erreur-champ">{{ messageNom }}</p>
+      }
+
+      @if (cascade.erreur(); as erreurCascade) {
+        <p class="erreur-generale">{{ erreurCascade }}</p>
+      }
+      @if (erreurs()?.general; as messageGeneral) {
+        <p class="erreur-generale">{{ messageGeneral }}</p>
+      }
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annule.emit()">Annuler</button>
+        <button type="submit" class="bouton-principal" [disabled]="enregistrementEnCours()">
+          {{ enregistrementEnCours() ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
