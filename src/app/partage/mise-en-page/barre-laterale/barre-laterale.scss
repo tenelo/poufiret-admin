@@ -1,7 +1,8 @@
 .barre-laterale {
-  height: 100%;
-  padding: 1rem 0;
-  background: #1f2937;
+  min-height: 100%;
+  padding: 0.75rem 0 1.5rem;
+  // Le fond bleu nuit est porté par la zone latérale (coquille) : ici on reste transparent.
+  background: transparent;
   color: #e5e7eb;
 
   ul {
@@ -26,18 +27,22 @@
     border-left: 3px solid transparent;
 
     &:hover {
-      background: #374151;
+      background: rgba(147, 197, 253, 0.1);
     }
 
     &.actif {
-      background: #374151;
-      border-left-color: #4f46e5;
+      background: rgba(147, 197, 253, 0.16);
+      border-left-color: #38bdf8;
       font-weight: 600;
     }
   }
 
+  // Largeur fixe : les libellés restent alignés quelle que soit la largeur de l'emoji.
   .icone {
+    flex: none;
+    width: 1.5rem;
     font-size: 1rem;
+    text-align: center;
   }
 
   .placeholder {

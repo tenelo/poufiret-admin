@@ -1,13 +1,20 @@
 import { Component, OnDestroy, computed, input, output, signal } from '@angular/core';
 
-import { FormulePublicite, MaPublicite } from '../../../../../modeles/publicite.model';
+import {
+  FormulePublicite,
+  MaPublicite,
+  optionsPorteeSelonForfait,
+  PorteePublicite,
+  rangPortee,
+} from '../../../../../modeles/publicite.model';
 
 // Taille max acceptée côté client pour une image de campagne.
 const TAILLE_MAX_IMAGE_OCTETS = 5 * 1024 * 1024;
 
 export interface DonneesReconduction {
-  formuleId: number;
+  formuleId: string;
   image?: File;
+  portee: PorteePublicite;
 }
 
 /**
@@ -28,14 +35,29 @@ export class DialogReconduction implements OnDestroy {
   readonly formules = input.required<FormulePublicite[]>();
   readonly enregistrementEnCours = input(false);
   readonly messageErreur = input<string | null>(null);
+  /** Portée du forfait du partenaire ; null si inconnue (aucune option grisée). */
+  readonly porteeForfait = input<PorteePublicite | null>(null);
 
   readonly soumis = output<DonneesReconduction>();
   readonly annule = output<void>();
 
   // Tant que l'utilisateur n'a rien choisi explicitement, on retombe sur la
   // formule de la campagne d'origine (pré-remplissage demandé).
-  private readonly formuleIdChoisie = signal<number | null>(null);
+  private readonly formuleIdChoisie = signal<string | null>(null);
   readonly formuleId = computed(() => this.formuleIdChoisie() ?? this.publicite().formule);
+
+  // Par défaut : la portée de la campagne d'origine si elle est >= au forfait, sinon celle du forfait.
+  private readonly porteeChoisie = signal<PorteePublicite | null>(null);
+  readonly portee = computed<PorteePublicite>(() => {
+    const choisie = this.porteeChoisie();
+    if (choisie) {
+      return choisie;
+    }
+    const origine = this.publicite().portee;
+    const forfait = this.porteeForfait();
+    return forfait && rangPortee(origine) < rangPortee(forfait) ? forfait : origine;
+  });
+  readonly optionsPortee = computed(() => optionsPorteeSelonForfait(this.porteeForfait()));
 
   readonly formuleSelectionnee = computed(
     () => this.formules().find((f) => f.id === this.formuleId()) ?? null,
@@ -52,7 +74,11 @@ export class DialogReconduction implements OnDestroy {
   }
 
   selectionnerFormule(valeur: string): void {
-    this.formuleIdChoisie.set(valeur ? Number(valeur) : null);
+    this.formuleIdChoisie.set(valeur || null);
+  }
+
+  selectionnerPortee(valeur: PorteePublicite): void {
+    this.porteeChoisie.set(valeur);
   }
 
   selectionnerNouvelleImage(evenement: Event): void {
@@ -95,6 +121,7 @@ export class DialogReconduction implements OnDestroy {
       return;
     }
     const image = this.nouvelleImage();
-    this.soumis.emit(image ? { formuleId: this.formuleId()!, image } : { formuleId: this.formuleId()! });
+    const base = { formuleId: this.formuleId()!, portee: this.portee() };
+    this.soumis.emit(image ? { ...base, image } : base);
   }
 }

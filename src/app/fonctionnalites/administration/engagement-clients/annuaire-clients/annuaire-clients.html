@@ -1,0 +1,65 @@
+<div class="barre-filtres">
+  <input
+    type="search"
+    class="champ-recherche"
+    placeholder="Rechercher un identifiant, un téléphone…"
+    aria-label="Rechercher un client"
+    [value]="recherche()"
+    (input)="changerRecherche($any($event.target).value)"
+  />
+  <select aria-label="Filtrer par activité" (change)="changerFiltreActivite($any($event.target).value)">
+    <option value="" [selected]="filtreActivite() === ''">Tous les clients</option>
+    <option value="actifs" [selected]="filtreActivite() === 'actifs'">Actifs</option>
+    <option value="inactifs" [selected]="filtreActivite() === 'inactifs'">Inactifs</option>
+  </select>
+</div>
+
+@if (clients() === null) {
+  @if (erreur()) {
+    <p class="erreur-section">{{ erreur() }}</p>
+  } @else {
+    <p class="etat-section">Chargement des clients…</p>
+  }
+} @else if (totalAffiche() === 0) {
+  <p class="etat-section">Aucun client ne correspond à ces critères.</p>
+} @else {
+  <p class="total">{{ formaterNombre(totalAffiche()) }} client(s)</p>
+  <div class="conteneur-tableau">
+    <table class="tableau">
+      <thead>
+        <tr>
+          <th>Identifiant</th>
+          <th>Téléphone</th>
+          <th>Dernière activité</th>
+          <th>Articles vus (mois)</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (client of clientsPage(); track client.utilisateur_id) {
+          <tr>
+            <td class="fort">{{ client.username }}</td>
+            <td>{{ client.telephone }}</td>
+            <td>{{ formaterDate(client.derniere_activite) }}</td>
+            <td>{{ formaterNombre(client.nb_articles_vus_mois) }}</td>
+            <td>
+              <span class="badge" [class.badge-actif]="client.est_client_actif">
+                {{ client.est_client_actif ? 'Actif' : 'Inactif' }}
+              </span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (nombrePages() > 1) {
+    <div class="pagination">
+      <button type="button" [disabled]="pageAffichee() === 1" (click)="pagePrecedente()">← Précédent</button>
+      <span>Page {{ pageAffichee() }} / {{ nombrePages() }}</span>
+      <button type="button" [disabled]="pageAffichee() === nombrePages()" (click)="pageSuivante()">
+        Suivant →
+      </button>
+    </div>
+  }
+}

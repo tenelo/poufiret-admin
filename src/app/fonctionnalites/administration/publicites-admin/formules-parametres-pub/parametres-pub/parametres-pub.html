@@ -1,0 +1,105 @@
+<section class="bloc">
+  <h2>Paramètres généraux</h2>
+
+  @if (chargementEnCours()) {
+    <p class="etat">Chargement des paramètres…</p>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (formulaireCharge()) {
+    <form class="carte" (submit)="$event.preventDefault(); enregistrer()">
+      <!-- Créneau d'affluence -->
+      <fieldset>
+        <legend>Créneau d'affluence</legend>
+        <label class="ligne-case">
+          <input type="checkbox" [checked]="calculAuto()" (change)="calculAuto.set($any($event.target).checked)" />
+          Calcul automatique du créneau d'affluence
+        </label>
+        <p class="aide">Le créneau est déduit des sessions réelles des 30 derniers jours.</p>
+
+        <div class="grille-champs">
+          @for (champ of champsAffluence; track champ.cle) {
+            <div>
+              <label [for]="'pp-' + champ.cle">{{ champ.libelle }}</label>
+              <input
+                [id]="'pp-' + champ.cle"
+                type="number"
+                step="1"
+                [attr.min]="champ.min"
+                [attr.max]="champ.max"
+                [disabled]="calculAuto()"
+                [value]="valeurs()[champ.cle]"
+                (input)="saisir(champ.cle, $any($event.target).value)"
+              />
+              <p class="aide">{{ champ.aide }}</p>
+              @if (erreur(champ.cle); as message) {
+                <p class="erreur-champ">{{ message }}</p>
+              }
+            </div>
+          }
+        </div>
+      </fieldset>
+
+      <!-- Interstitiel -->
+      <fieldset>
+        <legend>Interstitiel</legend>
+        <div class="grille-champs">
+          @for (champ of champsInterstitiel; track champ.cle) {
+            <div>
+              <label [for]="'pp-' + champ.cle">{{ champ.libelle }}</label>
+              <input
+                [id]="'pp-' + champ.cle"
+                type="number"
+                step="1"
+                [attr.min]="champ.min"
+                [attr.max]="champ.max"
+                [value]="valeurs()[champ.cle]"
+                (input)="saisir(champ.cle, $any($event.target).value)"
+              />
+              <p class="aide">{{ champ.aide }}</p>
+              @if (erreur(champ.cle); as message) {
+                <p class="erreur-champ">{{ message }}</p>
+              }
+            </div>
+          }
+        </div>
+      </fieldset>
+
+      <!-- Validation -->
+      <fieldset>
+        <legend>Validation des campagnes</legend>
+        <label class="ligne-case">
+          <input type="checkbox" [checked]="validationAuto()" (change)="validationAuto.set($any($event.target).checked)" />
+          Validation automatique
+        </label>
+        <p class="aide">
+          Quand elle est activée, confirmer le paiement active directement la pub, sans validation
+          admin séparée.
+        </p>
+        @if (validationAuto()) {
+          <p class="avertissement">
+            Attention : les pubs payées seront activées sans validation admin.
+          </p>
+        }
+        @if (erreur('validation_auto'); as message) {
+          <p class="erreur-champ">{{ message }}</p>
+        }
+      </fieldset>
+
+      @if (erreurs()?.general; as message) {
+        <p class="erreur-generale">{{ message }}</p>
+      }
+      @if (messageSucces()) {
+        <p class="message-succes">{{ messageSucces() }}</p>
+      }
+
+      <div class="actions">
+        <button type="submit" class="bouton-principal" [disabled]="enregistrementEnCours()">
+          {{ enregistrementEnCours() ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>

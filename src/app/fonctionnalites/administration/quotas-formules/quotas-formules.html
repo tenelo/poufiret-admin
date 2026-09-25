@@ -1,0 +1,74 @@
+<section class="carte-quotas">
+  <div class="entete-quotas">
+    <h3>Quotas des formules</h3>
+    <button
+      type="button"
+      class="bouton-rafraichir"
+      aria-label="Rafraîchir les quotas"
+      [disabled]="chargementEnCours()"
+      (click)="charger()"
+    >
+      ↻
+    </button>
+  </div>
+
+  @if (chargementEnCours()) {
+    <p class="etat">Chargement des quotas…</p>
+  } @else if (erreur() && formules().length === 0) {
+    <div class="etat etat-erreur">
+      <p>{{ erreur() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (formules().length === 0) {
+    <p class="etat">Aucune formule.</p>
+  } @else {
+    @if (erreur()) {
+      <p class="erreur-actualisation">{{ erreur() }}</p>
+    }
+    <div class="grille-quotas">
+      @for (formule of formules(); track formule.id) {
+        <div class="quota" [class.quota-complet]="estComplete(formule)">
+          <div class="quota-entete">
+            <span class="nom">{{ formule.nom }}</span>
+            @if (estComplete(formule)) {
+              <span class="badge badge-complet">Complet</span>
+            } @else if (!formule.est_active) {
+              <span class="badge">Inactive</span>
+            }
+          </div>
+
+          <div
+            class="barre"
+            role="progressbar"
+            aria-valuemin="0"
+            [attr.aria-valuenow]="formule.nb_actives"
+            [attr.aria-valuemax]="formule.quota_partenaires"
+          >
+            <div
+              class="remplissage"
+              [class.remplissage-complet]="estComplete(formule)"
+              [style.width.%]="pourcentageRemplissage(formule)"
+            ></div>
+          </div>
+
+          <div class="quota-chiffres">
+            <span><strong>{{ formule.nb_actives }} / {{ formule.quota_partenaires }}</strong> actives</span>
+            <span>
+              {{ formule.places_restantes }}
+              {{ formule.places_restantes > 1 ? 'places restantes' : 'place restante' }}
+            </span>
+          </div>
+          <p class="quota-attente">
+            {{ formule.nb_en_attente }} en attente
+            @if (formule.nb_en_attente > 0) {
+              <span>
+                ({{ formule.nb_en_attente_paiement }} paiement ·
+                {{ formule.nb_en_attente_validation }} validation)
+              </span>
+            }
+          </p>
+        </div>
+      }
+    </div>
+  }
+</section>

@@ -52,7 +52,7 @@ export class CreditsPub implements OnInit {
   readonly erreurFormules = signal<string | null>(null);
 
   // ---- Octroi d'un crédit ----
-  readonly formuleSelectionneeId = signal<number | null>(null);
+  readonly formuleSelectionneeId = signal<string | null>(null);
   readonly motifOctroi = signal('');
   readonly octroiEnCours = signal(false);
   readonly erreurOctroi = signal<string | null>(null);
@@ -159,7 +159,7 @@ export class CreditsPub implements OnInit {
   }
 
   changerFormuleSelectionnee(valeur: string): void {
-    this.formuleSelectionneeId.set(valeur ? Number(valeur) : null);
+    this.formuleSelectionneeId.set(valeur || null);
   }
 
   changerMotif(valeur: string): void {

@@ -38,6 +38,8 @@ export interface ProfilPartenaire {
   badge_certifie: boolean;
   est_faveur: boolean;
   plan_libelle: string;
+  // Portée du forfait (departement / region / district) ; absente si le backend ne l'expose pas.
+  portee_forfait?: string | null;
   abonnement_fin: string | null;
   nb_vues: number;
   type_partenaire_libelle: string;

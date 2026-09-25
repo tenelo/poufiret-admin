@@ -22,11 +22,16 @@ export class Connexion {
 
   readonly enCours = signal(false);
   readonly messageErreur = signal<string | null>(null);
+  readonly pinVisible = signal(false);
 
   readonly formulaire = this.formBuilder.nonNullable.group({
     telephone: ['', [Validators.required]],
     pin: ['', [Validators.required, Validators.pattern(/^\d{4}$/)]],
   });
+
+  basculerVisibilitePin(): void {
+    this.pinVisible.update((visible) => !visible);
+  }
 
   soumettre(): void {
     if (this.formulaire.invalid || this.enCours()) {

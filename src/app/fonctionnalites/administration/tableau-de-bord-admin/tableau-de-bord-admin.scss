@@ -177,16 +177,59 @@
   margin-top: 0;
 }
 
-.carte-statuts {
-  padding: 1.1rem;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+// Deux grands encadrés verticaux côte à côte (En temps réel | Comptes). Chacun tient sur trois
+// lignes (titre, KPI, répartition) alignées d'un encadré à l'autre grâce à subgrid : les deux KPI
+// ont la même hauteur, de même que les deux répartitions.
+.duos {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+
+  @media (min-width: 800px) {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto 1fr;
+  }
+}
+
+.panneau {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+  padding: 1.25rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+
+  @media (min-width: 800px) {
+    display: grid;
+    grid-row: span 3;
+    grid-template-rows: subgrid;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #1a1a1a;
+  }
+
+  .carte-kpi {
+    justify-content: center;
+  }
+}
+
+// Statuts des comptes, intégrés à la carte « Comptes au total ».
+.statuts-integres {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f3f4f6;
 
   h3 {
-    margin: 0 0 0.75rem;
-    font-size: 0.9rem;
-    color: #1a1a1a;
+    margin: 0 0 0.4rem;
+    font-size: 0.8rem;
+    color: #6b7280;
+    font-weight: 600;
   }
 }
 

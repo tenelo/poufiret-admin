@@ -1,5 +1,22 @@
 <section class="page-publicites">
-  <h1>Publicités</h1>
+  <div class="entete-page">
+    <h1>Publicités</h1>
+    <button
+      type="button"
+      class="bouton-principal"
+      [disabled]="chargementFormules()"
+      (click)="ouvrirCreation()"
+    >
+      {{ chargementFormules() ? 'Chargement…' : '+ Créer une campagne' }}
+    </button>
+  </div>
+
+  @if (messageSucces()) {
+    <p class="message-succes">{{ messageSucces() }}</p>
+  }
+  @if (messageErreur()) {
+    <p class="erreur-generale">{{ messageErreur() }}</p>
+  }
 
   <nav class="barre-onglets">
     @for (onglet of sousOnglets; track onglet.valeur) {
@@ -15,16 +32,32 @@
   </nav>
 
   <div class="contenu-onglet">
-    @switch (sousOngletActif()) {
-      @case ('points') {
-        <app-onglet-points-publicites />
-      }
-      @case ('gestion') {
-        <app-onglet-gestion-publicites />
-      }
-      @case ('formules') {
-        <app-onglet-formules-disponibles />
+    <!-- Le suivi par valeur de `cle` recrée le contenu quand la clé change : c'est ce qui recharge
+         l'onglet après une création. -->
+    @for (cle of clesOnglet(); track cle) {
+      @switch (sousOngletActif()) {
+        @case ('points') {
+          <app-onglet-points-publicites />
+        }
+        @case ('gestion') {
+          <app-onglet-gestion-publicites />
+        }
+        @case ('formules') {
+          <app-onglet-formules-disponibles />
+        }
       }
     }
   </div>
 </section>
+
+@if (formulaireOuvert()) {
+  <app-formulaire-creation-publicite
+    [formules]="formules()"
+    [porteeForfait]="porteeForfait()"
+    [enregistrementEnCours]="enregistrementEnCours()"
+    [messageErreur]="messageErreurFormulaire()"
+    [erreursChamps]="erreursChampsFormulaire()"
+    (soumis)="creerCampagne($event)"
+    (annule)="fermerCreation()"
+  />
+}

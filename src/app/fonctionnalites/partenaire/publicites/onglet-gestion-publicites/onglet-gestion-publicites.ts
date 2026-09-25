@@ -3,7 +3,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 
 import { OngletGestionPublicitesService } from './onglet-gestion-publicites.service';
-import { FormulaireCreationPublicite } from './formulaire-creation-publicite/formulaire-creation-publicite';
 import { DialogDetailPublicite } from './dialog-detail-publicite/dialog-detail-publicite';
 import { DialogReconduction, DonneesReconduction } from './dialog-reconduction/dialog-reconduction';
 import { extraireMessageErreur } from '../../mes-produits/extraire-message-erreur';
@@ -11,17 +10,18 @@ import {
   FormulePublicite,
   LIBELLES_STATUT_PUBLICITE,
   MaPublicite,
-  RequeteCreationPublicite,
+  PorteePublicite,
 } from '../../../../modeles/publicite.model';
 
 /**
- * Onglet "Gérer mes publicités" : liste des campagnes, création (statut
- * brouillon) et soumission (brouillon -> en attente de paiement). La
- * validation et le paiement se font ensuite côté admin, hors de cet écran.
+ * Onglet "Gérer mes publicités" : liste des campagnes et soumission (brouillon
+ * -> en attente de paiement). La création d'une campagne se fait depuis
+ * l'en-tête de l'écran Publicités (visible sur tous les onglets). La validation
+ * et le paiement se font ensuite côté admin, hors de cet écran.
  */
 @Component({
   selector: 'app-onglet-gestion-publicites',
-  imports: [FormulaireCreationPublicite, DialogDetailPublicite, DialogReconduction],
+  imports: [DialogDetailPublicite, DialogReconduction],
   templateUrl: './onglet-gestion-publicites.html',
   styleUrl: './onglet-gestion-publicites.scss',
 })
@@ -33,12 +33,10 @@ export class OngletGestionPublicites implements OnInit {
 
   readonly formules = signal<FormulePublicite[]>([]);
   readonly publicites = signal<MaPublicite[]>([]);
+  // Portée du forfait (null si indisponible : aucune option grisée à la reconduction).
+  readonly porteeForfait = signal<PorteePublicite | null>(null);
 
   readonly libellesStatut = LIBELLES_STATUT_PUBLICITE;
-
-  readonly formulaireOuvert = signal(false);
-  readonly enregistrementEnCours = signal(false);
-  readonly messageErreurFormulaire = signal<string | null>(null);
 
   readonly soumissionEnCoursId = signal<string | null>(null);
   readonly messageErreur = signal<string | null>(null);
@@ -56,6 +54,11 @@ export class OngletGestionPublicites implements OnInit {
   readonly reconductionEnCours = signal(false);
   readonly erreurReconduction = signal<string | null>(null);
 
+  // ---- Annulation de la soumission ----
+  readonly publiciteAAnnuler = signal<MaPublicite | null>(null);
+  readonly annulationEnCours = signal(false);
+  readonly erreurAnnulation = signal<string | null>(null);
+
   // ---- Masquage (retrait des listes) ----
   readonly publiciteASupprimer = signal<MaPublicite | null>(null);
   readonly suppressionEnCours = signal(false);
@@ -72,43 +75,17 @@ export class OngletGestionPublicites implements OnInit {
     forkJoin({
       formules: this.service.listerFormules(),
       publicites: this.service.listerMesPublicites(),
+      porteeForfait: this.service.chargerPorteeForfait(),
     }).subscribe({
-      next: ({ formules, publicites }) => {
+      next: ({ formules, publicites, porteeForfait }) => {
         this.chargementEnCours.set(false);
         this.formules.set(formules);
         this.publicites.set(publicites);
+        this.porteeForfait.set(porteeForfait);
       },
       error: (erreur: unknown) => {
         this.chargementEnCours.set(false);
         this.erreurChargement.set(extraireMessageErreur(erreur));
-      },
-    });
-  }
-
-  ouvrirCreation(): void {
-    this.messageErreurFormulaire.set(null);
-    this.formulaireOuvert.set(true);
-  }
-
-  fermerCreation(): void {
-    this.formulaireOuvert.set(false);
-    this.messageErreurFormulaire.set(null);
-  }
-
-  creerCampagne(donnees: RequeteCreationPublicite): void {
-    this.enregistrementEnCours.set(true);
-    this.messageErreurFormulaire.set(null);
-
-    this.service.creerPublicite(donnees).subscribe({
-      next: (publicite) => {
-        this.enregistrementEnCours.set(false);
-        this.publicites.update((liste) => [publicite, ...liste]);
-        this.fermerCreation();
-        this.messageSucces.set('Campagne créée en brouillon avec succès.');
-      },
-      error: (erreur: unknown) => {
-        this.enregistrementEnCours.set(false);
-        this.messageErreurFormulaire.set(extraireMessageErreur(erreur));
       },
     });
   }
@@ -138,7 +115,7 @@ export class OngletGestionPublicites implements OnInit {
     });
   }
 
-  nomFormule(id: number): string {
+  nomFormule(id: string): string {
     return this.formules().find((f) => f.id === id)?.nom ?? `Formule #${id}`;
   }
 
@@ -161,6 +138,11 @@ export class OngletGestionPublicites implements OnInit {
 
   peutSoumettre(publicite: MaPublicite): boolean {
     return publicite.statut === 'brouillon';
+  }
+
+  /** Seule une campagne en attente de paiement peut être annulée (le backend refuse sinon). */
+  peutAnnulerSoumission(publicite: MaPublicite): boolean {
+    return publicite.statut === 'en_attente_paiement';
   }
 
   peutReconduire(publicite: MaPublicite): boolean {
@@ -228,7 +210,7 @@ export class OngletGestionPublicites implements OnInit {
     this.reconductionEnCours.set(true);
     this.erreurReconduction.set(null);
 
-    this.service.reconduirePublicite(publicite.id, donnees.formuleId, donnees.image).subscribe({
+    this.service.reconduirePublicite(publicite.id, donnees.formuleId, donnees.image, donnees.portee).subscribe({
       next: (nouvellePublicite) => {
         this.reconductionEnCours.set(false);
         this.publiciteAReconduire.set(null);
@@ -240,6 +222,45 @@ export class OngletGestionPublicites implements OnInit {
       error: (erreur: unknown) => {
         this.reconductionEnCours.set(false);
         this.erreurReconduction.set(extraireMessageErreur(erreur));
+      },
+    });
+  }
+
+  // ---- Annulation de la soumission ----
+
+  demanderAnnulation(publicite: MaPublicite): void {
+    this.erreurAnnulation.set(null);
+    this.publiciteAAnnuler.set(publicite);
+  }
+
+  fermerAnnulation(): void {
+    this.publiciteAAnnuler.set(null);
+  }
+
+  confirmerAnnulation(): void {
+    const publicite = this.publiciteAAnnuler();
+    if (!publicite || this.annulationEnCours()) {
+      return;
+    }
+    this.annulationEnCours.set(true);
+    this.erreurAnnulation.set(null);
+
+    this.service.annulerSoumission(publicite.id).subscribe({
+      next: (reponse) => {
+        this.annulationEnCours.set(false);
+        this.publiciteAAnnuler.set(null);
+        this.publicites.update((liste) =>
+          liste.map((p) => (p.id === publicite.id ? { ...p, statut: 'brouillon' } : p)),
+        );
+        this.messageErreur.set(null);
+        this.messageSucces.set(
+          reponse.message || 'Soumission annulée : la publicité est repassée en brouillon.',
+        );
+      },
+      error: (erreur: unknown) => {
+        this.annulationEnCours.set(false);
+        // 400 : message du backend affiché dans la boîte de confirmation.
+        this.erreurAnnulation.set(extraireMessageErreur(erreur));
       },
     });
   }

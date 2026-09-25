@@ -4,7 +4,12 @@ import { ChartConfiguration } from 'chart.js';
 import { IndicateursPartenairesService } from './indicateurs-partenaires.service';
 import { Graphique } from '../../../partage/graphique/graphique';
 import { extraireMessageErreur } from '../tableau-de-bord-admin/extraire-message-erreur';
-import { couleursGraphique, formaterNombre } from '../tableau-de-bord-admin/palette-graphiques';
+import {
+  COULEUR_PRINCIPALE,
+  COULEUR_SECONDAIRE,
+  couleursGraphique,
+  formaterNombre,
+} from '../tableau-de-bord-admin/palette-graphiques';
 import { IndicateursPartenaires } from '../../../modeles/indicateurs-partenaires.model';
 
 interface TrancheExpiration {
@@ -90,11 +95,11 @@ export class IndicateursPartenairesComponent implements OnInit {
   );
 
   readonly donneesParType = computed<ChartConfiguration['data']>(() =>
-    this.dictVersBarres(this.donnees()?.par_type ?? {}, '#1B5E20'),
+    this.dictVersBarres(this.donnees()?.par_type ?? {}, COULEUR_PRINCIPALE),
   );
 
   readonly donneesParDepartement = computed<ChartConfiguration['data']>(() =>
-    this.dictVersBarres(this.donnees()?.par_departement ?? {}, '#E65100'),
+    this.dictVersBarres(this.donnees()?.par_departement ?? {}, COULEUR_SECONDAIRE),
   );
 
   readonly listeExpirations = computed<TrancheExpiration[]>(() => {

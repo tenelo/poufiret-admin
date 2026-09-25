@@ -1,19 +1,22 @@
 <div class="coquille">
-  <app-en-tete [menuOuvert]="menuOuvert()" (menuBascule)="basculerMenu()"></app-en-tete>
-
-  <div class="corps">
-    <aside
-      id="menu-lateral"
-      class="zone-barre-laterale"
-      [class.ouverte]="menuOuvert()"
-      (click)="surClicBarreLaterale($event)"
-    >
+  <aside
+    id="menu-lateral"
+    class="zone-barre-laterale"
+    [class.ouverte]="menuOuvert()"
+    (click)="surClicBarreLaterale($event)"
+  >
+    <div class="marque">ADMINISTRATION</div>
+    <div class="menu-defilant">
       <app-barre-laterale></app-barre-laterale>
-    </aside>
+    </div>
+  </aside>
 
-    @if (menuOuvert()) {
-      <div class="voile-menu" (click)="fermerMenu()"></div>
-    }
+  @if (menuOuvert()) {
+    <div class="voile-menu" (click)="fermerMenu()"></div>
+  }
+
+  <div class="colonne-principale">
+    <app-en-tete [menuOuvert]="menuOuvert()" (menuBascule)="basculerMenu()"></app-en-tete>
 
     <main class="zone-contenu">
       <router-outlet></router-outlet>

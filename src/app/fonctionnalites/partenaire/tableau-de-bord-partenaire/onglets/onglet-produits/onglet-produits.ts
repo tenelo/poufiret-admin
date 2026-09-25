@@ -3,7 +3,7 @@ import { ChartConfiguration } from 'chart.js';
 
 import { Graphique } from '../../../../../partage/graphique/graphique';
 import { LigneProduitStats, VueProduitsPartenaire } from '../../../../../modeles/tableau-de-bord-partenaire.model';
-import { couleursGraphique } from '../../palette-graphiques';
+import { COULEUR_PRINCIPALE, couleursGraphique } from '../../palette-graphiques';
 
 type ColonneTri = 'nom' | 'vuesTotal' | 'vuesJour' | 'vuesSemaine' | 'vuesMois' | 'likes' | 'prix';
 
@@ -42,7 +42,7 @@ export class OngletProduits {
         {
           label: 'Vues',
           data: points.map((p) => p.valeur),
-          backgroundColor: '#1B5E20',
+          backgroundColor: COULEUR_PRINCIPALE,
         },
       ],
     };

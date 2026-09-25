@@ -2,20 +2,26 @@
   <div class="modale" (click)="$event.stopPropagation()">
     <h2>Nouvelle campagne</h2>
 
-    <form class="formulaire" (ngSubmit)="soumettre()">
+    <!-- (submit) natif + preventDefault : ce composant n'importe pas FormsModule, donc
+         (ngSubmit) ne se déclenche jamais et le navigateur rechargeait la page. -->
+    <form class="formulaire" (submit)="$event.preventDefault(); soumettre()">
       <label for="formule">Formule</label>
-      <select
-        id="formule"
-        [value]="formuleId() ?? ''"
-        (change)="selectionnerFormule($any($event.target).value)"
-      >
-        <option value="" disabled>Choisir une formule</option>
+      <!-- [selected] sur chaque option (et non [value] sur le select) : le select est rendu avant
+           ses options, et un placeholder `disabled` était sauté par le navigateur, qui affichait
+           alors la 1re formule alors que l'état du composant restait vide. -->
+      <select id="formule" (change)="selectionnerFormule($any($event.target).value)">
+        <option value="" [selected]="formuleId() === null">— Choisir une formule —</option>
         @for (formule of formules(); track formule.id) {
-          <option [value]="formule.id">{{ formule.nom }} — {{ formule.prix }} FCFA</option>
+          <option [value]="formule.id" [selected]="formule.id === formuleId()">
+            {{ formule.nom }} — {{ formule.prix }} FCFA
+          </option>
         }
       </select>
       @if (touche() && !formuleId()) {
         <p class="erreur-champ">Choisissez une formule.</p>
+      }
+      @if (erreursChamps()?.['formule']; as erreurFormule) {
+        <p class="erreur-champ">{{ erreurFormule }}</p>
       }
 
       @if (formuleSelectionnee(); as formule) {
@@ -61,6 +67,9 @@
       @if (touche() && !titre().trim()) {
         <p class="erreur-champ">Le titre est requis.</p>
       }
+      @if (erreursChamps()?.['titre']; as erreurTitre) {
+        <p class="erreur-champ">{{ erreurTitre }}</p>
+      }
 
       <label for="description">Description</label>
       <textarea
@@ -69,20 +78,28 @@
         [value]="description()"
         (input)="description.set($any($event.target).value)"
       ></textarea>
+      @if (erreursChamps()?.['description']; as erreurDescription) {
+        <p class="erreur-champ">{{ erreurDescription }}</p>
+      }
 
       <label for="portee">Portée</label>
-      <select
-        id="portee"
-        [value]="portee()"
-        (change)="portee.set($any($event.target).value)"
-      >
-        @for (option of optionsPortee; track option.valeur) {
-          <option [value]="option.valeur">{{ option.libelle }}</option>
+      <select id="portee" (change)="selectionnerPortee($any($event.target).value)">
+        @for (option of optionsPortee(); track option.valeur) {
+          <option
+            [value]="option.valeur"
+            [selected]="option.valeur === portee()"
+            [disabled]="option.desactivee"
+          >
+            {{ option.libelle }}
+          </option>
         }
       </select>
       <p class="note-champ">
         La portée réellement appliquée ne peut jamais être inférieure à celle de votre forfait.
       </p>
+      @if (erreursChamps()?.['portee']; as erreurPortee) {
+        <p class="erreur-champ">{{ erreurPortee }}</p>
+      }
 
       <span class="etiquette-image">Image de couverture</span>
       @if (apercuImage()) {
@@ -104,6 +121,9 @@
       }
       @if (touche() && !fichierImage()) {
         <p class="erreur-champ">L'image de couverture est requise.</p>
+      }
+      @if (erreursChamps()?.['image_couverture']; as erreurImage) {
+        <p class="erreur-champ">{{ erreurImage }}</p>
       }
 
       @if (videoAutorisee()) {
@@ -127,6 +147,9 @@
         }
       } @else if (formuleId()) {
         <p class="note-champ">La formule choisie n'autorise pas la vidéo.</p>
+      }
+      @if (erreursChamps()?.['video']; as erreurVideo) {
+        <p class="erreur-champ">{{ erreurVideo }}</p>
       }
 
       @if (messageErreurValidation()) {

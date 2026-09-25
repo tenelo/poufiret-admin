@@ -1,6 +1,6 @@
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Observable, catchError, interval, of, startWith, switchMap } from 'rxjs';
+import { Observable, catchError, filter, fromEvent, interval, merge, of, startWith, switchMap } from 'rxjs';
 
 /**
  * Configuration d'un DetecteurCompteur : n'importe quel endpoint de résumé
@@ -19,6 +19,11 @@ export interface OptionsDetecteurCompteur<T> {
   intervalleMs: number;
   /** Si fourni et retourne false, le tick est ignoré (ex. rôle non concerné). */
   actif?: () => boolean;
+  /**
+   * Si true, le polling est suspendu tant que l'onglet du navigateur est masqué et reprend
+   * immédiatement à son retour (visibilitychange). Faux par défaut.
+   */
+  pauseSiOngletMasque?: boolean;
 }
 
 /**
@@ -52,11 +57,21 @@ export class DetecteurCompteur<T = unknown> {
     }
     this.demarre = true;
 
-    interval(options.intervalleMs)
+    const ticks$ = options.pauseSiOngletMasque
+      ? merge(
+          interval(options.intervalleMs),
+          fromEvent(document, 'visibilitychange').pipe(filter(() => !document.hidden)),
+        )
+      : interval(options.intervalleMs);
+
+    ticks$
       .pipe(
         startWith(0),
         switchMap(() => {
           if (options.actif && !options.actif()) {
+            return of(null);
+          }
+          if (options.pauseSiOngletMasque && document.hidden) {
             return of(null);
           }
           return options.charger().pipe(catchError(() => of(null)));
@@ -77,6 +92,15 @@ export class DetecteurCompteur<T = unknown> {
         }
         this.compteurPrecedent = valeur;
       });
+  }
+
+  /**
+   * Fixe le compteur sans signaler d'augmentation (ex. après avoir marqué des notifications
+   * comme lues, ou quand une autre réponse donne déjà le compteur à jour).
+   */
+  definirCompteur(valeur: number): void {
+    this.compteurActuel.set(valeur);
+    this.compteurPrecedent = valeur;
   }
 
   /** À appeler une fois l'effet (son/animation) déclenché, pour ne pas le rejouer. */

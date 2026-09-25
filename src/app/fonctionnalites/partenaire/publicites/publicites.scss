@@ -2,12 +2,63 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
+}
+
+// Titre + bouton de création, visibles quel que soit l'onglet actif.
+.entete-page {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
 
   h1 {
-    margin: 0 0 1.25rem;
+    margin: 0;
     font-size: 1.5rem;
     color: #1a1a1a;
   }
+}
+
+.bouton-principal {
+  padding: 0.6rem 1.25rem;
+  background: #4f46e5;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: #4338ca;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.message-succes,
+.erreur-generale {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.message-succes {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+}
+
+.erreur-generale {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
 }
 
 // Onglets "segmented control" : un rectangle englobant (fond gris, bordure,

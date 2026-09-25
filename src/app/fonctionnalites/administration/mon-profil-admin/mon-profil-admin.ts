@@ -34,11 +34,13 @@ export class MonProfilAdmin implements OnInit {
     if (!p) {
       return [];
     }
-    return Object.entries(p.capacites).map(([cle, valeur]) => ({
-      cle,
-      valeur,
-      libelle: LIBELLES_CAPACITE[cle as NomCapacite] ?? cle.replace(/_/g, ' '),
-    }));
+    // Seules les capacités accordées à cet admin sont affichées.
+    return Object.entries(p.capacites)
+      .filter(([, valeur]) => valeur)
+      .map(([cle]) => ({
+        cle,
+        libelle: LIBELLES_CAPACITE[cle as NomCapacite] ?? cle.replace(/_/g, ' '),
+      }));
   });
 
   ngOnInit(): void {

@@ -104,9 +104,9 @@ export const routes: Routes = [
         canActivate: [roleGuard(['admin']), capaciteGuard],
         data: { capacite: 'voir_indicateurs' },
         loadComponent: () =>
-          import('./fonctionnalites/administration/partenaires-liste/partenaires-liste').then(
-            (m) => m.PartenairesListe,
-          ),
+          import(
+            './fonctionnalites/administration/partenaires-liste/partenaires-onglets/partenaires-onglets'
+          ).then((m) => m.PartenairesOnglets),
       },
       {
         path: 'administration/demandes-partenariat',
@@ -167,9 +167,9 @@ export const routes: Routes = [
         canActivate: [roleGuard(['admin']), capaciteGuard],
         data: { capacite: 'voir_stats' },
         loadComponent: () =>
-          import('./fonctionnalites/administration/publicites-admin/publicites-admin').then(
-            (m) => m.PublicitesAdmin,
-          ),
+          import(
+            './fonctionnalites/administration/publicites-admin/publicites-admin-onglets/publicites-admin-onglets'
+          ).then((m) => m.PublicitesAdminOnglets),
       },
       {
         path: 'administration/credits-pub',

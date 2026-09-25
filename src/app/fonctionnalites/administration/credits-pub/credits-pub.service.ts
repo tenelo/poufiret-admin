@@ -39,7 +39,7 @@ export class CreditsPubService {
   }
 
   /** POST /administration/partenaires/<pk>/credits/ */
-  accorderCredit(partenaireId: number, formuleId: number, motif?: string): Observable<CreditPub> {
+  accorderCredit(partenaireId: number, formuleId: string, motif?: string): Observable<CreditPub> {
     const donnees: RequeteAccorderCredit = motif
       ? { formule_id: formuleId, motif }
       : { formule_id: formuleId };

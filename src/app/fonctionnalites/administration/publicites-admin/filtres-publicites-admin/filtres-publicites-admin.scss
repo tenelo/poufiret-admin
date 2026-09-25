@@ -1,0 +1,84 @@
+// Onglets par statut : défilement horizontal si l'écran est trop étroit.
+.barre-onglets {
+  display: flex;
+  gap: 0.25rem;
+  max-width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.3rem;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+.onglet {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    color: #1a1a1a;
+  }
+}
+
+.onglet-actif {
+  background: #ffffff;
+  color: #1b5e20;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.compteur {
+  min-width: 1.35rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #374151;
+  font-size: 0.7rem;
+  text-align: center;
+
+  .onglet-actif & {
+    background: #dcfce7;
+    color: #15803d;
+  }
+}
+
+// Les filtres passent à la ligne sur petit écran.
+.filtres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+
+  input,
+  select {
+    padding: 0.55rem 0.75rem;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.85rem;
+
+    &:focus {
+      outline: none;
+      border-color: #4f46e5;
+    }
+  }
+
+  .champ-recherche {
+    flex: 1 1 240px;
+    min-width: 0;
+  }
+
+  select {
+    flex: 0 1 200px;
+    min-width: 0;
+  }
+}

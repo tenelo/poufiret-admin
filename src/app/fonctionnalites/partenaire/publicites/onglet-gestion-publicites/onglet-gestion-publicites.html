@@ -4,10 +4,6 @@
     paiement puis de validation par l'administration) → <strong>Active</strong>. Le paiement et la
     validation se font côté administration, pas depuis cet écran.
   </p>
-
-  <button type="button" class="bouton-principal" (click)="ouvrirCreation()">
-    + Créer une campagne
-  </button>
 </div>
 
 @if (messageErreur()) {
@@ -70,6 +66,15 @@
                 {{ soumissionEnCoursId() === publicite.id ? 'Envoi en cours…' : 'Soumettre' }}
               </button>
             }
+            @if (peutAnnulerSoumission(publicite)) {
+              <button
+                type="button"
+                class="bouton-secondaire"
+                (click)="$event.stopPropagation(); demanderAnnulation(publicite)"
+              >
+                Annuler la soumission
+              </button>
+            }
             @if (peutReconduire(publicite)) {
               <button
                 type="button"
@@ -84,16 +89,6 @@
       </div>
     }
   </div>
-}
-
-@if (formulaireOuvert()) {
-  <app-formulaire-creation-publicite
-    [formules]="formules()"
-    [enregistrementEnCours]="enregistrementEnCours()"
-    [messageErreur]="messageErreurFormulaire()"
-    (soumis)="creerCampagne($event)"
-    (annule)="fermerCreation()"
-  />
 }
 
 @if (publiciteDetail(); as publicite) {
@@ -112,11 +107,34 @@
   <app-dialog-reconduction
     [publicite]="publicite"
     [formules]="formules()"
+    [porteeForfait]="porteeForfait()"
     [enregistrementEnCours]="reconductionEnCours()"
     [messageErreur]="erreurReconduction()"
     (soumis)="confirmerReconduction($event)"
     (annule)="annulerReconduction()"
   />
+}
+
+@if (publiciteAAnnuler(); as publicite) {
+  <div class="voile-confirmation" (click)="fermerAnnulation()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>
+        Annuler la soumission de « <strong>{{ publicite.titre }}</strong> » ? Elle repassera en
+        brouillon et vous pourrez la modifier puis la soumettre à nouveau.
+      </p>
+      @if (erreurAnnulation()) {
+        <p class="erreur-generale">{{ erreurAnnulation() }}</p>
+      }
+      <div class="actions-confirmation">
+        <button type="button" class="bouton-secondaire" [disabled]="annulationEnCours()" (click)="fermerAnnulation()">
+          Retour
+        </button>
+        <button type="button" class="bouton-danger" [disabled]="annulationEnCours()" (click)="confirmerAnnulation()">
+          {{ annulationEnCours() ? 'Annulation en cours…' : 'Annuler la soumission' }}
+        </button>
+      </div>
+    </div>
+  </div>
 }
 
 @if (publiciteASupprimer(); as publicite) {

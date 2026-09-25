@@ -1,0 +1,33 @@
+<section class="bloc">
+  <h2>Clients</h2>
+
+  @if (dashboard()) {
+    <div class="grille-kpi">
+      <div class="carte-kpi">
+        <span class="valeur">{{ formaterNombre(nbClients()) }}</span>
+        <span class="libelle">Clients (comptes)</span>
+      </div>
+      <div class="carte-kpi carte-kpi-mise-en-avant">
+        <span class="valeur">{{ tauxClientsActifs() }} %</span>
+        <span class="libelle">Clients actifs ({{ formaterNombre(nbClientsActifs()) }})</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="valeur">{{ formaterNombre(enLigne()) }}</span>
+        <span class="libelle">En ligne maintenant</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="valeur">{{ formaterNombre(connectes7j()) }}</span>
+        <span class="libelle">Connectés sur 7 jours</span>
+      </div>
+    </div>
+
+    <div class="carte-graphique">
+      <h3>Activité des clients</h3>
+      <app-graphique type="bar" [data]="donneesActivite()" [options]="optionsBarres" />
+    </div>
+  } @else if (erreurDashboard()) {
+    <p class="erreur-section">{{ erreurDashboard() }}</p>
+  } @else {
+    <p class="etat-section">Chargement des statistiques de comptes…</p>
+  }
+</section>

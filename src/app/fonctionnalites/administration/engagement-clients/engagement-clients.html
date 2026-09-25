@@ -1,10 +1,35 @@
 <section class="page-engagement">
   <div class="entete">
     <h1>Engagement clients</h1>
-    <button type="button" class="bouton-rafraichir" [disabled]="chargementEnCours()" (click)="charger()">
-      {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
+    <button
+      type="button"
+      class="bouton-rafraichir"
+      [disabled]="chargementEnCours() || chargementAutres()"
+      (click)="chargerTout()"
+    >
+      {{ chargementEnCours() || chargementAutres() ? 'Chargement…' : '↻ Rafraîchir' }}
     </button>
   </div>
+
+  <nav class="barre-onglets" aria-label="Sections">
+    <button type="button" class="onglet" [class.onglet-actif]="ongletActif() === 'apercu'" (click)="changerOnglet('apercu')">
+      Vue d'ensemble
+    </button>
+    <button type="button" class="onglet" [class.onglet-actif]="ongletActif() === 'clients'" (click)="changerOnglet('clients')">
+      Liste des clients
+    </button>
+  </nav>
+
+  @if (ongletActif() === 'clients') {
+    <app-annuaire-clients [clients]="donnees()?.profils ?? null" [erreur]="erreurChargement()" />
+  } @else {
+  <app-apercu-clients
+    [dashboard]="tableauBord()"
+    [erreurDashboard]="erreurTableauBord()"
+    [nbClientsActifs]="donnees()?.nb_clients_actifs ?? 0"
+  />
+
+  <h2 class="titre-section">Engagement des clients</h2>
 
   @if (chargementEnCours()) {
     <div class="etat-chargement">
@@ -132,5 +157,6 @@
         }
       }
     }
+  }
   }
 </section>

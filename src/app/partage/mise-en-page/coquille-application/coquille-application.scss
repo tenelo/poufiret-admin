@@ -1,27 +1,57 @@
+// Bureau : la barre latérale occupe toute la hauteur (marque en haut), l'en-tête et le
+// contenu forment la colonne de droite.
 .coquille {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
-  overflow-x: hidden;
-}
-
-.corps {
   position: relative;
   display: flex;
-  flex: 1;
-  min-height: 0;
-  min-width: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .zone-barre-laterale {
+  display: flex;
   flex: 0 0 220px;
+  flex-direction: column;
+  min-height: 0;
+  // Même fond que la page de connexion : dégradé bleu nuit + halos bleutés dans les coins.
+  background:
+    radial-gradient(circle 320px at 0% 0%, rgba(59, 130, 246, 0.28), transparent 70%),
+    radial-gradient(circle 360px at 100% 100%, rgba(56, 189, 248, 0.16), transparent 70%),
+    linear-gradient(160deg, #050b1f 0%, #0a1330 50%, #101d4a 100%);
+}
+
+.marque {
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  padding: 0 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  border-bottom: 1px solid rgba(147, 197, 253, 0.18);
+}
+
+// Seule cette zone défile : le fond sombre couvre donc toujours toute la hauteur visible.
+.menu-defilant {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  scrollbar-color: #2f427f transparent;
+  scrollbar-width: thin;
+}
+
+.colonne-principale {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
 }
 
 .zone-contenu {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   overflow-y: auto;
   padding: 1.5rem;
   background: #f9fafb;
@@ -32,12 +62,13 @@
   display: none;
 }
 
-// Mobile / tablette : la sidebar devient un tiroir coulissant depuis la gauche,
-// par-dessus le contenu (sous les modales, dont le z-index est >= 100).
+// Mobile / tablette : la sidebar devient un tiroir coulissant depuis la gauche, sous l'en-tête
+// (56px), par-dessus le contenu (sous les modales, dont le z-index est >= 100).
+// Le nom de l'app est alors affiché dans l'en-tête, donc la marque du tiroir est masquée.
 @media (max-width: 991.98px) {
   .zone-barre-laterale {
     position: absolute;
-    top: 0;
+    top: 56px;
     bottom: 0;
     left: 0;
     z-index: 90;
@@ -56,10 +87,17 @@
     }
   }
 
+  .marque {
+    display: none;
+  }
+
   .voile-menu {
     display: block;
     position: absolute;
-    inset: 0;
+    top: 56px;
+    right: 0;
+    bottom: 0;
+    left: 0;
     z-index: 80;
     background: rgba(17, 24, 39, 0.5);
     animation: apparition-voile 0.25s ease;

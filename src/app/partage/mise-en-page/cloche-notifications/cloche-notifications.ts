@@ -2,13 +2,13 @@ import { Component, DestroyRef, ElementRef, OnInit, computed, effect, inject, si
 import { Router } from '@angular/router';
 
 import { DetecteurCompteur } from '../../../noyau/notifications/detecteur-compteur';
+import { CHEMIN_SON_NOTIFICATION, SonNotification } from '../../../noyau/notifications/son-notification';
 import { AuthService } from '../../../noyau/auth/auth.service';
 import { MesCommandesService } from '../../../fonctionnalites/partenaire/mes-commandes/mes-commandes.service';
 import { ResumeCommandes } from '../../../modeles/commande.model';
 
 const INTERVALLE_POLLING_MS = 10000;
 const DUREE_ANIMATION_MS = 1200;
-const CHEMIN_SON_NOTIFICATION = 'sons/notification.wav';
 
 /**
  * Cloche de notification (nouvelles commandes) de l'en-tête partenaire.
@@ -33,6 +33,8 @@ export class ClocheNotifications implements OnInit {
 
   private readonly lecteurAudio = viewChild<ElementRef<HTMLAudioElement>>('lecteurAudio');
 
+  private readonly son = new SonNotification(this.destroyRef, () => this.lecteurAudio()?.nativeElement);
+
   readonly cheminSon = CHEMIN_SON_NOTIFICATION;
 
   readonly nbNouvelles = this.detecteur.compteur;
@@ -43,8 +45,6 @@ export class ClocheNotifications implements OnInit {
   readonly badgeVu = signal(false);
 
   readonly badgeVisible = computed(() => this.nbNouvelles() > 0 && !this.badgeVu());
-
-  private interactionUtilisateurEffectuee = false;
 
   constructor() {
     // effect() doit être appelé dans un contexte d'injection (constructeur) :
@@ -57,18 +57,6 @@ export class ClocheNotifications implements OnInit {
   }
 
   ngOnInit(): void {
-    // Autorise la lecture du son après une première interaction utilisateur
-    // (restriction des navigateurs sur la lecture audio automatique).
-    const marquerInteraction = () => {
-      this.interactionUtilisateurEffectuee = true;
-    };
-    document.addEventListener('pointerdown', marquerInteraction, { once: true });
-    document.addEventListener('keydown', marquerInteraction, { once: true });
-    this.destroyRef.onDestroy(() => {
-      document.removeEventListener('pointerdown', marquerInteraction);
-      document.removeEventListener('keydown', marquerInteraction);
-    });
-
     this.detecteur.demarrer({
       charger: () => this.mesCommandesService.resume(),
       selectionnerCompteur: (resume) => resume.nouvelles,
@@ -101,21 +89,7 @@ export class ClocheNotifications implements OnInit {
     // Une nouvelle notification "dé-consulte" le badge, même si le panneau
     // avait déjà été ouvert avant cette hausse.
     this.badgeVu.set(false);
-    this.jouerSon();
+    this.son.jouer();
     this.detecteur.accuserAugmentation();
-  }
-
-  private jouerSon(): void {
-    if (!this.interactionUtilisateurEffectuee) {
-      return;
-    }
-    const audio = this.lecteurAudio()?.nativeElement;
-    if (!audio) {
-      return;
-    }
-    audio.currentTime = 0;
-    audio.play().catch(() => {
-      // Lecture bloquée par le navigateur : pas grave, la cloche visuelle suffit.
-    });
   }
 }

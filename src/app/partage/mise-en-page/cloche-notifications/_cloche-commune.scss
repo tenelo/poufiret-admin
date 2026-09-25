@@ -1,0 +1,92 @@
+// Bouton cloche, animation, badge et voile du panneau : partagés par la cloche partenaire
+// (commandes) et la cloche admin (campagnes de pub).
+.cloche-notifications {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.bouton-cloche {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+
+  &:hover {
+    background: #f3f4f6;
+  }
+}
+
+.icone-cloche {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.en-animation .icone-cloche {
+  animation: sonnette 0.6s ease-in-out;
+}
+
+@keyframes sonnette {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-18deg);
+  }
+  40% {
+    transform: rotate(15deg);
+  }
+  60% {
+    transform: rotate(-10deg);
+  }
+  80% {
+    transform: rotate(6deg);
+  }
+}
+
+.badge-cloche {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dc2626;
+  color: #ffffff;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+.en-animation .badge-cloche {
+  animation: pastille-pulse 0.6s ease-in-out;
+}
+
+@keyframes pastille-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.4);
+  }
+}
+
+.voile-panneau {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+}

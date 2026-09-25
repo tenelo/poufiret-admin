@@ -1,51 +1,169 @@
+// ===== COULEURS DE LA PAGE : modifiez les valeurs ci-dessous (tout le reste en découle) =====
 .page-connexion {
+  --fond-page-debut: #050b1f; // fond de page : haut gauche
+  --fond-page-milieu: #0a1330; // fond de page : milieu
+  --fond-page-fin: #101d4a; // fond de page : bas droite
+  --halo-1: rgba(59, 130, 246, 0.28); // halo lumineux haut gauche
+  --halo-2: rgba(56, 189, 248, 0.16); // halo lumineux bas droite
+  --cadre-debut: #ffffff; // cadre (carte) : haut
+  --cadre-fin: #ffffff; // cadre (carte) : bas
+  --cadre-bordure: transparent; // fine bordure du cadre
+  --cadre-titre: #1a1a1a; // titre « Poufiret »
+  --cadre-sous-titre: #6b7280; // sous-titre
+  --cadre-libelle: #374151; // libellés « Téléphone », « Code PIN »
+  --champ-fond: #ffffff; // zones de saisie : fond
+  --champ-fond-focus: #ffffff; // zones de saisie : fond quand on tape
+  --champ-bordure: #d1d5db; // zones de saisie : bordure
+  --champ-texte: #1a1a1a; // zones de saisie : texte saisi
+  --champ-placeholder: #9ca3af; // zones de saisie : texte d'exemple
+  --champ-focus-halo: rgba(79, 70, 229, 0.18); // zones de saisie : halo au focus
+  --bouton-debut: #4f46e5; // bouton « Se connecter » : début du dégradé
+  --bouton-fin: #4338ca; // bouton « Se connecter » : fin du dégradé
+  --bouton-texte: #ffffff; // bouton « Se connecter » : texte
+
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #f4f5f7;
   padding: 1rem;
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--fond-page-debut) 0%, var(--fond-page-milieu) 50%, var(--fond-page-fin) 100%);
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  &::before {
+    top: -160px;
+    left: -140px;
+    width: 460px;
+    height: 460px;
+    background: radial-gradient(circle, var(--halo-1), transparent 70%);
+  }
+
+  &::after {
+    right: -180px;
+    bottom: -180px;
+    width: 560px;
+    height: 560px;
+    background: radial-gradient(circle, var(--halo-2), transparent 70%);
+  }
 }
 
+// Cadre (carte) blanc ; ses couleurs sont dans les variables en haut du fichier.
 .carte-connexion {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   width: 100%;
-  max-width: 360px;
-  padding: 2rem;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  max-width: 400px;
+  padding: 2.25rem 2rem 2rem;
+  background: linear-gradient(160deg, var(--cadre-debut) 0%, var(--cadre-fin) 100%);
+  border: 1px solid var(--cadre-bordure);
+  border-radius: 16px;
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.6);
+
+  .entete-carte {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    text-align: center;
+  }
 
   h1 {
     margin: 0;
-    font-size: 1.5rem;
-    color: #1a1a1a;
+    font-size: 1.6rem;
+    color: var(--cadre-titre);
   }
 
   .sous-titre {
-    margin: 0 0 1rem;
-    color: #6b7280;
+    margin: 0.2rem 0 0;
+    color: var(--cadre-sous-titre);
     font-size: 0.9rem;
   }
 
   label {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #374151;
+    color: var(--cadre-libelle);
     margin-top: 0.5rem;
   }
 
   input {
-    padding: 0.6rem 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
+    padding: 0.7rem 0.85rem;
+    background: var(--champ-fond);
+    border: 1px solid var(--champ-bordure);
+    border-radius: 10px;
+    color: var(--champ-texte);
     font-size: 1rem;
+    transition:
+      background 0.15s,
+      border-color 0.15s,
+      box-shadow 0.15s;
+
+    &::placeholder {
+      color: var(--champ-placeholder);
+    }
 
     &:focus {
       outline: none;
-      border-color: #4f46e5;
+      background: var(--champ-fond-focus);
+      border-color: var(--bouton-debut);
+      box-shadow: 0 0 0 3px var(--champ-focus-halo);
+    }
+
+    // Le remplissage automatique du navigateur garde la couleur choisie.
+    &:-webkit-autofill {
+      -webkit-text-fill-color: var(--champ-texte);
+      box-shadow: 0 0 0 1000px var(--champ-fond) inset;
+    }
+  }
+
+  // Champ PIN avec bouton œil superposé à droite ; le bouton neutralise le style du bouton principal.
+  .champ-pin {
+    position: relative;
+    display: flex;
+
+    input {
+      flex: 1;
+      min-width: 0;
+      padding-right: 2.75rem;
+    }
+
+    .bouton-oeil {
+      position: absolute;
+      top: 50%;
+      right: 0.4rem;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 0.35rem;
+      background: transparent;
+      box-shadow: none;
+      color: var(--champ-texte);
+      opacity: 0.7;
+      border-radius: 6px;
+
+      &:not(:disabled):hover {
+        background: transparent;
+        box-shadow: none;
+        transform: translateY(-50%);
+        opacity: 1;
+      }
+
+      &:focus-visible {
+        outline: 2px solid #1d4ed8;
+      }
     }
   }
 
@@ -67,14 +185,18 @@
 
   button {
     margin-top: 1.25rem;
-    padding: 0.7rem;
-    background: #4f46e5;
-    color: #ffffff;
+    padding: 0.8rem;
+    background: linear-gradient(135deg, var(--bouton-debut), var(--bouton-fin));
+    box-shadow: 0 8px 16px -6px rgba(79, 70, 229, 0.55);
+    color: var(--bouton-texte);
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
+    transition:
+      transform 0.15s,
+      box-shadow 0.15s;
 
     &:disabled {
       opacity: 0.6;
@@ -82,7 +204,8 @@
     }
 
     &:not(:disabled):hover {
-      background: #4338ca;
+      transform: translateY(-1px);
+      box-shadow: 0 12px 20px -6px rgba(79, 70, 229, 0.6);
     }
   }
 }

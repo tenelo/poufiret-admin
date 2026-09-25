@@ -1,0 +1,120 @@
+@use '../cloche-notifications/cloche-commune';
+
+// Panneau ancré à droite de la cloche (elle est dans la zone utilisateur, à droite de l'en-tête).
+.panneau-notifications {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 360px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 201;
+}
+
+.entete-panneau {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+
+  h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #1a1a1a;
+  }
+}
+
+.lien-tout-lire {
+  padding: 0;
+  background: none;
+  border: none;
+  color: #4f46e5;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.etat-panneau,
+.erreur-panneau {
+  margin: 0;
+  padding: 1rem;
+  font-size: 0.82rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+.erreur-panneau {
+  color: #b91c1c;
+}
+
+.liste-notifications {
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.notification {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: #ffffff;
+  border: none;
+  border-bottom: 1px solid #f3f4f6;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: #f9fafb;
+  }
+}
+
+// Non lue : fond teinté et liseré à gauche.
+.non-lue {
+  background: #eef2ff;
+  box-shadow: inset 3px 0 0 #4f46e5;
+
+  &:hover {
+    background: #e0e7ff;
+  }
+}
+
+.titre-notification {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.message-notification {
+  font-size: 0.8rem;
+  color: #4b5563;
+}
+
+.date-notification {
+  font-size: 0.72rem;
+  color: #9ca3af;
+}
+
+// Mobile : le panneau occupe la largeur de l'écran (sous l'en-tête de 56px).
+@media (max-width: 575.98px) {
+  .panneau-notifications {
+    position: fixed;
+    top: 60px;
+    left: 0.5rem;
+    right: 0.5rem;
+    width: auto;
+  }
+}

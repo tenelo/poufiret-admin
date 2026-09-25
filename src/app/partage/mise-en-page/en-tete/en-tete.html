@@ -17,6 +17,9 @@
     @if (estPartenaire()) {
       <app-cloche-notifications />
     }
+    @if (estAdmin()) {
+      <app-cloche-notifications-admin />
+    }
     @if (utilisateur()) {
       <span class="telephone">{{ nomAffiche() }}</span>
       <span class="role" [class.role-superadmin]="estSuperadmin()">{{ libelleRole() }}</span>

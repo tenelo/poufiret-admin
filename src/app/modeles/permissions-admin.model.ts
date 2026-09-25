@@ -3,9 +3,9 @@
  * capacités fines de l'admin connecté (grille `PermissionsAdmin` côté backend).
  */
 
-// Les 33 capacités possibles de la grille admin, pour l'autocomplétion lors
+// Les capacités possibles de la grille admin, pour l'autocomplétion lors
 // de la déclaration des entrées de menu / des routes protégées.
-// `gerer_admins` est privilégiée : seul un super-admin peut la poser à true
+// `gerer_admins`, `gerer_geographie` et `gerer_formules_pub` sont privilégiées : seul un super-admin peut la poser à true
 // (le backend ignore silencieusement toute tentative venant d'un non-superuser).
 export type NomCapacite =
   | 'suspendre_client'
@@ -42,7 +42,8 @@ export type NomCapacite =
   | 'lire_journal'
   | 'exporter_csv'
   | 'gerer_admins'
-  | 'gerer_geographie';
+  | 'gerer_geographie'
+  | 'gerer_formules_pub';
 
 // Corps brut renvoyé par le backend (snake_case).
 export interface ReponsePermissionsAdmin {
@@ -102,4 +103,5 @@ export const LIBELLES_CAPACITE: Record<NomCapacite, string> = {
   exporter_csv: 'Exporter des données (CSV)',
   gerer_admins: 'Gérer les administrateurs',
   gerer_geographie: 'Gérer la géographie',
+  gerer_formules_pub: 'Gérer les formules et paramètres pub',
 };

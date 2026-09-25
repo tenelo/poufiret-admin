@@ -1,0 +1,28 @@
+<div class="zone-onglets">
+  <nav class="barre-onglets" aria-label="Sections">
+    <button
+      type="button"
+      class="onglet"
+      [class.onglet-actif]="ongletActif() === 'liste'"
+      (click)="changerOnglet('liste')"
+    >
+      Liste
+    </button>
+    <button
+      type="button"
+      class="onglet"
+      [class.onglet-actif]="ongletActif() === 'statistiques'"
+      (click)="changerOnglet('statistiques')"
+    >
+      Statistiques
+    </button>
+  </nav>
+</div>
+
+@if (ongletActif() === 'statistiques') {
+  <div class="zone-statistiques">
+    <app-statistiques-partenaires />
+  </div>
+} @else {
+  <app-partenaires-liste />
+}

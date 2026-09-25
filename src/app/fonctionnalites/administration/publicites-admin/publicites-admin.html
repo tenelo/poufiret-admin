@@ -2,7 +2,7 @@
   <div class="entete">
     <h1>Publicités</h1>
     <div class="actions-entete">
-      <button type="button" class="bouton-secondaire" [disabled]="chargementEnCours()" (click)="charger()">
+      <button type="button" class="bouton-secondaire" [disabled]="chargementEnCours()" (click)="rafraichir()">
         {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
       </button>
 
@@ -36,6 +36,15 @@
   @if (messageSucces()) {
     <p class="message-succes">{{ messageSucces() }}</p>
   }
+
+  <app-quotas-formules (charge)="formulesQuotas.set($event)" />
+
+  <app-filtres-publicites-admin
+    [compteurs]="compteurs()"
+    [statutImpose]="statutImpose()"
+    [formules]="formulesQuotas()"
+    (filtresChange)="surFiltres($event)"
+  />
 
   @if (chargementEnCours()) {
     <div class="etat-chargement">
@@ -80,12 +89,12 @@
 
     @if (d.publicites.length === 0) {
       <div class="etat-vide">
-        <p>Aucune campagne.</p>
+        <p>Aucune campagne pour ces critères.</p>
       </div>
     } @else {
       <div class="grille-publicites">
         @for (pub of d.publicites; track pub.id) {
-          <div class="carte-publicite">
+          <div class="carte-publicite" [id]="'pub-' + pub.id" [class.carte-surlignee]="pub.id === pubMiseEnEvidence()">
             <div
               class="vignette-media"
               [class.vignette-cliquable]="aUnVisuel(pub)"
@@ -108,6 +117,9 @@
               <span class="badge badge-{{ pub.statut }}">{{ libellesStatut[pub.statut] }}</span>
             </div>
             <p class="formule">Formule : {{ pub.formule }}</p>
+            @if (libellePortee(pub); as portee) {
+              <p class="formule">Portée effective : {{ portee }}</p>
+            }
 
             <div class="grille-stats-pub">
               <div class="stat-pub">

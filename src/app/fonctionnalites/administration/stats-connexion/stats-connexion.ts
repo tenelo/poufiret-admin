@@ -5,7 +5,12 @@ import { StatsConnexionService } from './stats-connexion.service';
 import { PermissionsService } from '../../../noyau/permissions/permissions.service';
 import { Graphique } from '../../../partage/graphique/graphique';
 import { extraireMessageErreur } from '../tableau-de-bord-admin/extraire-message-erreur';
-import { formaterDuree, formaterNombre } from '../tableau-de-bord-admin/palette-graphiques';
+import {
+  COULEUR_PRINCIPALE,
+  COULEUR_PRINCIPALE_TRANSPARENTE,
+  formaterDuree,
+  formaterNombre,
+} from '../tableau-de-bord-admin/palette-graphiques';
 import { StatsConnexion } from '../../../modeles/stats-connexion.model';
 import { OuverturesPeriodeAdmin } from '../../../modeles/tableau-bord-admin.model';
 import { DureeParUtilisateur, DureeSessions } from '../../../modeles/duree-sessions.model';
@@ -84,8 +89,8 @@ export class StatsConnexionComponent implements OnInit {
         {
           label: 'Durée moyenne (min)',
           data: parJour.map((point) => Math.round((point.duree_moyenne_secondes / 60) * 10) / 10),
-          borderColor: '#1B5E20',
-          backgroundColor: 'rgba(27, 94, 32, 0.15)',
+          borderColor: COULEUR_PRINCIPALE,
+          backgroundColor: COULEUR_PRINCIPALE_TRANSPARENTE,
           fill: true,
           tension: 0.3,
         },
@@ -106,7 +111,7 @@ export class StatsConnexionComponent implements OnInit {
         {
           label: 'Connexions distinctes',
           data: [cd?.aujourdhui.total ?? 0, cd?.sept_jours.total ?? 0, cd?.trente_jours.total ?? 0],
-          backgroundColor: '#1B5E20',
+          backgroundColor: COULEUR_PRINCIPALE,
         },
       ],
     };

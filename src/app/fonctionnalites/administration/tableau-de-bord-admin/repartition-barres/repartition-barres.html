@@ -1,0 +1,31 @@
+<div class="carte">
+  <h3>{{ titre() }}</h3>
+
+  <div class="barre" role="img" [attr.aria-label]="titre()">
+    @for (entree of entrees(); track entree.libelle; let i = $index) {
+      @if (entree.valeur > 0) {
+        <span
+          class="segment"
+          [style.flex-grow]="entree.valeur"
+          [style.background]="couleur(i)"
+          [title]="entree.libelle + ' : ' + entree.valeur"
+        ></span>
+      }
+    }
+  </div>
+
+  @if (total() === 0) {
+    <p class="vide">{{ messageVide() }}</p>
+  }
+
+  <ul class="legende">
+    @for (entree of entrees(); track entree.libelle; let i = $index) {
+      <li>
+        <span class="pastille" [style.background]="couleur(i)"></span>
+        <span class="libelle">{{ entree.libelle }}</span>
+        <span class="valeur">{{ formaterNombre(entree.valeur) }}</span>
+        <span class="pourcentage">{{ pourcentage(entree.valeur) }} %</span>
+      </li>
+    }
+  </ul>
+</div>

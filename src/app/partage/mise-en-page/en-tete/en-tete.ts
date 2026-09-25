@@ -3,6 +3,7 @@ import { Component, computed, inject, input, output } from '@angular/core';
 import { AuthService } from '../../../noyau/auth/auth.service';
 import { PermissionsService } from '../../../noyau/permissions/permissions.service';
 import { ClocheNotifications } from '../cloche-notifications/cloche-notifications';
+import { ClocheNotificationsAdmin } from '../cloche-notifications-admin/cloche-notifications-admin';
 
 /**
  * En-tête de la coquille applicative : affiche l'utilisateur connecté
@@ -13,7 +14,7 @@ import { ClocheNotifications } from '../cloche-notifications/cloche-notification
  */
 @Component({
   selector: 'app-en-tete',
-  imports: [ClocheNotifications],
+  imports: [ClocheNotifications, ClocheNotificationsAdmin],
   templateUrl: './en-tete.html',
   styleUrl: './en-tete.scss',
 })
@@ -38,6 +39,9 @@ export class EnTete {
   });
 
   readonly estPartenaire = computed(() => this.authService.role() === 'partenaire');
+
+  /** Admin et super-admin : cloche des campagnes de pub soumises / à valider. */
+  readonly estAdmin = computed(() => this.authService.role() === 'admin');
 
   /** True pour un admin dont is_superuser=true (permissions déjà chargées par CoquilleApplication). */
   readonly estSuperadmin = computed(

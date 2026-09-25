@@ -2,7 +2,7 @@ import { Component, computed, input, output, signal } from '@angular/core';
 
 import {
   FormulePublicite,
-  OPTIONS_PORTEE,
+  optionsPorteeSelonForfait,
   PorteePublicite,
   RequeteCreationPublicite,
 } from '../../../../../modeles/publicite.model';
@@ -24,16 +24,24 @@ export class FormulaireCreationPublicite {
   readonly formules = input.required<FormulePublicite[]>();
   readonly enregistrementEnCours = input(false);
   readonly messageErreur = input<string | null>(null);
+  /** Erreurs de validation renvoyées par le backend (400), par nom de champ. */
+  readonly erreursChamps = input<Record<string, string> | null>(null);
+  /** Portée du forfait du partenaire ; null si inconnue (aucune option grisée). */
+  readonly porteeForfait = input<PorteePublicite | null>(null);
 
   readonly soumis = output<RequeteCreationPublicite>();
   readonly annule = output<void>();
 
-  readonly optionsPortee = OPTIONS_PORTEE;
+  readonly optionsPortee = computed(() => optionsPorteeSelonForfait(this.porteeForfait()));
 
-  readonly formuleId = signal<number | null>(null);
+  readonly formuleId = signal<string | null>(null);
   readonly titre = signal('');
   readonly description = signal('');
-  readonly portee = signal<PorteePublicite>('departement');
+  // Tant que rien n'est choisi, la portée par défaut est celle du forfait (sinon département).
+  private readonly porteeChoisie = signal<PorteePublicite | null>(null);
+  readonly portee = computed<PorteePublicite>(
+    () => this.porteeChoisie() ?? this.porteeForfait() ?? 'departement',
+  );
 
   readonly fichierImage = signal<File | null>(null);
   readonly apercuImage = signal<string | null>(null);
@@ -48,12 +56,17 @@ export class FormulaireCreationPublicite {
   readonly videoAutorisee = computed(() => this.formuleSelectionnee()?.video_autorisee ?? false);
 
   selectionnerFormule(valeur: string): void {
-    const id = valeur ? Number(valeur) : null;
+    const id = valeur || null;
     this.formuleId.set(id);
+    this.messageErreurValidation.set(null);
     const formule = this.formules().find((f) => f.id === id);
     if (!formule?.video_autorisee) {
       this.retirerVideo();
     }
+  }
+
+  selectionnerPortee(valeur: PorteePublicite): void {
+    this.porteeChoisie.set(valeur);
   }
 
   selectionnerImage(evenement: Event): void {

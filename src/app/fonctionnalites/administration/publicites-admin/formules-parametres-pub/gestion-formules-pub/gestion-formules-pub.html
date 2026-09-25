@@ -1,0 +1,126 @@
+<section class="bloc">
+  <div class="entete-bloc">
+    <h2>Formules</h2>
+    <button type="button" class="bouton-principal" (click)="ouvrirCreation()">+ Nouvelle formule</button>
+  </div>
+
+  @if (messageSucces()) {
+    <p class="message-succes">{{ messageSucces() }}</p>
+  }
+  @if (messageErreur()) {
+    <p class="erreur-generale">{{ messageErreur() }}</p>
+  }
+
+  @if (chargementEnCours()) {
+    <p class="etat">Chargement des formules…</p>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (formules().length === 0) {
+    <p class="etat">Aucune formule. Créez-en une pour la proposer aux partenaires.</p>
+  } @else {
+    <div class="grille-formules">
+      @for (formule of formules(); track formule.id) {
+        <div class="carte-formule" [class.carte-inactive]="!formule.est_active">
+          <div class="entete-carte">
+            <span class="nom">{{ formule.nom }}</span>
+            <span class="badge" [class.badge-actif]="formule.est_active">
+              {{ formule.est_active ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+          <p class="prix">{{ formaterNombre(formule.prix) }} FCFA</p>
+
+          <dl class="details">
+            <div>
+              <dt>Durée</dt>
+              <dd>{{ formule.duree_jours }} j</dd>
+            </div>
+            <div>
+              <dt>Quota</dt>
+              <dd>{{ formule.nb_actives ?? 0 }} / {{ formule.quota_partenaires }} actives</dd>
+            </div>
+            <div>
+              <dt>En attente</dt>
+              <dd>{{ formule.nb_en_attente ?? 0 }}</dd>
+            </div>
+            <div>
+              <dt>Total campagnes</dt>
+              <dd>{{ formule.nb_pubs_total ?? 0 }}</dd>
+            </div>
+            <div class="detail-large">
+              <dt>Emplacements</dt>
+              <dd>{{ emplacements(formule) }}</dd>
+            </div>
+          </dl>
+
+          <div class="actions-carte">
+            <button type="button" class="bouton-secondaire" (click)="ouvrirEdition(formule)">Modifier</button>
+            <button type="button" class="bouton-secondaire" (click)="demanderBascule(formule)">
+              {{ formule.est_active ? 'Désactiver' : 'Activer' }}
+            </button>
+            <button type="button" class="bouton-danger" (click)="demanderSuppression(formule)">Supprimer</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>
+
+@if (dialogOuvert()) {
+  <app-dialog-formule-pub
+    [formule]="formuleEnEdition()"
+    [enregistrementEnCours]="enregistrementEnCours()"
+    [erreurs]="erreursFormulaire()"
+    (soumis)="enregistrer($event)"
+    (annule)="fermerDialog()"
+  />
+}
+
+@if (formuleABasculer(); as formule) {
+  <div class="voile-confirmation" (click)="annulerBascule()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>
+        {{ formule.est_active ? 'Désactiver' : 'Activer' }} la formule « <strong>{{ formule.nom }}</strong> » ?
+        @if (formule.est_active) {
+          Elle ne sera plus proposée aux partenaires ; les campagnes déjà actives ne sont pas affectées.
+        } @else {
+          Elle sera de nouveau proposée aux partenaires.
+        }
+      </p>
+      @if (erreurBascule()) {
+        <p class="erreur-generale">{{ erreurBascule() }}</p>
+      }
+      <div class="actions-confirmation">
+        <button type="button" class="bouton-secondaire" [disabled]="basculeEnCours()" (click)="annulerBascule()">Annuler</button>
+        <button type="button" class="bouton-principal" [disabled]="basculeEnCours()" (click)="confirmerBascule()">
+          {{ basculeEnCours() ? 'Enregistrement…' : 'Confirmer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (formuleASupprimer(); as formule) {
+  <div class="voile-confirmation" (click)="annulerSuppression()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>Supprimer définitivement la formule « <strong>{{ formule.nom }}</strong> » ? Cette action est irréversible.</p>
+      @if (erreurSuppression()) {
+        <p class="erreur-generale">{{ erreurSuppression() }}</p>
+      }
+      <div class="actions-confirmation">
+        <button type="button" class="bouton-secondaire" [disabled]="suppressionEnCours()" (click)="annulerSuppression()">Annuler</button>
+        @if (erreurSuppression() && formule.est_active) {
+          <button type="button" class="bouton-principal" [disabled]="suppressionEnCours()" (click)="desactiverALaPlace()">
+            Désactiver à la place
+          </button>
+        } @else if (!erreurSuppression()) {
+          <button type="button" class="bouton-danger" [disabled]="suppressionEnCours()" (click)="confirmerSuppression()">
+            {{ suppressionEnCours() ? 'Suppression…' : 'Supprimer' }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

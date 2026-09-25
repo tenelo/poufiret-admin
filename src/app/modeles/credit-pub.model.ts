@@ -21,7 +21,8 @@ export type StatutCreditPub = 'disponible' | 'consomme';
 
 export interface CreditPub {
   id: string;
-  formule_id: number;
+  // UUID de la formule.
+  formule_id: string;
   formule_nom: string;
   formule_prix: number;
   statut: StatutCreditPub;
@@ -45,12 +46,13 @@ export interface ReponseCreditsPartenaire {
 
 // Corps de POST /administration/partenaires/<pk>/credits/.
 export interface RequeteAccorderCredit {
-  formule_id: number;
+  formule_id: string;
   motif?: string;
 }
 
 export interface FormulePub {
-  id: number;
+  // UUID (string) côté backend.
+  id: string;
   nom: string;
   prix: number;
   types_affichage: string[];

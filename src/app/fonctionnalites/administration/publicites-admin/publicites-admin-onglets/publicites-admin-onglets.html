@@ -1,0 +1,33 @@
+@if (peutGererFormules()) {
+  <div class="zone-onglets">
+    <nav class="barre-onglets" aria-label="Sections">
+      <button
+        type="button"
+        class="onglet"
+        [class.onglet-actif]="ongletActif() === 'campagnes'"
+        (click)="changerOnglet('campagnes')"
+      >
+        Campagnes
+      </button>
+      <button
+        type="button"
+        class="onglet"
+        [class.onglet-actif]="ongletActif() === 'formules'"
+        (click)="changerOnglet('formules')"
+      >
+        Formules &amp; paramètres
+      </button>
+    </nav>
+  </div>
+
+  @if (ongletActif() === 'formules') {
+    <div class="zone-formules">
+      <h1>Formules &amp; paramètres</h1>
+      <app-formules-parametres-pub />
+    </div>
+  } @else {
+    <app-publicites-admin />
+  }
+} @else {
+  <app-publicites-admin />
+}

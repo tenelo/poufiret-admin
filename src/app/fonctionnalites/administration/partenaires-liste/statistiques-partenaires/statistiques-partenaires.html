@@ -1,0 +1,98 @@
+<div class="entete">
+  <h1>Statistiques des partenaires</h1>
+  <button type="button" class="bouton-rafraichir" [disabled]="chargementEnCours()" (click)="charger()">
+    {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
+  </button>
+</div>
+
+<section class="bloc">
+  <h2>Partenaires et clients</h2>
+
+  @if (dashboard(); as d) {
+    <div class="grille-kpi">
+      <div class="carte-kpi">
+        <span class="valeur">{{ formaterNombre(nbPartenaires()) }}</span>
+        <span class="libelle">Partenaires (comptes)</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="valeur">{{ formaterNombre(nbClients()) }}</span>
+        <span class="libelle">Clients (comptes)</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="valeur">{{ clientsParPartenaire() ?? '—' }}</span>
+        <span class="libelle">Clients par partenaire</span>
+      </div>
+    </div>
+
+    <div class="grille-graphiques">
+      <div class="carte-graphique">
+        <h3>Répartition des comptes par rôle ({{ formaterNombre(d.comptes.total) }})</h3>
+        <app-graphique type="doughnut" [data]="donneesRoles()" [options]="optionsDonut" />
+      </div>
+      <div class="carte-graphique">
+        <h3>Activité : partenaires vs clients</h3>
+        <app-graphique type="bar" [data]="donneesActivite()" [options]="optionsBarres" />
+      </div>
+    </div>
+  } @else if (erreurDashboard()) {
+    <p class="erreur-section">{{ erreurDashboard() }}</p>
+  } @else {
+    <p class="etat-section">Chargement des statistiques de comptes…</p>
+  }
+</section>
+
+<section class="bloc">
+  <h2>Répartition des partenaires</h2>
+
+  @if (partenaires()) {
+    @if (totalPartenaires() === 0) {
+      <p class="etat-section">Aucun partenaire.</p>
+    } @else {
+      <div class="grille-kpi">
+        <div class="carte-kpi">
+          <span class="valeur">{{ formaterNombre(totalPartenaires()) }}</span>
+          <span class="libelle">Partenaires au total</span>
+        </div>
+        <div class="carte-kpi">
+          <span class="valeur">{{ formaterNombre(nbActifs()) }}</span>
+          <span class="libelle">Actifs</span>
+        </div>
+        <div class="carte-kpi">
+          <span class="valeur">{{ formaterNombre(nbVisibles()) }}</span>
+          <span class="libelle">Visibles</span>
+        </div>
+        <div class="carte-kpi">
+          <span class="valeur">{{ formaterNombre(nbCertifies()) }}</span>
+          <span class="libelle">Certifiés</span>
+        </div>
+        <div class="carte-kpi">
+          <span class="valeur">{{ formaterNombre(nbEnFaveur()) }}</span>
+          <span class="libelle">En faveur</span>
+        </div>
+      </div>
+
+      <div class="grille-graphiques">
+        <div class="carte-graphique">
+          <h3>Partenaires par statut</h3>
+          <app-graphique type="doughnut" [data]="donneesStatuts()" [options]="optionsDonut" />
+        </div>
+        <div class="carte-graphique">
+          <h3>Partenaires par forfait</h3>
+          <app-graphique type="doughnut" [data]="donneesPlans()" [options]="optionsDonut" />
+        </div>
+        <div class="carte-graphique">
+          <h3>Partenaires par type</h3>
+          <app-graphique type="bar" [data]="donneesTypes()" [options]="optionsBarresHorizontales" />
+        </div>
+        <div class="carte-graphique">
+          <h3>Partenaires par département</h3>
+          <app-graphique type="bar" [data]="donneesDepartements()" [options]="optionsBarresHorizontales" />
+        </div>
+      </div>
+    }
+  } @else if (erreurPartenaires()) {
+    <p class="erreur-section">{{ erreurPartenaires() }}</p>
+  } @else {
+    <p class="etat-section">Chargement des partenaires…</p>
+  }
+</section>

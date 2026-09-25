@@ -14,7 +14,9 @@
     min-width: 0;
   }
 
+  // Bureau : le nom de l'app est dans la barre latérale ; affiché ici seulement en mode tiroir.
   .nom-app {
+    display: none;
     font-weight: 700;
     color: #1f2937;
   }
@@ -84,6 +86,10 @@
 
     .bouton-menu {
       display: flex;
+    }
+
+    .nom-app {
+      display: inline;
     }
 
     .zone-utilisateur {

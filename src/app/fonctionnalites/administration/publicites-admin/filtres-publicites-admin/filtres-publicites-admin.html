@@ -1,0 +1,42 @@
+<nav class="barre-onglets" aria-label="Filtrer par statut">
+  @for (onglet of onglets; track onglet.valeur) {
+    <button
+      type="button"
+      class="onglet"
+      [class.onglet-actif]="statut() === onglet.valeur"
+      (click)="choisirOnglet(onglet.valeur)"
+    >
+      {{ onglet.libelle }}
+      @if (compteur(onglet.valeur) !== null) {
+        <span class="compteur">{{ compteur(onglet.valeur) }}</span>
+      }
+    </button>
+  }
+</nav>
+
+<div class="filtres">
+  <input
+    type="search"
+    class="champ-recherche"
+    placeholder="Rechercher (titre ou partenaire)"
+    aria-label="Rechercher une publicité"
+    [value]="recherche()"
+    (input)="saisirRecherche($any($event.target).value)"
+  />
+
+  <select aria-label="Filtrer par formule" (change)="choisirFormule($any($event.target).value)">
+    <option value="" [selected]="formule() === ''">Toutes les formules</option>
+    @for (f of formules(); track f.id) {
+      <option [value]="f.id" [selected]="f.id === formule()">{{ f.nom }}</option>
+    }
+  </select>
+
+  <select aria-label="Filtrer par portée" (change)="choisirPortee($any($event.target).value)">
+    <option value="" [selected]="portee() === ''">Toutes les portées</option>
+    @for (option of optionsPortee; track option.valeur) {
+      <option [value]="option.valeur" [selected]="option.valeur === portee()">
+        {{ option.libelle }}
+      </option>
+    }
+  </select>
+</div>

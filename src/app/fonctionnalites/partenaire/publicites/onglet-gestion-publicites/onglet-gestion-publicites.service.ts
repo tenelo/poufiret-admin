@@ -1,11 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 
 import { ConfigurationService } from '../../../../noyau/config/configuration.service';
 import {
   FormulePublicite,
   MaPublicite,
+  PorteePublicite,
+  porteeValide,
+  ReponseAnnulationSoumission,
   ReponseTransitionPublicite,
   RequeteCreationPublicite,
 } from '../../../../modeles/publicite.model';
@@ -33,6 +36,20 @@ export class OngletGestionPublicitesService {
       .pipe(map(normaliserListe));
   }
 
+  /**
+   * GET /auth/mon-profil-partenaire/ (champ portee_forfait) : portée du forfait du partenaire.
+   * Renvoie null si l'appel échoue ou si le champ est absent : les écrans retombent alors sur
+   * le comportement sans portée minimale (aucune option grisée).
+   */
+  chargerPorteeForfait(): Observable<PorteePublicite | null> {
+    return this.http
+      .get<{ portee_forfait?: unknown }>(`${this.configuration.apiUrl}/auth/mon-profil-partenaire/`)
+      .pipe(
+        map((profil) => porteeValide(profil?.portee_forfait)),
+        catchError(() => of(null)),
+      );
+  }
+
   /** GET /publicites/mes-publicites/ : campagnes du partenaire connecté. */
   listerMesPublicites(): Observable<MaPublicite[]> {
     return this.http
@@ -47,7 +64,7 @@ export class OngletGestionPublicitesService {
    */
   creerPublicite(donnees: RequeteCreationPublicite): Observable<MaPublicite> {
     const formData = new FormData();
-    formData.append('formule', String(donnees.formule));
+    formData.append('formule', donnees.formule);
     formData.append('titre', donnees.titre);
     if (donnees.description) formData.append('description', donnees.description);
     formData.append('image_couverture', donnees.imageCouverture);
@@ -74,14 +91,31 @@ export class OngletGestionPublicitesService {
    * défaut celle de la campagne d'origine si `formuleId` est omis) et image de
    * couverture optionnelle (sinon l'ancienne est reprise par le backend).
    */
-  reconduirePublicite(id: string, formuleId?: number, image?: File): Observable<MaPublicite> {
+  reconduirePublicite(
+    id: string,
+    formuleId?: string,
+    image?: File,
+    portee?: PorteePublicite,
+  ): Observable<MaPublicite> {
     const formData = new FormData();
-    if (formuleId) formData.append('formule_id', String(formuleId));
+    if (formuleId) formData.append('formule_id', formuleId);
+    if (portee) formData.append('portee', portee);
     if (image) formData.append('image_couverture', image);
 
     return this.http.post<MaPublicite>(
       `${this.configuration.apiUrl}/publicites/mes-publicites/${id}/reconduire/`,
       formData,
+    );
+  }
+
+  /**
+   * POST /publicites/mes-publicites/<id>/annuler-soumission/ (sans corps) : repasse en brouillon
+   * une campagne en attente de paiement (sans paiement confirmé). 400 avec message sinon.
+   */
+  annulerSoumission(id: string): Observable<ReponseAnnulationSoumission> {
+    return this.http.post<ReponseAnnulationSoumission>(
+      `${this.configuration.apiUrl}/publicites/mes-publicites/${id}/annuler-soumission/`,
+      null,
     );
   }
 

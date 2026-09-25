@@ -42,7 +42,7 @@ export interface RequeteModifierCapacites {
 export interface CapaciteDescriptor {
   nom: NomCapacite;
   libelle: string;
-  // true pour `gerer_admins` et `gerer_geographie` : non modifiable par un admin non-superuser.
+  // true pour `gerer_admins`, `gerer_geographie` et `gerer_formules_pub` : non modifiable par un admin non-superuser.
   privilegiee?: boolean;
 }
 
@@ -102,6 +102,8 @@ export const GROUPES_CAPACITES: GroupeCapacites[] = [
     capacites: [
       { nom: 'valider_publicite', libelle: 'Valider une publicité' },
       { nom: 'offrir_campagne', libelle: 'Offrir des crédits de campagne' },
+      // Privilégiée : seul un super-admin peut la modifier (case verrouillée pour les autres).
+      { nom: 'gerer_formules_pub', libelle: 'Gérer les formules et paramètres pub', privilegiee: true },
     ],
   },
   {

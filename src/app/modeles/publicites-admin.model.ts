@@ -6,6 +6,8 @@
  * (optionnels) au cas où l'un d'eux serait absent pour une campagne donnée.
  */
 
+import { PorteePublicite } from './publicite.model';
+
 export type StatutPubliciteAdmin =
   | 'brouillon'
   | 'en_attente_paiement'
@@ -28,6 +30,9 @@ export interface PubliciteAdmin {
   titre: string;
   formule: string | number;
   statut: StatutPubliciteAdmin;
+  // Portée choisie et portée effective (MAX(forfait, choisie)) ; optionnelles par prudence.
+  portee?: PorteePublicite;
+  portee_effective?: PorteePublicite;
   nb_personnes_touchees?: number;
   nb_impressions?: number;
   nb_clics?: number;
@@ -42,9 +47,60 @@ export interface PubliciteAdmin {
   video?: string | null;
 }
 
+/** Compteurs par statut (hors brouillon) ; ignorent le filtre `statut` mais respectent les autres. */
+export type CompteursStatutPubliciteAdmin = Partial<
+  Record<Exclude<StatutPubliciteAdmin, 'brouillon'> | 'total', number>
+>;
+
 export interface StatsPublicitesAdmin {
   totaux: TotauxPublicitesAdmin;
+  compteurs_statut?: CompteursStatutPubliciteAdmin;
   publicites: PubliciteAdmin[];
+}
+
+/** Onglet "Toutes" = aucun filtre de statut envoyé à l'API. */
+export type OngletStatutPubliciteAdmin = Exclude<StatutPubliciteAdmin, 'brouillon'> | 'toutes';
+
+export const ONGLETS_STATUT_PUBLICITE_ADMIN: { valeur: OngletStatutPubliciteAdmin; libelle: string }[] = [
+  { valeur: 'en_attente_paiement', libelle: 'En attente de paiement' },
+  { valeur: 'en_attente_validation', libelle: 'En attente de validation' },
+  { valeur: 'active', libelle: 'Actives' },
+  { valeur: 'terminee', libelle: 'Terminées' },
+  { valeur: 'rejetee', libelle: 'Rejetées' },
+  { valeur: 'toutes', libelle: 'Toutes' },
+];
+
+/** Filtres envoyés à GET /publicites/admin/stats/ (chaîne vide = filtre non appliqué). */
+export interface FiltresPublicitesAdmin {
+  statut: OngletStatutPubliciteAdmin;
+  recherche: string;
+  formule: string;
+  portee: PorteePublicite | '';
+}
+
+export const FILTRES_PUBLICITES_ADMIN_DEFAUT: FiltresPublicitesAdmin = {
+  statut: 'en_attente_validation',
+  recherche: '',
+  formule: '',
+  portee: '',
+};
+
+/** Ligne de GET /publicites/admin/formules/ : occupation du quota d'une formule. */
+export interface QuotaFormule {
+  id: string;
+  nom: string;
+  prix: number;
+  est_active: boolean;
+  quota_partenaires: number;
+  nb_actives: number;
+  places_restantes: number;
+  nb_en_attente: number;
+  nb_en_attente_paiement: number;
+  nb_en_attente_validation: number;
+}
+
+export interface ReponseQuotasFormules {
+  formules: QuotaFormule[];
 }
 
 export type ActionTransitionPubliciteId = 'confirmer_paiement' | 'valider' | 'rejeter' | 'terminer';

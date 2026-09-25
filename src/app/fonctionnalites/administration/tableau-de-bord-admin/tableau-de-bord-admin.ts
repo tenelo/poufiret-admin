@@ -3,8 +3,10 @@ import { ChartConfiguration } from 'chart.js';
 
 import { TableauDeBordAdminService } from './tableau-de-bord-admin.service';
 import { Graphique } from '../../../partage/graphique/graphique';
+import { QuotasFormules } from '../quotas-formules/quotas-formules';
 import { extraireMessageErreur } from './extraire-message-erreur';
-import { PALETTE_GRAPHIQUES, couleursGraphique, formaterNombre } from './palette-graphiques';
+import { PALETTE_GRAPHIQUES, formaterNombre } from './palette-graphiques';
+import { EntreeRepartition, RepartitionBarres } from './repartition-barres/repartition-barres';
 import {
   ConnexionsPeriodeAdmin,
   OuverturesPeriodeAdmin,
@@ -38,7 +40,7 @@ const LIBELLES_PLATEFORME: Record<string, string> = {
  */
 @Component({
   selector: 'app-tableau-de-bord-admin',
-  imports: [Graphique],
+  imports: [Graphique, QuotasFormules, RepartitionBarres],
   templateUrl: './tableau-de-bord-admin.html',
   styleUrl: './tableau-de-bord-admin.scss',
 })
@@ -82,12 +84,12 @@ export class TableauDeBordAdmin implements OnInit {
     });
   }
 
-  readonly donneesEnLigneParRole = computed<ChartConfiguration['data']>(() =>
-    this.repartitionVersChart(this.donnees()?.en_ligne.par_role),
+  readonly entreesEnLigne = computed<EntreeRepartition[]>(() =>
+    this.repartitionVersEntrees(this.donnees()?.en_ligne.par_role),
   );
 
-  readonly donneesComptesParRole = computed<ChartConfiguration['data']>(() =>
-    this.repartitionVersChart(this.donnees()?.comptes.par_role),
+  readonly entreesComptes = computed<EntreeRepartition[]>(() =>
+    this.repartitionVersEntrees(this.donnees()?.comptes.par_role),
   );
 
   readonly donneesConnexions = computed<ChartConfiguration['data']>(() => {
@@ -111,23 +113,12 @@ export class TableauDeBordAdmin implements OnInit {
     scales: { y: { beginAtZero: true } },
   };
 
-  readonly optionsDonut: ChartConfiguration['options'] = {
-    plugins: { legend: { position: 'bottom' } },
-  };
-
-  readonly donneesPlateformes = computed<ChartConfiguration['data']>(() => {
-    const parPlateforme = this.donnees()?.appareils.par_plateforme ?? {};
-    const entrees = Object.entries(parPlateforme);
-    return {
-      labels: entrees.map(([cle]) => LIBELLES_PLATEFORME[cle] ?? cle),
-      datasets: [
-        {
-          data: entrees.map(([, valeur]) => valeur),
-          backgroundColor: couleursGraphique(entrees.length),
-        },
-      ],
-    };
-  });
+  readonly entreesPlateformes = computed<EntreeRepartition[]>(() =>
+    Object.entries(this.donnees()?.appareils.par_plateforme ?? {}).map(([cle, valeur]) => ({
+      libelle: LIBELLES_PLATEFORME[cle] ?? cle,
+      valeur,
+    })),
+  );
 
   readonly listeConnexionsTotaux = computed<{ libelle: string; total: number }[]>(() => {
     const cd = this.donnees()?.connexions_distinctes;
@@ -148,16 +139,8 @@ export class TableauDeBordAdmin implements OnInit {
     ];
   });
 
-  private repartitionVersChart(repartition: RepartitionParRole | undefined): ChartConfiguration['data'] {
+  private repartitionVersEntrees(repartition: RepartitionParRole | undefined): EntreeRepartition[] {
     const valeurs = repartition ?? { client: 0, partenaire: 0, livreur: 0, admin: 0 };
-    return {
-      labels: ROLES.map((r) => r.libelle),
-      datasets: [
-        {
-          data: ROLES.map((r) => valeurs[r.cle]),
-          backgroundColor: couleursGraphique(ROLES.length),
-        },
-      ],
-    };
+    return ROLES.map((role) => ({ libelle: role.libelle, valeur: valeurs[role.cle] }));
   }
 }

@@ -17,7 +17,8 @@ export type StatutPublicite =
   | 'terminee';
 
 export interface FormulePublicite {
-  id: number;
+  // UUID (string) côté backend, pas un entier.
+  id: string;
   nom: string;
   prix: number;
   priorite: number;
@@ -36,7 +37,8 @@ export interface FormulePublicite {
 /** Une campagne du partenaire connecté, telle que renvoyée par mes-publicites/. */
 export interface MaPublicite {
   id: string;
-  formule: number;
+  // UUID de la formule.
+  formule: string;
   // Dénormalisation optionnelle côté backend : si absente, le nom/prix sont
   // résolus côté front via la liste des formules (formule id → formule).
   formule_nom?: string;
@@ -53,12 +55,18 @@ export interface MaPublicite {
 
 // Corps de POST /publicites/mes-publicites/ (envoyé en multipart par le service).
 export interface RequeteCreationPublicite {
-  formule: number;
+  formule: string;
   titre: string;
   description?: string;
   imageCouverture: File;
   video?: File;
   portee: PorteePublicite;
+}
+
+export interface ReponseAnnulationSoumission {
+  id: string;
+  statut: string;
+  message: string;
 }
 
 export interface ReponseTransitionPublicite {
@@ -102,6 +110,42 @@ export const OPTIONS_PORTEE: { valeur: PorteePublicite; libelle: string }[] = [
   { valeur: 'region', libelle: 'Région' },
   { valeur: 'district', libelle: 'District' },
 ];
+
+/** Ordre des portées : departement < region < district. */
+const RANG_PORTEE: Record<PorteePublicite, number> = { departement: 0, region: 1, district: 2 };
+
+export function rangPortee(portee: PorteePublicite): number {
+  return RANG_PORTEE[portee];
+}
+
+/** Valide une valeur brute renvoyée par le backend (null si absente ou inconnue). */
+export function porteeValide(valeur: unknown): PorteePublicite | null {
+  return typeof valeur === 'string' && valeur in RANG_PORTEE ? (valeur as PorteePublicite) : null;
+}
+
+export interface OptionPorteeForfait {
+  valeur: PorteePublicite;
+  libelle: string;
+  desactivee: boolean;
+}
+
+/**
+ * Options du select "Portée" selon le forfait : la portée du forfait est libellée
+ * « (inclus dans votre forfait) », les portées strictement inférieures sont grisées.
+ * Sans portée de forfait connue, toutes les options restent sélectionnables.
+ */
+export function optionsPorteeSelonForfait(
+  porteeForfait: PorteePublicite | null,
+): OptionPorteeForfait[] {
+  return OPTIONS_PORTEE.map((option) => ({
+    valeur: option.valeur,
+    libelle:
+      option.valeur === porteeForfait
+        ? `${option.libelle} (inclus dans votre forfait)`
+        : option.libelle,
+    desactivee: porteeForfait !== null && rangPortee(option.valeur) < rangPortee(porteeForfait),
+  }));
+}
 
 /** GET /publicites/mes-stats/ — deux formes possibles par campagne. */
 interface StatistiquePubliciteBase {

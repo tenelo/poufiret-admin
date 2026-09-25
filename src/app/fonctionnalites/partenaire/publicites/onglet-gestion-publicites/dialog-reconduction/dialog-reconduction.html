@@ -4,13 +4,13 @@
     <p class="sous-titre">Une nouvelle campagne en brouillon sera créée, à soumettre ensuite.</p>
 
     <label for="formule-reconduction">Formule</label>
-    <select
-      id="formule-reconduction"
-      [value]="formuleId() ?? ''"
-      (change)="selectionnerFormule($any($event.target).value)"
-    >
+    <!-- [selected] par option : le select est rendu avant ses options, un [value] sur le select
+         n'y pré-sélectionne donc pas la formule d'origine. -->
+    <select id="formule-reconduction" (change)="selectionnerFormule($any($event.target).value)">
       @for (formule of formules(); track formule.id) {
-        <option [value]="formule.id">{{ formule.nom }} — {{ formule.prix }} FCFA</option>
+        <option [value]="formule.id" [selected]="formule.id === formuleId()">
+          {{ formule.nom }} — {{ formule.prix }} FCFA
+        </option>
       }
     </select>
 
@@ -26,6 +26,19 @@
         </div>
       </div>
     }
+
+    <label for="portee-reconduction">Portée</label>
+    <select id="portee-reconduction" (change)="selectionnerPortee($any($event.target).value)">
+      @for (option of optionsPortee(); track option.valeur) {
+        <option
+          [value]="option.valeur"
+          [selected]="option.valeur === portee()"
+          [disabled]="option.desactivee"
+        >
+          {{ option.libelle }}
+        </option>
+      }
+    </select>
 
     <label>Image de couverture</label>
     @if (nouvelleImage(); as fichier) {

@@ -2,10 +2,15 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ChartConfiguration } from 'chart.js';
 
 import { EngagementClientsService } from './engagement-clients.service';
+import { ApercuClients } from './apercu-clients/apercu-clients';
+import { AnnuaireClients } from './annuaire-clients/annuaire-clients';
+import { TableauDeBordAdminService } from '../tableau-de-bord-admin/tableau-de-bord-admin.service';
 import { Graphique } from '../../../partage/graphique/graphique';
+import { formaterDateRelative as formaterDateRelativePartagee } from '../../../partage/formater-date-relative';
 import { extraireMessageErreur } from '../tableau-de-bord-admin/extraire-message-erreur';
-import { couleursGraphique, formaterNombre } from '../tableau-de-bord-admin/palette-graphiques';
+import { COULEUR_PRINCIPALE, couleursGraphique, formaterNombre } from '../tableau-de-bord-admin/palette-graphiques';
 import { EngagementClients, ProfilEngagement } from '../../../modeles/engagement-clients.model';
+import { TableauBordAdmin } from '../../../modeles/tableau-bord-admin.model';
 
 const TAILLE_PAGE = 25;
 const NB_TOP_CATEGORIES = 10;
@@ -17,19 +22,32 @@ type ColonneTri =
   | 'temps_cumule_secondes_mois'
   | 'derniere_activite';
 
+type OngletEngagement = 'apercu' | 'clients';
+
 /**
- * Écran "Engagement clients" : profils d'engagement des clients, en lecture
- * seule (GET /analytics/admin/engagement/). Filtrage/tri/pagination
- * entièrement côté client (réponse non paginée par le backend).
+ * Écran "Engagement clients", en deux onglets (lecture seule) :
+ * - "Vue d'ensemble" : statistiques de comptes clients, puis l'engagement des clients
+ *   (GET /analytics/admin/engagement/, filtrage/tri/pagination côté client, réponse non paginée) ;
+ * - "Liste des clients" : liste exhaustive des clients.
+ * Les statistiques partenaires sont dans le menu Partenaires. Engagement et dashboard se chargent
+ * indépendamment : l'échec de l'un (ex. capacité manquante) n'empêche pas d'afficher l'autre.
  */
 @Component({
   selector: 'app-engagement-clients',
-  imports: [Graphique],
+  imports: [Graphique, ApercuClients, AnnuaireClients],
   templateUrl: './engagement-clients.html',
   styleUrl: './engagement-clients.scss',
 })
 export class EngagementClientsComponent implements OnInit {
   private readonly service = inject(EngagementClientsService);
+  private readonly tableauBordService = inject(TableauDeBordAdminService);
+
+  readonly ongletActif = signal<OngletEngagement>('apercu');
+
+  // Comptes par rôle (dashboard) ; null tant que non chargé.
+  readonly tableauBord = signal<TableauBordAdmin | null>(null);
+  readonly erreurTableauBord = signal<string | null>(null);
+  readonly chargementAutres = signal(false);
 
   readonly chargementEnCours = signal(true);
   readonly erreurChargement = signal<string | null>(null);
@@ -69,7 +87,7 @@ export class EngagementClientsComponent implements OnInit {
     const inactifs = d ? d.nb_profils - d.nb_clients_actifs : 0;
     return {
       labels: ['Actifs', 'Inactifs'],
-      datasets: [{ data: [actifs, inactifs], backgroundColor: ['#1B5E20', '#e5e7eb'] }],
+      datasets: [{ data: [actifs, inactifs], backgroundColor: [COULEUR_PRINCIPALE, '#e5e7eb'] }],
     };
   });
 
@@ -141,7 +159,33 @@ export class EngagementClientsComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.chargerTout();
+  }
+
+  /** Recharge les deux sources (bouton "Rafraîchir"). */
+  chargerTout(): void {
     this.charger();
+    this.chargerAutres();
+  }
+
+  private chargerAutres(): void {
+    this.chargementAutres.set(true);
+    this.erreurTableauBord.set(null);
+
+    this.tableauBordService.charger().subscribe({
+      next: (donnees) => {
+        this.tableauBord.set(donnees);
+        this.chargementAutres.set(false);
+      },
+      error: (erreur: unknown) => {
+        this.erreurTableauBord.set(extraireMessageErreur(erreur));
+        this.chargementAutres.set(false);
+      },
+    });
+  }
+
+  changerOnglet(onglet: OngletEngagement): void {
+    this.ongletActif.set(onglet);
   }
 
   charger(): void {
@@ -217,19 +261,7 @@ export class EngagementClientsComponent implements OnInit {
     return minutes === 0 ? `${heures} h` : `${heures} h ${minutes} min`;
   }
 
-  /** Date relative simple (à l'instant / il y a N min / il y a N h / il y a N j / date), ou "—". */
   formaterDateRelative(iso: string | null): string {
-    if (!iso) {
-      return '—';
-    }
-    const diffMs = Date.now() - new Date(iso).getTime();
-    const diffMin = Math.floor(diffMs / 60000);
-    if (diffMin < 1) return "à l'instant";
-    if (diffMin < 60) return `il y a ${diffMin} min`;
-    const diffH = Math.floor(diffMin / 60);
-    if (diffH < 24) return `il y a ${diffH} h`;
-    const diffJ = Math.floor(diffH / 24);
-    if (diffJ < 7) return `il y a ${diffJ} j`;
-    return new Date(iso).toLocaleDateString('fr-FR');
+    return formaterDateRelativePartagee(iso);
   }
 }

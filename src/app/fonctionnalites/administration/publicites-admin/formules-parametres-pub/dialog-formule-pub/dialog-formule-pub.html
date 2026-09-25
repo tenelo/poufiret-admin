@@ -1,0 +1,182 @@
+<div class="voile-modale" (click)="annule.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>{{ formule() ? 'Modifier la formule « ' + formule()!.nom + ' »' : 'Nouvelle formule' }}</h2>
+
+    @if (formule() && nbActives() > 0) {
+      <p class="avertissement">
+        {{ nbActives() }} campagne(s) active(s) utilisent cette formule : les nouvelles limites
+        s'appliquent immédiatement, leurs dates de fin restent inchangées.
+      </p>
+    }
+
+    <form (submit)="$event.preventDefault(); soumettre()">
+      <!-- Général -->
+      <section>
+        <h3>Général</h3>
+
+        <label for="fp-nom">Nom</label>
+        <input id="fp-nom" type="text" [value]="nom()" (input)="nom.set($any($event.target).value)" />
+        @if (erreur('nom'); as message) {
+          <p class="erreur-champ">{{ message }}</p>
+        }
+
+        <div class="grille-champs">
+          <div>
+            <label for="fp-prix">Prix (FCFA)</label>
+            <input id="fp-prix" type="number" min="0" step="any" [value]="prix()" (input)="prix.set($any($event.target).value)" />
+            @if (erreur('prix'); as message) {
+              <p class="erreur-champ">{{ message }}</p>
+            }
+          </div>
+          <div>
+            <label for="fp-priorite">Priorité</label>
+            <input id="fp-priorite" type="number" step="1" [value]="priorite()" (input)="priorite.set($any($event.target).value)" />
+            @if (erreur('priorite'); as message) {
+              <p class="erreur-champ">{{ message }}</p>
+            }
+          </div>
+        </div>
+        <p class="aide">Une priorité plus haute passe en premier dans le carrousel, à égalité.</p>
+
+        <label class="ligne-case">
+          <input type="checkbox" [checked]="estActive()" (change)="estActive.set($any($event.target).checked)" />
+          Formule active (proposée aux partenaires)
+        </label>
+        @if (erreur('est_active'); as message) {
+          <p class="erreur-champ">{{ message }}</p>
+        }
+      </section>
+
+      <!-- Diffusion -->
+      <section>
+        <h3>Diffusion</h3>
+
+        <div class="grille-champs">
+          <div>
+            <label for="fp-duree">Durée (jours)</label>
+            <input id="fp-duree" type="number" min="1" step="1" [value]="dureeJours()" (input)="dureeJours.set($any($event.target).value)" />
+            @if (erreur('duree_jours'); as message) {
+              <p class="erreur-champ">{{ message }}</p>
+            }
+          </div>
+          <div>
+            <label for="fp-quota">Quota de campagnes actives</label>
+            <input id="fp-quota" type="number" min="1" step="1" [value]="quota()" (input)="quota.set($any($event.target).value)" />
+            @if (erreur('quota_partenaires'); as message) {
+              <p class="erreur-champ">{{ message }}</p>
+            }
+          </div>
+          <div>
+            <label for="fp-passages">Passages par jour</label>
+            <input id="fp-passages" type="number" min="1" step="1" [value]="passagesParJour()" (input)="passagesParJour.set($any($event.target).value)" />
+            @if (erreur('passages_par_jour'); as message) {
+              <p class="erreur-champ">{{ message }}</p>
+            }
+          </div>
+          <div>
+            <label for="fp-affichage">Durée d'affichage (s)</label>
+            <input id="fp-affichage" type="number" min="1" step="1" [value]="dureeAffichage()" (input)="dureeAffichage.set($any($event.target).value)" />
+            @if (erreur('duree_affichage_secondes'); as message) {
+              <p class="erreur-champ">{{ message }}</p>
+            }
+          </div>
+        </div>
+        <p class="aide">
+          Le quota est le nombre maximum de campagnes actives en même temps sur cette formule
+          (1 = exclusivité). Les passages par jour sont partagés entre les emplacements, sauf
+          quota précisé par emplacement.
+        </p>
+        @if (quotaSousActives()) {
+          <p class="avertissement">
+            Quota inférieur aux campagnes actives : aucune nouvelle activation ne sera possible
+            tant que des campagnes n'auront pas terminé.
+          </p>
+        }
+
+        <label class="ligne-case">
+          <input type="checkbox" [checked]="accesAffluence()" (change)="accesAffluence.set($any($event.target).checked)" />
+          Accès aux heures d'affluence
+        </label>
+        <p class="aide">Sans cet accès, les pubs de la formule ne sont pas diffusées pendant le créneau d'affluence.</p>
+
+        <label for="fp-cible">Cible : % de clients actifs à atteindre</label>
+        <input id="fp-cible" type="number" min="1" max="100" step="1" placeholder="Aucune garantie" [value]="cible()" (input)="cible.set($any($event.target).value)" />
+        @if (erreur('cible_pourcentage_actifs'); as message) {
+          <p class="erreur-champ">{{ message }}</p>
+        }
+        <p class="aide">
+          Vide = aucune garantie. Sinon la pub reste diffusée au-delà de sa durée jusqu'à avoir
+          atteint ce pourcentage des clients actifs.
+        </p>
+      </section>
+
+      <!-- Emplacements -->
+      <section>
+        <h3>Emplacements</h3>
+        @for (option of optionsTypes; track option.valeur) {
+          <div class="ligne-emplacement">
+            <label class="ligne-case">
+              <input type="checkbox" [checked]="typeCoche(option.valeur)" (change)="basculerType(option.valeur, $any($event.target).checked)" />
+              {{ option.libelle }}
+            </label>
+            @if (typeCoche(option.valeur)) {
+              <input
+                type="number"
+                min="0"
+                step="1"
+                class="champ-type"
+                placeholder="Passages/jour (global si vide)"
+                [attr.aria-label]="'Passages par jour pour ' + option.libelle"
+                [value]="passagesType(option.valeur)"
+                (input)="saisirPassagesType(option.valeur, $any($event.target).value)"
+              />
+            }
+          </div>
+        }
+        <p class="aide">
+          Pour chaque emplacement coché, vous pouvez fixer un nombre de passages par jour propre à
+          cet emplacement ; vide = quota global partagé. Décocher un emplacement retire son quota.
+        </p>
+        @if (erreur('types_affichage'); as message) {
+          <p class="erreur-champ">{{ message }}</p>
+        }
+        @if (erreur('passages_par_type'); as message) {
+          <p class="erreur-champ">{{ message }}</p>
+        }
+      </section>
+
+      <!-- Médias -->
+      <section>
+        <h3>Médias</h3>
+        <label for="fp-images">Nombre d'images maximum</label>
+        <input id="fp-images" type="number" min="1" step="1" [value]="nbImagesMax()" (input)="nbImagesMax.set($any($event.target).value)" />
+        @if (erreur('nb_images_max'); as message) {
+          <p class="erreur-champ">{{ message }}</p>
+        }
+
+        <label class="ligne-case">
+          <input type="checkbox" [checked]="videoAutorisee()" (change)="videoAutorisee.set($any($event.target).checked)" />
+          Vidéo autorisée
+        </label>
+        @if (videoAutorisee()) {
+          <label for="fp-video">Durée vidéo maximale (s)</label>
+          <input id="fp-video" type="number" min="1" step="1" [value]="dureeVideoMax()" (input)="dureeVideoMax.set($any($event.target).value)" />
+          @if (erreur('duree_video_max_secondes'); as message) {
+            <p class="erreur-champ">{{ message }}</p>
+          }
+        }
+      </section>
+
+      @if (erreurs()?.general; as message) {
+        <p class="erreur-generale">{{ message }}</p>
+      }
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annule.emit()">Annuler</button>
+        <button type="submit" class="bouton-principal" [disabled]="enregistrementEnCours()">
+          {{ enregistrementEnCours() ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

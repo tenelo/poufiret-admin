@@ -3,7 +3,11 @@ import { ChartConfiguration } from 'chart.js';
 
 import { Graphique } from '../../../../../partage/graphique/graphique';
 import { VueCommandesPartenaire } from '../../../../../modeles/tableau-de-bord-partenaire.model';
-import { couleursGraphique } from '../../palette-graphiques';
+import {
+  COULEUR_PRINCIPALE,
+  COULEUR_PRINCIPALE_TRANSPARENTE,
+  couleursGraphique,
+} from '../../palette-graphiques';
 import { formaterFcfa } from '../../formatage';
 
 /** Onglet "Commandes" : répartition par statut, CA par mois, KPIs. */
@@ -38,8 +42,8 @@ export class OngletCommandes {
         {
           label: 'CA (FCFA)',
           data: points.map((p) => p.valeur),
-          borderColor: '#1B5E20',
-          backgroundColor: 'rgba(27, 94, 32, 0.15)',
+          borderColor: COULEUR_PRINCIPALE,
+          backgroundColor: COULEUR_PRINCIPALE_TRANSPARENTE,
           fill: true,
           tension: 0.3,
         },

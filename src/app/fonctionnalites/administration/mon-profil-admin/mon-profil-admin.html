@@ -12,10 +12,12 @@
       </p>
       <div class="grille-capacites">
         @for (entree of entreesCapacites(); track entree.cle) {
-          <span class="chip-capacite" [class.chip-actif]="entree.valeur">
-            <span class="icone-chip">{{ entree.valeur ? '✔' : '✖' }}</span>
+          <span class="chip-capacite chip-actif">
+            <span class="icone-chip">✔</span>
             {{ entree.libelle }}
           </span>
+        } @empty {
+          <p class="note-droits">Aucun droit ne vous a été accordé pour le moment.</p>
         }
       </div>
     </section>

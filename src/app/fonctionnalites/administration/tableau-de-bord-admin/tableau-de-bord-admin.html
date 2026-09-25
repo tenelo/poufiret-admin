@@ -22,35 +22,31 @@
       <button type="button" (click)="charger()">Réessayer</button>
     </div>
   } @else if (donnees(); as d) {
-    <!-- En temps réel -->
-    <section class="bloc">
-      <h2>En temps réel</h2>
-      <div class="grille-mixte">
+    <!-- Deux grands encadrés côte à côte : En temps réel | Comptes (KPI puis répartition par rôle) -->
+    <section class="duos">
+      <div class="panneau">
+        <h2>En temps réel</h2>
         <div class="carte-kpi carte-kpi-large">
           <span class="icone">🟢</span>
           <span class="valeur">{{ formaterNombre(d.en_ligne.total) }}</span>
           <span class="libelle">En ligne maintenant</span>
         </div>
-        <div class="carte-graphique">
-          <h3>Répartition par rôle</h3>
-          <app-graphique type="doughnut" [data]="donneesEnLigneParRole()" [options]="optionsDonut" />
-        </div>
+        <app-repartition-barres
+          titre="Répartition par rôle"
+          messageVide="Personne n'est en ligne pour le moment."
+          [entrees]="entreesEnLigne()"
+        />
       </div>
-    </section>
 
-    <!-- Comptes -->
-    <section class="bloc">
-      <h2>Comptes</h2>
-      <div class="grille-mixte">
-        <div class="colonne">
-          <div class="carte-kpi carte-kpi-large">
-            <span class="icone">👥</span>
-            <span class="valeur">{{ formaterNombre(d.comptes.total) }}</span>
-            <span class="libelle">Comptes au total</span>
-          </div>
+      <div class="panneau">
+        <h2>Comptes</h2>
+        <div class="carte-kpi carte-kpi-large">
+          <span class="icone">👥</span>
+          <span class="valeur">{{ formaterNombre(d.comptes.total) }}</span>
+          <span class="libelle">Comptes au total</span>
 
-          <div class="carte-statuts">
-            <h3>Comptes par statut</h3>
+          <div class="statuts-integres">
+            <h3>Par statut</h3>
             <div class="ligne-statut">
               <span class="pastille pastille-actifs"></span>
               <span class="libelle-statut">Actifs</span>
@@ -73,11 +69,7 @@
             </div>
           </div>
         </div>
-
-        <div class="carte-graphique">
-          <h3>Répartition par rôle</h3>
-          <app-graphique type="doughnut" [data]="donneesComptesParRole()" [options]="optionsDonut" />
-        </div>
+        <app-repartition-barres titre="Répartition par rôle" [entrees]="entreesComptes()" />
       </div>
     </section>
 
@@ -120,6 +112,12 @@
       </div>
     </section>
 
+    <!-- Publicités : occupation des quotas par formule -->
+    <section class="bloc">
+      <h2>Publicités</h2>
+      <app-quotas-formules />
+    </section>
+
     <!-- Appareils -->
     <section class="bloc">
       <h2>Appareils</h2>
@@ -137,10 +135,11 @@
           </div>
         </div>
 
-        <div class="carte-graphique">
-          <h3>Répartition par plateforme</h3>
-          <app-graphique type="doughnut" [data]="donneesPlateformes()" [options]="optionsDonut" />
-        </div>
+        <app-repartition-barres
+          titre="Répartition par plateforme"
+          messageVide="Aucune session active pour le moment."
+          [entrees]="entreesPlateformes()"
+        />
       </div>
     </section>
   }

@@ -1,18 +1,29 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChartConfiguration } from 'chart.js';
+import { Subscription } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 
 import { PublicitesAdminService } from './publicites-admin.service';
 import { PermissionsService } from '../../../noyau/permissions/permissions.service';
 import { Graphique } from '../../../partage/graphique/graphique';
+import { QuotasFormules } from '../quotas-formules/quotas-formules';
+import { BarreFiltresPublicitesAdmin } from './filtres-publicites-admin/filtres-publicites-admin';
 import { extraireMessageErreur } from '../tableau-de-bord-admin/extraire-message-erreur';
 import { couleursGraphique, formaterNombre } from '../tableau-de-bord-admin/palette-graphiques';
+import { LIBELLES_PORTEE } from '../../../modeles/publicite.model';
 import {
   ActionTransitionPubliciteAdmin,
+  ONGLETS_STATUT_PUBLICITE_ADMIN,
+  OngletStatutPubliciteAdmin,
+  CompteursStatutPubliciteAdmin,
+  FILTRES_PUBLICITES_ADMIN_DEFAUT,
+  FiltresPublicitesAdmin,
   LIBELLES_STATUT_PUBLICITE_ADMIN,
   OPTIONS_EXPORT_PUBLICITES,
   PubliciteAdmin,
+  QuotaFormule,
   StatsPublicitesAdmin,
   StatutPubliciteAdmin,
   TRANSITIONS_ADMIN_PUBLICITE,
@@ -31,20 +42,35 @@ interface ActionEnAttenteConfirmation {
  */
 @Component({
   selector: 'app-publicites-admin',
-  imports: [Graphique, DatePipe],
+  imports: [Graphique, DatePipe, QuotasFormules, BarreFiltresPublicitesAdmin],
   templateUrl: './publicites-admin.html',
   styleUrl: './publicites-admin.scss',
 })
-export class PublicitesAdmin implements OnInit {
+export class PublicitesAdmin implements OnInit, OnDestroy {
   private readonly service = inject(PublicitesAdminService);
   private readonly permissionsService = inject(PermissionsService);
+  private readonly route = inject(ActivatedRoute);
 
   readonly chargementEnCours = signal(true);
   readonly erreurChargement = signal<string | null>(null);
   readonly donnees = signal<StatsPublicitesAdmin | null>(null);
 
+  // Onglet (statut) + filtres, envoyés à l'API. Défaut : "En attente de validation".
+  private readonly filtres = signal<FiltresPublicitesAdmin>(FILTRES_PUBLICITES_ADMIN_DEFAUT);
+  // Les compteurs ignorent le filtre de statut : on garde les derniers reçus pour les onglets.
+  readonly compteurs = signal<CompteursStatutPubliciteAdmin | null>(null);
+  readonly formulesQuotas = signal<QuotaFormule[]>([]);
+  private readonly quotas = viewChild(QuotasFormules);
+  private abonnementChargement?: Subscription;
+  private abonnementRoute?: Subscription;
+
+  // Arrivée depuis une notification : onglet de statut imposé et campagne à mettre en évidence.
+  readonly statutImpose = signal<{ statut: OngletStatutPubliciteAdmin } | null>(null);
+  readonly pubMiseEnEvidence = signal<string | null>(null);
+
   readonly formaterNombre = formaterNombre;
   readonly libellesStatut = LIBELLES_STATUT_PUBLICITE_ADMIN;
+  readonly libellesPortee = LIBELLES_PORTEE;
   readonly optionsExport = OPTIONS_EXPORT_PUBLICITES;
 
   readonly menuExportOuvert = signal(false);
@@ -90,23 +116,76 @@ export class PublicitesAdmin implements OnInit {
   });
 
   ngOnInit(): void {
-    this.charger();
+    // Paramètres de route optionnels : ?statut=<onglet>&pub=<uuid> (ex. depuis la cloche admin).
+    // L'émission initiale déclenche le premier chargement ; les suivantes couvrent une navigation
+    // vers la même page avec d'autres paramètres.
+    this.abonnementRoute = this.route.queryParamMap.subscribe((params) => {
+      const statut = params.get('statut');
+      const onglet = ONGLETS_STATUT_PUBLICITE_ADMIN.find((o) => o.valeur === statut)?.valeur ?? null;
+      if (onglet) {
+        this.statutImpose.set({ statut: onglet });
+        this.filtres.update((f) => ({ ...f, statut: onglet }));
+      }
+      this.pubMiseEnEvidence.set(params.get('pub'));
+      this.charger();
+    });
   }
 
-  charger(): void {
-    this.chargementEnCours.set(true);
+  ngOnDestroy(): void {
+    this.abonnementChargement?.unsubscribe();
+    this.abonnementRoute?.unsubscribe();
+  }
+
+  /** `silencieux` : recharge la liste sans remplacer l'affichage par le spinner. */
+  charger(silencieux = false): void {
+    if (!silencieux) {
+      this.chargementEnCours.set(true);
+    }
     this.erreurChargement.set(null);
 
-    this.service.chargerStats().subscribe({
+    // Une réponse plus ancienne ne doit pas écraser celle d'un filtre plus récent.
+    this.abonnementChargement?.unsubscribe();
+    this.abonnementChargement = this.service.chargerStats(this.filtres()).subscribe({
       next: (donnees) => {
         this.chargementEnCours.set(false);
         this.donnees.set(donnees);
+        if (donnees.compteurs_statut) {
+          this.compteurs.set(donnees.compteurs_statut);
+        }
+        this.faireDefilerVersPubMiseEnEvidence();
       },
       error: (erreur: unknown) => {
         this.chargementEnCours.set(false);
         this.erreurChargement.set(extraireMessageErreur(erreur));
       },
     });
+  }
+
+  /** Amène la campagne mise en évidence dans la vue, une fois la liste affichée. */
+  private faireDefilerVersPubMiseEnEvidence(): void {
+    const id = this.pubMiseEnEvidence();
+    if (!id) {
+      return;
+    }
+    setTimeout(() => {
+      document.getElementById('pub-' + id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+
+  surFiltres(filtres: FiltresPublicitesAdmin): void {
+    this.filtres.set(filtres);
+    this.charger();
+  }
+
+  rafraichir(): void {
+    this.charger();
+    this.quotas()?.charger();
+  }
+
+  /** Portée effective de la campagne (à défaut, la portée choisie), libellée. */
+  libellePortee(publicite: PubliciteAdmin): string | null {
+    const portee = publicite.portee_effective ?? publicite.portee;
+    return portee ? this.libellesPortee[portee] : null;
   }
 
   actionsDisponibles(publicite: PubliciteAdmin): ActionTransitionPubliciteAdmin[] {
@@ -192,7 +271,9 @@ export class PublicitesAdmin implements OnInit {
     this.service.appliquerTransition(publicite.id, action.cible).subscribe({
       next: (reponse) => {
         this.transitionEnCoursId.set(null);
-        this.mettreAJourStatut(publicite.id, reponse.statut as StatutPubliciteAdmin);
+        // La pub change d'onglet et libère/occupe une place : on recharge la liste et les quotas.
+        this.charger(true);
+        this.quotas()?.charger();
         this.messageSucces.set(
           reponse.message || `« ${action.libelle} » appliqué avec succès à « ${publicite.titre} ».`,
         );
@@ -201,18 +282,6 @@ export class PublicitesAdmin implements OnInit {
         this.transitionEnCoursId.set(null);
         this.messageErreur.set(this.extraireMessageErreurTransition(erreur));
       },
-    });
-  }
-
-  private mettreAJourStatut(id: string, statut: StatutPubliciteAdmin): void {
-    this.donnees.update((d) => {
-      if (!d) {
-        return d;
-      }
-      return {
-        ...d,
-        publicites: d.publicites.map((p) => (p.id === id ? { ...p, statut } : p)),
-      };
     });
   }
 
