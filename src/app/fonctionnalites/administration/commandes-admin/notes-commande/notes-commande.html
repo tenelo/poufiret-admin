@@ -1,0 +1,23 @@
+<p class="aide">Visibles uniquement par l'administration.</p>
+
+@for (note of notes(); track note.id) {
+  <div class="note">
+    <p>{{ note.texte }}</p>
+    <span class="meta">{{ note.auteur_nom }} · {{ formaterDateHeure(note.cree_le) }}</span>
+  </div>
+} @empty {
+  <p class="vide">Aucune note.</p>
+}
+
+<textarea
+  rows="2"
+  placeholder="Ajouter une note interne…"
+  [value]="texte()"
+  (input)="texte.set($any($event.target).value)"
+></textarea>
+@if (erreur()) {
+  <p class="erreur-champ">{{ erreur() }}</p>
+}
+<button type="button" class="bouton-secondaire" [disabled]="enCours() || !texte().trim()" (click)="ajouter()">
+  {{ enCours() ? 'Ajout…' : 'Ajouter la note' }}
+</button>

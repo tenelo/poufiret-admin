@@ -1,4 +1,4 @@
-@if (peutGererFormules()) {
+@if (barreVisible()) {
   <div class="zone-onglets">
     <nav class="barre-onglets" aria-label="Sections">
       <button
@@ -9,24 +9,45 @@
       >
         Campagnes
       </button>
-      <button
-        type="button"
-        class="onglet"
-        [class.onglet-actif]="ongletActif() === 'formules'"
-        (click)="changerOnglet('formules')"
-      >
-        Formules &amp; paramètres
-      </button>
+      @if (peutVoirStatistiques()) {
+        <button
+          type="button"
+          class="onglet"
+          [class.onglet-actif]="ongletActif() === 'statistiques'"
+          (click)="changerOnglet('statistiques')"
+        >
+          Statistiques
+        </button>
+      }
+      @if (peutGererFormules()) {
+        <button
+          type="button"
+          class="onglet"
+          [class.onglet-actif]="ongletActif() === 'formules'"
+          (click)="changerOnglet('formules')"
+        >
+          Formules &amp; paramètres
+        </button>
+      }
     </nav>
   </div>
 
-  @if (ongletActif() === 'formules') {
-    <div class="zone-formules">
-      <h1>Formules &amp; paramètres</h1>
-      <app-formules-parametres-pub />
-    </div>
-  } @else {
-    <app-publicites-admin />
+  @switch (ongletActif()) {
+    @case ('statistiques') {
+      <div class="zone-formules">
+        <h1>Statistiques</h1>
+        <app-statistiques-pub />
+      </div>
+    }
+    @case ('formules') {
+      <div class="zone-formules">
+        <h1>Formules &amp; paramètres</h1>
+        <app-formules-parametres-pub />
+      </div>
+    }
+    @default {
+      <app-publicites-admin />
+    }
   }
 } @else {
   <app-publicites-admin />

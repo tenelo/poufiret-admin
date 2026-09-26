@@ -1,0 +1,81 @@
+<section class="page-commandes-admin">
+  <div class="entete">
+    <h1>Commandes</h1>
+    <div class="actions-entete">
+      <button
+        type="button"
+        class="bouton-secondaire"
+        [disabled]="chargementListe()"
+        (click)="rafraichir()"
+      >
+        ↻ Rafraîchir
+      </button>
+      <button type="button" class="bouton-principal" [disabled]="exportEnCours()" (click)="exporter()">
+        {{ exportEnCours() ? 'Export en cours…' : '⭳ Exporter CSV' }}
+      </button>
+    </div>
+  </div>
+
+  @if (erreurExport()) {
+    <p class="erreur-generale">{{ erreurExport() }}</p>
+  }
+
+  @if (!pret()) {
+    <p class="etat">Chargement du centre des commandes…</p>
+  } @else {
+    <nav class="barre-onglets" aria-label="Sections">
+      @for (item of onglets; track item.valeur) {
+        <button
+          type="button"
+          class="onglet"
+          [class.onglet-actif]="onglet() === item.valeur"
+          (click)="changerOnglet(item.valeur)"
+        >
+          {{ item.libelle }}
+          @if (compteur(item.valeur) !== null) {
+            <span class="compteur" [class.compteur-a-traiter]="item.valeur === 'a_traiter' && compteur(item.valeur)! > 0">
+              {{ compteur(item.valeur) }}
+            </span>
+          }
+        </button>
+      }
+    </nav>
+
+    <app-filtres-commandes
+      [filtres]="filtres()"
+      [meta]="meta()"
+      [groupe]="groupeCourant()"
+      [modeStats]="onglet() === 'tableau'"
+      (filtresChange)="surFiltres($event)"
+    />
+
+    @if (onglet() === 'tableau') {
+      <app-tableau-de-bord-commandes [filtres]="filtres()" (filtrer)="surFiltreGraphique($event)" />
+    } @else {
+      @if (onglet() === 'a_traiter') {
+        <p class="note">Les plus anciennes en premier · actualisation automatique toutes les 30 s.</p>
+      }
+      <app-liste-commandes
+        [commandes]="commandes()"
+        [chargementEnCours]="chargementListe()"
+        [erreur]="erreurListe()"
+        [total]="total()"
+        [page]="page()"
+        [taillePage]="taillePage"
+        [commandeOuverteId]="commandeOuverteId()"
+        (ouvrir)="ouvrirDetail($event)"
+        (pageChange)="changerPage($event)"
+        (reessayer)="chargerListe()"
+      />
+    }
+  }
+</section>
+
+@if (commandeOuverteId(); as id) {
+  <app-detail-commande-admin
+    [commandeId]="id"
+    [meta]="meta()"
+    (ferme)="fermerDetail()"
+    (modifiee)="surDetailModifie()"
+  />
+}

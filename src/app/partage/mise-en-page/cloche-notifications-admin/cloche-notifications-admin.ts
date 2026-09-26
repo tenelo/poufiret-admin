@@ -30,7 +30,7 @@ const NB_NOTIFICATIONS_AFFICHEES = 10;
 
 /**
  * Cloche de notifications de l'en-tête admin / super-admin : campagnes de publicité soumises ou à
- * valider. Compteur interrogé toutes les 30 s (en pause quand l'onglet du navigateur est masqué),
+ * valider, commandes nouvelles ou annulées par le client. Compteur interrogé toutes les 30 s (en pause quand l'onglet du navigateur est masqué),
  * son et animation quand il augmente, panneau des 10 dernières notifications. Même moteur de
  * détection (DetecteurCompteur) et même son que la cloche partenaire.
  */
@@ -144,6 +144,21 @@ export class ClocheNotificationsAdmin implements OnInit {
     }
 
     this.fermerPanneau();
+    this.naviguerVers(notification);
+  }
+
+  /**
+   * Commandes (commande_nouvelle, commande_annulee_client) : centre des commandes, détail ouvert
+   * via ?commande=<id>. Campagnes de pub : page Publicités > Campagnes, onglet de statut
+   * correspondant, campagne mise en évidence.
+   */
+  private naviguerVers(notification: NotificationAdmin): void {
+    if (notification.type === 'commande_nouvelle' || notification.type === 'commande_annulee_client') {
+      this.router.navigate(['/administration/commandes'], {
+        queryParams: { commande: notification.commande_id ?? undefined },
+      });
+      return;
+    }
     this.router.navigate(['/administration/publicites'], {
       queryParams: {
         statut: STATUT_CAMPAGNE_PAR_TYPE[notification.type],

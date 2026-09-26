@@ -1,0 +1,27 @@
+@if (partenaire(); as choisi) {
+  <span class="puce-partenaire">
+    {{ choisi.nom }}
+    <button type="button" aria-label="Retirer le partenaire" (click)="retirer()">×</button>
+  </span>
+} @else {
+  <input
+    [id]="idChamp()"
+    type="search"
+    autocomplete="off"
+    placeholder="Rechercher un partenaire…"
+    [value]="texte()"
+    (input)="saisir($any($event.target).value)"
+  />
+  @if (suggestions().length > 0) {
+    <ul class="suggestions">
+      @for (suggestion of suggestions(); track suggestion.id) {
+        <li>
+          <button type="button" (click)="choisir(suggestion)">
+            {{ suggestion.nom_commerce }}
+            <span class="detail-suggestion">{{ suggestion.type_partenaire_libelle }}</span>
+          </button>
+        </li>
+      }
+    </ul>
+  }
+}

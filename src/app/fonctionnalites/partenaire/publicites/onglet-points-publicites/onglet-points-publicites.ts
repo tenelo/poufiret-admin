@@ -1,9 +1,14 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { StatsPublicite } from '../../../../partage/stats-publicite/stats-publicite';
 
 import { OngletPointsPublicitesService } from './onglet-points-publicites.service';
 import { extraireMessageErreur } from '../../mes-produits/extraire-message-erreur';
-import { StatistiquePublicite, estStatistiqueDetaillee } from '../../../../modeles/publicite.model';
+import {
+  StatistiquePublicite,
+  StatistiquePubliciteDetaillee,
+  estStatistiqueDetaillee,
+  libelleStatutPublicite,
+} from '../../../../modeles/publicite.model';
 
 /**
  * Onglet "Points des Publicités" : statistiques des campagnes du partenaire
@@ -12,7 +17,7 @@ import { StatistiquePublicite, estStatistiqueDetaillee } from '../../../../model
  */
 @Component({
   selector: 'app-onglet-points-publicites',
-  imports: [DatePipe],
+  imports: [StatsPublicite],
   templateUrl: './onglet-points-publicites.html',
   styleUrl: './onglet-points-publicites.scss',
 })
@@ -31,7 +36,21 @@ export class OngletPointsPublicites implements OnInit {
   readonly suppressionEnCours = signal(false);
   readonly erreurSuppression = signal<string | null>(null);
 
-  readonly estDetaillee = estStatistiqueDetaillee;
+  readonly libelleStatut = libelleStatutPublicite;
+
+  /**
+   * Stats réelles affichées seulement si le backend les a fournies ET si elles sont visibles
+   * (stats_visibles : campagne active ou terminée, non masquée par l'admin). Absent = ancien
+   * comportement (fondé sur la forme de la réponse).
+   */
+  estDetaillee(pub: StatistiquePublicite): pub is StatistiquePubliciteDetaillee {
+    return estStatistiqueDetaillee(pub) && pub.stats_visibles !== false;
+  }
+
+  /** Message quand les stats ne sont pas visibles : celui du backend, sinon un message par défaut. */
+  messageStats(pub: StatistiquePublicite): string {
+    return 'message' in pub && pub.message ? pub.message : 'Statistiques bientôt disponibles.';
+  }
 
   ngOnInit(): void {
     this.charger();
@@ -51,16 +70,6 @@ export class OngletPointsPublicites implements OnInit {
         this.erreurChargement.set(extraireMessageErreur(erreur));
       },
     });
-  }
-
-  /** Entrées {type, valeur} d'une répartition d'impressions par emplacement, pour les mini-barres. */
-  entreesImpressionsParType(impressions: Record<string, number>): { type: string; valeur: number }[] {
-    return Object.entries(impressions).map(([type, valeur]) => ({ type, valeur }));
-  }
-
-  pourcentageBarre(valeur: number, impressions: Record<string, number>): number {
-    const maxValeur = Math.max(1, ...Object.values(impressions));
-    return Math.round((valeur / maxValeur) * 100);
   }
 
   // ---- Masquage (retrait des listes) ----

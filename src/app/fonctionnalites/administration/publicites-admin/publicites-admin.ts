@@ -1,5 +1,4 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal, viewChild } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChartConfiguration } from 'chart.js';
 import { Subscription } from 'rxjs';
@@ -9,6 +8,8 @@ import { PublicitesAdminService } from './publicites-admin.service';
 import { PermissionsService } from '../../../noyau/permissions/permissions.service';
 import { Graphique } from '../../../partage/graphique/graphique';
 import { QuotasFormules } from '../quotas-formules/quotas-formules';
+import { StatsPublicite } from '../../../partage/stats-publicite/stats-publicite';
+import { InterrupteurStatsVisibles } from './interrupteur-stats-visibles/interrupteur-stats-visibles';
 import { BarreFiltresPublicitesAdmin } from './filtres-publicites-admin/filtres-publicites-admin';
 import { extraireMessageErreur } from '../tableau-de-bord-admin/extraire-message-erreur';
 import { couleursGraphique, formaterNombre } from '../tableau-de-bord-admin/palette-graphiques';
@@ -42,7 +43,7 @@ interface ActionEnAttenteConfirmation {
  */
 @Component({
   selector: 'app-publicites-admin',
-  imports: [Graphique, DatePipe, QuotasFormules, BarreFiltresPublicitesAdmin],
+  imports: [Graphique, QuotasFormules, BarreFiltresPublicitesAdmin, InterrupteurStatsVisibles, StatsPublicite],
   templateUrl: './publicites-admin.html',
   styleUrl: './publicites-admin.scss',
 })
@@ -81,6 +82,10 @@ export class PublicitesAdmin implements OnInit, OnDestroy {
   readonly messageErreur = signal<string | null>(null);
   readonly messageSucces = signal<string | null>(null);
   readonly actionAConfirmer = signal<ActionEnAttenteConfirmation | null>(null);
+
+  // ---- Interrupteur « Stats visibles par le partenaire » ----
+  readonly statsAConfirmer = signal<{ publicite: PubliciteAdmin; visible: boolean } | null>(null);
+  readonly statsEnCoursId = signal<string | null>(null);
 
   // ---- Visuel (image/vidéo) de la campagne, agrandi dans une lightbox maison ----
   readonly mediaAgrandi = signal<PubliciteAdmin | null>(null);
@@ -188,6 +193,65 @@ export class PublicitesAdmin implements OnInit, OnDestroy {
     return portee ? this.libellesPortee[portee] : null;
   }
 
+  // ---- Stats visibles par le partenaire (campagnes actives ou terminées) ----
+
+  peutBasculerStats(publicite: PubliciteAdmin): boolean {
+    return publicite.statut === 'active' || publicite.statut === 'terminee';
+  }
+
+  /** Absent (ancien backend) = visibles, comme le comportement historique. */
+  statsVisibles(publicite: PubliciteAdmin): boolean {
+    return publicite.stats_visibles_partenaire ?? true;
+  }
+
+  demanderBasculeStats(publicite: PubliciteAdmin, visible: boolean): void {
+    this.messageErreur.set(null);
+    this.statsAConfirmer.set({ publicite, visible });
+  }
+
+  annulerBasculeStats(): void {
+    this.statsAConfirmer.set(null);
+  }
+
+  confirmerBasculeStats(): void {
+    const attente = this.statsAConfirmer();
+    if (!attente) {
+      return;
+    }
+    this.statsAConfirmer.set(null);
+
+    const { publicite, visible } = attente;
+    this.statsEnCoursId.set(publicite.id);
+    this.messageErreur.set(null);
+    this.messageSucces.set(null);
+
+    this.service.basculerStatsVisibles(publicite.id, visible).subscribe({
+      next: () => {
+        this.statsEnCoursId.set(null);
+        this.donnees.update((d) =>
+          d
+            ? {
+                ...d,
+                publicites: d.publicites.map((p) =>
+                  p.id === publicite.id ? { ...p, stats_visibles_partenaire: visible } : p,
+                ),
+              }
+            : d,
+        );
+        this.messageSucces.set(
+          visible
+            ? `Les stats de « ${publicite.titre} » sont maintenant visibles par le partenaire.`
+            : `Les stats de « ${publicite.titre} » sont maintenant masquées au partenaire.`,
+        );
+      },
+      // Message du backend tel quel (403, 404...).
+      error: (erreur: unknown) => {
+        this.statsEnCoursId.set(null);
+        this.messageErreur.set(extraireMessageErreur(erreur));
+      },
+    });
+  }
+
   actionsDisponibles(publicite: PubliciteAdmin): ActionTransitionPubliciteAdmin[] {
     return TRANSITIONS_ADMIN_PUBLICITE[publicite.statut];
   }
@@ -215,15 +279,6 @@ export class PublicitesAdmin implements OnInit, OnDestroy {
 
   fermerMedia(): void {
     this.mediaAgrandi.set(null);
-  }
-
-  entreesImpressionsParType(impressions: Record<string, number> | undefined): { type: string; valeur: number }[] {
-    return Object.entries(impressions ?? {}).map(([type, valeur]) => ({ type, valeur }));
-  }
-
-  pourcentageBarre(valeur: number, impressions: Record<string, number> | undefined): number {
-    const maxValeur = Math.max(1, ...Object.values(impressions ?? {}));
-    return Math.round((valeur / maxValeur) * 100);
   }
 
   basculerMenuExport(): void {

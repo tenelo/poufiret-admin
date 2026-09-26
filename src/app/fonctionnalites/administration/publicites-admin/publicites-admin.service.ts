@@ -12,6 +12,11 @@ import {
   StatsPublicitesAdmin,
   TypeExportPublicites,
 } from '../../../modeles/publicites-admin.model';
+import {
+  FiltresStatsPub,
+  StatistiquesPubAdmin,
+  bornesPeriodeStatsPub,
+} from '../../../modeles/statistiques-pub-admin.model';
 import { declencherTelechargementFichier, nomFichierHorodate } from '../telecharger-fichier';
 
 /** Service admin des publicités : stats globales, export CSV, transitions de statut. */
@@ -34,6 +39,20 @@ export class PublicitesAdminService {
     });
   }
 
+  /** GET /publicites/admin/statistiques/ : tableau de bord statistique (défaut backend : 30 jours). */
+  chargerStatistiques(filtres: FiltresStatsPub): Observable<StatistiquesPubAdmin> {
+    let params = new HttpParams();
+    const { du, au } = bornesPeriodeStatsPub(filtres);
+    if (du) params = params.set('du', du);
+    if (au) params = params.set('au', au);
+    if (filtres.formule) params = params.set('formule', filtres.formule);
+    if (filtres.partenaire) params = params.set('partenaire', filtres.partenaire.id);
+    if (filtres.portee) params = params.set('portee', filtres.portee);
+    return this.http.get<StatistiquesPubAdmin>(`${this.configuration.apiUrl}/publicites/admin/statistiques/`, {
+      params,
+    });
+  }
+
   /** GET /publicites/admin/formules/ : quotas et occupation de chaque formule. */
   chargerQuotasFormules(): Observable<QuotaFormule[]> {
     return this.http
@@ -52,6 +71,11 @@ export class PublicitesAdminService {
         ),
         map(() => undefined),
       );
+  }
+
+  /** POST /publicites/admin/<id>/stats-visibles/ {visible} : montre ou masque les stats au partenaire. */
+  basculerStatsVisibles(id: string, visible: boolean): Observable<unknown> {
+    return this.http.post(`${this.configuration.apiUrl}/publicites/admin/${id}/stats-visibles/`, { visible });
   }
 
   /** POST /publicites/<id>/transition/<action>/ */

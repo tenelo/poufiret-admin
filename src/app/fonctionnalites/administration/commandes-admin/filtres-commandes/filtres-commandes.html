@@ -1,0 +1,83 @@
+<div class="filtres">
+  <div class="champ">
+    <label for="fc-periode">Période</label>
+    <select id="fc-periode" (change)="changerPeriode($any($event.target).value)">
+      <option value="" [selected]="filtres().periode === ''">{{ libellePeriodeVide() }}</option>
+      <option value="aujourdhui" [selected]="filtres().periode === 'aujourdhui'">Aujourd'hui</option>
+      <option value="7j" [selected]="filtres().periode === '7j'">7 derniers jours</option>
+      @if (!modeStats()) {
+        <option value="30j" [selected]="filtres().periode === '30j'">30 derniers jours</option>
+      }
+      <option value="perso" [selected]="filtres().periode === 'perso'">Personnalisée</option>
+    </select>
+  </div>
+
+  @if (filtres().periode === 'perso') {
+    <div class="champ champ-date">
+      <label for="fc-du">Du</label>
+      <input id="fc-du" type="date" [value]="filtres().du" (change)="changerDu($any($event.target).value)" />
+    </div>
+    <div class="champ champ-date">
+      <label for="fc-au">Au</label>
+      <input id="fc-au" type="date" [value]="filtres().au" (change)="changerAu($any($event.target).value)" />
+    </div>
+  }
+
+  @if (!modeStats()) {
+    <div class="champ champ-large">
+      <label for="fc-recherche">Recherche</label>
+      <input
+        id="fc-recherche"
+        type="search"
+        placeholder="Référence, client, partenaire…"
+        [value]="filtres().recherche"
+        (input)="saisirRecherche($any($event.target).value)"
+      />
+    </div>
+  }
+
+  <div class="champ champ-partenaire">
+    <label for="fc-partenaire">Partenaire</label>
+    <app-selecteur-partenaire
+      idChamp="fc-partenaire"
+      [partenaire]="filtres().partenaire"
+      (partenaireChange)="changerPartenaire($event)"
+    />
+  </div>
+
+  <div class="champ">
+    <label for="fc-departement">Département</label>
+    <select id="fc-departement" (change)="changerDepartement($any($event.target).value)">
+      <option value="" [selected]="filtres().departement === ''">Tous</option>
+      @for (departement of departements(); track departement.id) {
+        <option [value]="departement.id" [selected]="departement.id === filtres().departement">
+          {{ departement.nom }}
+        </option>
+      }
+    </select>
+  </div>
+
+  @if (!modeStats()) {
+    <div class="champ">
+      <label for="fc-mode">Mode de livraison</label>
+      <select id="fc-mode" (change)="changerMode($any($event.target).value)">
+        <option value="" [selected]="filtres().mode === ''">Tous</option>
+        @for (mode of meta()?.modes_livraison ?? []; track mode.valeur) {
+          <option [value]="mode.valeur" [selected]="mode.valeur === filtres().mode">{{ mode.libelle }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="champ">
+      <label for="fc-statut">Statut</label>
+      <select id="fc-statut" (change)="changerStatut($any($event.target).value)">
+        <option value="" [selected]="filtres().statut === ''">Tous</option>
+        @for (statut of optionsStatut(); track statut.valeur) {
+          <option [value]="statut.valeur" [selected]="statut.valeur === filtres().statut">
+            {{ statut.libelle }}
+          </option>
+        }
+      </select>
+    </div>
+  }
+</div>

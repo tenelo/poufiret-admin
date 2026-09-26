@@ -1,7 +1,7 @@
 import { Component, OnDestroy, effect, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 
-import { LIBELLES_STATUT_PUBLICITE, MaPublicite } from '../../../../../modeles/publicite.model';
+import { MaPublicite, libelleStatutPublicite } from '../../../../../modeles/publicite.model';
 
 // Taille max acceptée côté client pour une image de campagne.
 const TAILLE_MAX_IMAGE_OCTETS = 5 * 1024 * 1024;
@@ -28,7 +28,7 @@ export class DialogDetailPublicite implements OnDestroy {
   readonly imageModifiee = output<File>();
   readonly supprimer = output<void>();
 
-  readonly libellesStatut = LIBELLES_STATUT_PUBLICITE;
+  readonly libelleStatut = libelleStatutPublicite;
 
   readonly nouvelleImage = signal<File | null>(null);
   readonly apercuNouvelleImage = signal<string | null>(null);

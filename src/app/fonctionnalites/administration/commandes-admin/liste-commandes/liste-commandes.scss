@@ -1,0 +1,212 @@
+.etat {
+  margin: 0;
+  padding: 2rem 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.etat-erreur {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+
+  p {
+    margin: 0;
+  }
+
+  button {
+    padding: 0.35rem 0.8rem;
+    background: #ffffff;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #b91c1c;
+    cursor: pointer;
+  }
+}
+
+.total {
+  margin: 0 0 0.6rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.fort {
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+// Statut : badge coloré selon le groupe (a_traiter, en_cours, terminees, annulees).
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-a_traiter {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.badge-en_cours {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.badge-terminees {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.badge-annulees {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.age {
+  white-space: nowrap;
+}
+
+.age-orange {
+  color: #c2410c;
+  font-weight: 700;
+}
+
+.age-rouge {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.ligne-ouverte {
+  background: #eef2ff;
+}
+
+// Grand écran : tableau défilant ; mobile : cartes.
+.conteneur-tableau {
+  overflow-x: auto;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.tableau {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  white-space: nowrap;
+
+  th,
+  td {
+    padding: 0.65rem 0.9rem;
+    text-align: left;
+  }
+
+  .droite {
+    text-align: right;
+  }
+
+  th {
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  td {
+    border-bottom: 1px solid #f3f4f6;
+    color: #374151;
+  }
+
+  tbody tr {
+    cursor: pointer;
+
+    &:hover td {
+      background: #f9fafb;
+    }
+  }
+}
+
+.cartes {
+  display: none;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.carte {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 0.9rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+
+  .carte-entete {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .carte-ligne {
+    font-size: 0.82rem;
+    color: #4b5563;
+  }
+}
+
+@media (max-width: 899.98px) {
+  .conteneur-tableau {
+    display: none;
+  }
+
+  .cartes {
+    display: flex;
+  }
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  color: #374151;
+  font-size: 0.9rem;
+
+  button {
+    padding: 0.45rem 0.9rem;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: #f4f5f7;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}

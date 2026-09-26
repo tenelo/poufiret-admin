@@ -18,6 +18,8 @@ export class Graphique implements OnDestroy {
   readonly type = input.required<ChartType>();
   readonly data = input.required<ChartConfiguration['data']>();
   readonly options = input<ChartConfiguration['options']>();
+  /** Hauteur du graphique en pixels (260 par défaut). */
+  readonly hauteur = input(260);
 
   private readonly canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
   private instance: Chart | null = null;

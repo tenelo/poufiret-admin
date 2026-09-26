@@ -1,0 +1,182 @@
+<!-- Filtres -->
+<div class="filtres">
+  <div class="champ">
+    <label for="sp-periode">Période</label>
+    <select id="sp-periode" (change)="changerPeriode($any($event.target).value)">
+      <option value="7j" [selected]="filtres().periode === '7j'">7 derniers jours</option>
+      <option value="30j" [selected]="filtres().periode === '30j'">30 derniers jours</option>
+      <option value="90j" [selected]="filtres().periode === '90j'">90 derniers jours</option>
+      <option value="perso" [selected]="filtres().periode === 'perso'">Personnalisée</option>
+    </select>
+  </div>
+
+  @if (filtres().periode === 'perso') {
+    <div class="champ champ-date">
+      <label for="sp-du">Du</label>
+      <input id="sp-du" type="date" [value]="filtres().du" (change)="changerDu($any($event.target).value)" />
+    </div>
+    <div class="champ champ-date">
+      <label for="sp-au">Au</label>
+      <input id="sp-au" type="date" [value]="filtres().au" (change)="changerAu($any($event.target).value)" />
+    </div>
+  }
+
+  <div class="champ">
+    <label for="sp-formule">Formule</label>
+    <select id="sp-formule" (change)="changerFormule($any($event.target).value)">
+      <option value="" [selected]="filtres().formule === ''">Toutes</option>
+      @for (formule of formules(); track formule.id) {
+        <option [value]="formule.id" [selected]="formule.id === filtres().formule">{{ formule.nom }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="champ champ-partenaire">
+    <label for="sp-partenaire">Partenaire</label>
+    <app-selecteur-partenaire
+      idChamp="sp-partenaire"
+      [partenaire]="filtres().partenaire"
+      (partenaireChange)="changerPartenaire($event)"
+    />
+  </div>
+
+  <div class="champ">
+    <label for="sp-portee">Portée</label>
+    <select id="sp-portee" (change)="changerPortee($any($event.target).value)">
+      <option value="" [selected]="filtres().portee === ''">Toutes</option>
+      @for (option of optionsPortee; track option.valeur) {
+        <option [value]="option.valeur" [selected]="option.valeur === filtres().portee">{{ option.libelle }}</option>
+      }
+    </select>
+  </div>
+</div>
+
+@if (erreur()) {
+  <div class="etat-erreur">
+    <p>{{ erreur() }}</p>
+    <button type="button" (click)="charger()">Réessayer</button>
+  </div>
+} @else if (!stats()) {
+  <p class="etat">Chargement des statistiques…</p>
+} @else if (stats(); as s) {
+  <!-- KPI -->
+  <div class="grille-kpi" [class.rafraichissement]="chargementEnCours()">
+    <div class="carte-kpi"><span class="valeur">{{ formaterNombre(s.kpis.campagnes_actives) }}</span><span class="libelle">Campagnes actives</span></div>
+    <div class="carte-kpi"><span class="valeur">{{ formaterNombre(s.kpis.campagnes_diffusees) }}</span><span class="libelle">Campagnes diffusées</span></div>
+    <div class="carte-kpi"><span class="valeur">{{ formaterNombre(s.kpis.annonceurs) }}</span><span class="libelle">Annonceurs</span></div>
+    <div class="carte-kpi"><span class="valeur">{{ formaterNombre(s.kpis.impressions) }}</span><span class="libelle">Impressions</span></div>
+    <div class="carte-kpi"><span class="valeur">{{ formaterNombre(s.kpis.personnes_touchees) }}</span><span class="libelle">Personnes touchées</span></div>
+    <div class="carte-kpi"><span class="valeur">{{ formaterNombre(s.kpis.clics) }}</span><span class="libelle">Clics</span></div>
+    <div class="carte-kpi"><span class="valeur">{{ s.kpis.taux_clic }} %</span><span class="libelle">Taux de clic</span></div>
+    <div class="carte-kpi carte-kpi-large"><span class="valeur">{{ formaterMontant(s.kpis.revenus_estimes) }}</span><span class="libelle">Revenus estimés</span></div>
+    <div class="carte-kpi"><span class="valeur">{{ formaterNombre(s.kpis.campagnes_cible_atteinte) }}</span><span class="libelle">Cibles atteintes</span></div>
+  </div>
+
+  @if (s.kpis.campagnes_diffusees === 0 && s.kpis.impressions === 0) {
+    <p class="etat">Aucune diffusion sur cette période.</p>
+  }
+
+  <!-- Graphiques -->
+  <div class="grille-graphiques">
+    <div class="carte-graphique pleine-largeur">
+      <h3>Impressions et clics par jour</h3>
+      @if (s.par_jour.length === 0) {
+        <p class="vide">Aucune donnée.</p>
+      } @else {
+        <app-graphique type="line" [data]="donneesJour()" [options]="optionsJour" [hauteur]="300" />
+      }
+    </div>
+
+    <div class="carte-graphique">
+      <h3>Impressions par type d'affichage</h3>
+      @if (s.par_type_affichage.length === 0) {
+        <p class="vide">Aucune donnée.</p>
+      } @else {
+        <app-graphique type="doughnut" [data]="donneesTypes()" [options]="optionsDonut" />
+      }
+    </div>
+
+    <div class="carte-graphique">
+      <h3>Par formule <span class="astuce">(cliquez pour filtrer)</span></h3>
+      @if (s.par_formule.length === 0) {
+        <p class="vide">Aucune donnée.</p>
+      } @else {
+        <app-graphique type="bar" [data]="donneesFormules()" [options]="optionsFormules" />
+      }
+    </div>
+
+    <div class="carte-graphique pleine-largeur">
+      <h3>Top 10 partenaires <span class="astuce">(cliquez pour filtrer)</span></h3>
+      @if (topPartenaires().length === 0) {
+        <p class="vide">Aucune donnée.</p>
+      } @else {
+        <app-graphique type="bar" [data]="donneesPartenaires()" [options]="optionsPartenaires" [hauteur]="380" />
+      }
+    </div>
+
+    <div class="carte-graphique">
+      <h3>Impressions par portée</h3>
+      @if (s.par_portee.length === 0) {
+        <p class="vide">Aucune donnée.</p>
+      } @else {
+        <app-graphique type="bar" [data]="donneesPortees()" [options]="optionsPortees" />
+      }
+    </div>
+
+    <div class="carte-graphique">
+      <h3>Impressions par heure de la journée</h3>
+      @if (!aDesHeures()) {
+        <p class="vide">Aucune donnée.</p>
+      } @else {
+        <app-graphique type="bar" [data]="donneesHeures()" [options]="optionsBarres" />
+      }
+    </div>
+  </div>
+
+  <!-- Top 10 campagnes -->
+  <div class="carte-graphique carte-tableau">
+    <h3>Top 10 campagnes <span class="astuce">(cliquez sur une ligne pour l'ouvrir)</span></h3>
+    @if (s.top_campagnes.length === 0) {
+      <p class="vide">Aucune campagne sur cette période.</p>
+    } @else {
+      <div class="conteneur-tableau">
+        <table class="tableau">
+          <thead>
+            <tr>
+              <th>Campagne</th>
+              <th>Partenaire</th>
+              <th>Formule</th>
+              <th>Statut</th>
+              <th class="droite">Impressions</th>
+              <th class="droite">Personnes touchées</th>
+              <th class="droite">Clics</th>
+              <th class="droite">Taux de clic</th>
+              <th>Cible</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (campagne of s.top_campagnes.slice(0, 10); track campagne.id) {
+              <tr (click)="ouvrirCampagne(campagne)">
+                <td class="fort">{{ campagne.titre }}</td>
+                <td>{{ campagne.partenaire_nom }}</td>
+                <td>{{ campagne.formule_nom }}</td>
+                <td><span class="badge badge-{{ campagne.statut }}">{{ campagne.statut_libelle }}</span></td>
+                <td class="droite">{{ formaterNombre(campagne.impressions) }}</td>
+                <td class="droite">{{ formaterNombre(campagne.personnes_touchees) }}</td>
+                <td class="droite">{{ formaterNombre(campagne.clics) }}</td>
+                <td class="droite">{{ campagne.taux_clic }} %</td>
+                <td>
+                  @if (campagne.cible_atteinte) {
+                    <span class="badge badge-cible">Cible atteinte</span>
+                  } @else if (campagne.cible_pourcentage) {
+                    <span class="texte-cible">{{ campagne.cible_pourcentage }} % visé</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+}

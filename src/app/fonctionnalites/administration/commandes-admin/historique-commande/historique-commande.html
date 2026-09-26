@@ -1,0 +1,21 @@
+<ol class="frise">
+  @for (evenement of evenements(); track $index) {
+    <li>
+      <span class="point"></span>
+      <div>
+        <strong>{{ evenement.statut_libelle }}</strong>
+        <span class="meta">
+          {{ formaterDateHeure(evenement.cree_le) }}
+          @if (evenement.acteur_nom) {
+            · {{ evenement.acteur_nom }}@if (evenement.acteur_role) { ({{ evenement.acteur_role }}) }
+          }
+        </span>
+        @if (evenement.commentaire) {
+          <p class="commentaire">{{ evenement.commentaire }}</p>
+        }
+      </div>
+    </li>
+  } @empty {
+    <li class="vide">Aucun historique.</li>
+  }
+</ol>

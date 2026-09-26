@@ -49,6 +49,8 @@ export interface MaPublicite {
   video: string | null;
   portee: PorteePublicite;
   statut: StatutPublicite;
+  // Libellé français du statut fourni par le backend (sinon, LIBELLES_STATUT_PUBLICITE).
+  statut_libelle?: string;
   debut_diffusion: string | null;
   fin_diffusion: string | null;
 }
@@ -147,12 +149,29 @@ export function optionsPorteeSelonForfait(
   }));
 }
 
+/** Champs affichés par le bloc de stats d'une campagne (partenaire et admin les exposent sous ces noms). */
+export interface DonneesStatsPublicite {
+  nb_impressions?: number;
+  nb_clics?: number;
+  taux_clic?: number;
+  nb_personnes_touchees?: number;
+  impressions_par_type?: Record<string, number>;
+  cible_pourcentage?: number | null;
+  cible_atteinte?: boolean;
+  debut_diffusion?: string | null;
+  fin_diffusion?: string | null;
+}
+
 /** GET /publicites/mes-stats/ — deux formes possibles par campagne. */
 interface StatistiquePubliciteBase {
   id: string;
   titre: string;
   formule: string | number;
   statut: string;
+  // Libellé français du statut fourni par le backend.
+  statut_libelle?: string;
+  // Stats visibles pour ce partenaire (effectif : campagne active/terminée et non masquées par l'admin).
+  stats_visibles?: boolean;
 }
 
 export interface StatistiquePubliciteDetaillee extends StatistiquePubliciteBase {
@@ -170,6 +189,18 @@ export interface StatistiquePubliciteDetaillee extends StatistiquePubliciteBase 
 export interface StatistiquePubliciteRestreinte extends StatistiquePubliciteBase {
   stats_disponibles: false;
   message: string;
+}
+
+/**
+ * Libellé français d'un statut de campagne : celui du backend (`statut_libelle`) s'il est fourni,
+ * sinon la table locale, sinon la valeur brute.
+ */
+export function libelleStatutPublicite(pub: { statut: string; statut_libelle?: string }): string {
+  return (
+    pub.statut_libelle ??
+    (LIBELLES_STATUT_PUBLICITE as Record<string, string | undefined>)[pub.statut] ??
+    pub.statut
+  );
 }
 
 export type StatistiquePublicite = StatistiquePubliciteDetaillee | StatistiquePubliciteRestreinte;

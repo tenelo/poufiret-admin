@@ -1,0 +1,144 @@
+@if (erreur()) {
+  <div class="etat-erreur">
+    <p>{{ erreur() }}</p>
+    <button type="button" (click)="charger()">Réessayer</button>
+  </div>
+} @else if (!stats()) {
+  <p class="etat">Chargement du tableau de bord…</p>
+} @else if (stats(); as s) {
+  <div class="grille-kpi" [class.rafraichissement]="chargementEnCours()">
+    <div class="carte-kpi"><span class="valeur">{{ formaterNombre(s.kpis.total) }}</span><span class="libelle">Commandes</span></div>
+    <div class="carte-kpi kpi-a-traiter"><span class="valeur">{{ formaterNombre(s.kpis.a_traiter) }}</span><span class="libelle">À traiter</span></div>
+    <div class="carte-kpi"><span class="valeur">{{ formaterNombre(s.kpis.en_cours) }}</span><span class="libelle">En cours</span></div>
+    <div class="carte-kpi"><span class="valeur">{{ formaterNombre(s.kpis.terminees) }}</span><span class="libelle">Terminées</span></div>
+    <div class="carte-kpi"><span class="valeur">{{ formaterNombre(s.kpis.annulees) }}</span><span class="libelle">Annulées</span></div>
+    <div class="carte-kpi carte-kpi-large"><span class="valeur">{{ formaterMontant(s.kpis.montant_total) }}</span><span class="libelle">Chiffre d'affaires</span></div>
+    <div class="carte-kpi"><span class="valeur">{{ formaterMontant(s.kpis.panier_moyen) }}</span><span class="libelle">Panier moyen</span></div>
+    <div class="carte-kpi"><span class="valeur">{{ formaterDuree(s.kpis.delai_moyen_traitement_min) }}</span><span class="libelle">Délai moyen de traitement</span></div>
+    <div class="carte-kpi"><span class="valeur">{{ formaterDuree(s.kpis.delai_moyen_livraison_min) }}</span><span class="libelle">Délai moyen de livraison</span></div>
+    <div class="carte-kpi"><span class="valeur">{{ s.kpis.taux_annulation }} %</span><span class="libelle">Taux d'annulation</span></div>
+  </div>
+
+  @if (s.kpis.total === 0) {
+    <p class="etat">Aucune commande sur cette période.</p>
+  } @else {
+    <div class="grille-graphiques">
+      <div class="carte-graphique pleine-largeur">
+        <h3>Commandes et chiffre d'affaires par jour</h3>
+        @if (s.par_jour.length === 0) {
+          <p class="vide">Aucune donnée.</p>
+        } @else {
+          <app-graphique type="line" [data]="donneesJour()" [options]="optionsJour" [hauteur]="300" />
+        }
+      </div>
+
+      <div class="carte-graphique">
+        <h3>Répartition par groupe</h3>
+        @if (s.par_groupe.length === 0) {
+          <p class="vide">Aucune donnée.</p>
+        } @else {
+          <app-graphique type="doughnut" [data]="donneesGroupes()" [options]="optionsDonut" />
+        }
+      </div>
+
+      <div class="carte-graphique">
+        <h3>Commandes par statut <span class="astuce">(cliquez pour filtrer)</span></h3>
+        @if (s.par_statut.length === 0) {
+          <p class="vide">Aucune donnée.</p>
+        } @else {
+          <app-graphique type="bar" [data]="donneesStatuts()" [options]="optionsStatut" />
+        }
+      </div>
+
+      <div class="carte-graphique pleine-largeur">
+        <h3>Top 10 partenaires <span class="astuce">(cliquez pour filtrer)</span></h3>
+        @if (topPartenaires().length === 0) {
+          <p class="vide">Aucune donnée.</p>
+        } @else {
+          <app-graphique type="bar" [data]="donneesPartenaires()" [options]="optionsPartenaires" [hauteur]="420" />
+        }
+      </div>
+
+      <div class="ligne-partenaires">
+      <div class="carte-graphique">
+        <h3>Commandes par partenaire <span class="astuce">(cliquez pour filtrer)</span></h3>
+        @if (partenairesDetail().length === 0) {
+          <p class="vide">Aucune donnée.</p>
+        } @else {
+          <div class="defilement">
+            <app-graphique
+              type="bar"
+              [data]="donneesPartenairesDetail()"
+              [options]="optionsPartenairesDetail"
+              [hauteur]="hauteurPartenairesDetail()"
+            />
+          </div>
+        }
+      </div>
+
+      <div class="carte-graphique">
+        <h3>Part des commandes par partenaire</h3>
+        @if (partenairesDetail().length === 0) {
+          <p class="vide">Aucune donnée.</p>
+        } @else {
+          <app-graphique type="doughnut" [data]="donneesPartPartenaires()" [options]="optionsDonut" [hauteur]="320" />
+        }
+      </div>
+      </div>
+
+      <div class="carte-graphique">
+        <h3>Par type de partenaire</h3>
+        @if (s.par_type_partenaire.length === 0) {
+          <p class="vide">Aucune donnée.</p>
+        } @else {
+          <app-graphique type="bar" [data]="donneesTypes()" [options]="optionsTypes" />
+        }
+      </div>
+
+      <div class="carte-graphique">
+        <h3>Top 10 clients</h3>
+        @if (topClients().length === 0) {
+          <p class="vide">Aucune donnée.</p>
+        } @else {
+          <app-graphique type="bar" [data]="donneesClients()" [options]="optionsClients" [hauteur]="320" />
+        }
+      </div>
+
+      <div class="carte-graphique">
+        <h3>Mode de livraison</h3>
+        @if (s.par_mode_livraison.length === 0) {
+          <p class="vide">Aucune donnée.</p>
+        } @else {
+          <app-graphique type="doughnut" [data]="donneesModes()" [options]="optionsDonut" />
+        }
+      </div>
+
+      <div class="carte-graphique">
+        <h3>Commandes par heure de la journée</h3>
+        @if (!aDesHeures()) {
+          <p class="vide">Aucune donnée.</p>
+        } @else {
+          <app-graphique type="bar" [data]="donneesHeures()" [options]="optionsBarres" />
+        }
+      </div>
+
+      <div class="carte-graphique">
+        <h3>Commandes par jour de la semaine</h3>
+        @if (s.par_jour_semaine.length === 0) {
+          <p class="vide">Aucune donnée.</p>
+        } @else {
+          <app-graphique type="bar" [data]="donneesJoursSemaine()" [options]="optionsBarres" />
+        }
+      </div>
+
+      <div class="carte-graphique">
+        <h3>Par département <span class="astuce">(cliquez pour filtrer)</span></h3>
+        @if (departements().length === 0) {
+          <p class="vide">Aucune donnée.</p>
+        } @else {
+          <app-graphique type="bar" [data]="donneesDepartements()" [options]="optionsDepartements" [hauteur]="320" />
+        }
+      </div>
+    </div>
+  }
+}

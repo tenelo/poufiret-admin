@@ -1,0 +1,181 @@
+<div class="voile" (click)="ferme.emit()">
+  <aside class="panneau" role="dialog" aria-label="Détail de la commande" (click)="$event.stopPropagation()">
+    <button type="button" class="bouton-fermer" aria-label="Fermer" (click)="ferme.emit()">×</button>
+
+    @if (chargementEnCours()) {
+      <p class="etat">Chargement de la commande…</p>
+    } @else if (erreurChargement()) {
+      <p class="erreur-generale">{{ erreurChargement() }}</p>
+    } @else if (detail(); as d) {
+      <!-- En-tête -->
+      <header class="entete">
+        <h2>{{ d.reference }}</h2>
+        <div class="entete-infos">
+          <span class="badge badge-{{ d.groupe }}">{{ d.statut_libelle }}</span>
+          <span class="groupe">{{ libelleGroupe(d.groupe) }}</span>
+          <strong>{{ formaterMontant(d.montant_total) }}</strong>
+          <span [class]="'age ' + classeAge(d)">{{ formaterAge(d.age_minutes) }}</span>
+        </div>
+      </header>
+
+      @if (messageSucces()) {
+        <p class="message-succes">{{ messageSucces() }}</p>
+      }
+
+      <!-- Client et partenaire -->
+      <section class="contacts">
+        <div class="contact">
+          <h3>Client</h3>
+          <p class="nom">{{ d.client.nom }}</p>
+          <p class="liens">
+            @if (lienTel(d.client.telephone); as tel) {
+              <a [href]="tel">{{ d.client.telephone }}</a>
+            } @else {
+              <span>—</span>
+            }
+            @if (lienWhatsApp(d.client.telephone); as wa) {
+              <a [href]="wa" target="_blank" rel="noopener">WhatsApp</a>
+            }
+          </p>
+        </div>
+        <div class="contact">
+          <h3>Partenaire</h3>
+          <p class="nom">{{ d.partenaire.nom }}</p>
+          <p class="detail-contact">{{ d.partenaire.type_partenaire_libelle }}@if (d.departement_nom) { · {{ d.departement_nom }} }</p>
+          <p class="liens">
+            @if (lienTel(d.partenaire.telephone); as tel) {
+              <a [href]="tel">{{ d.partenaire.telephone }}</a>
+            } @else {
+              <span>—</span>
+            }
+            @if (lienWhatsApp(d.partenaire.telephone); as wa) {
+              <a [href]="wa" target="_blank" rel="noopener">WhatsApp</a>
+            }
+          </p>
+        </div>
+      </section>
+
+      <!-- Lignes de commande -->
+      <section>
+        <h3>Articles ({{ d.nb_articles }})</h3>
+        <table class="lignes">
+          <thead>
+            <tr><th>Article</th><th class="droite">Qté</th><th class="droite">Prix</th><th class="droite">Sous-total</th></tr>
+          </thead>
+          <tbody>
+            @for (ligne of d.lignes; track $index) {
+              <tr>
+                <td>
+                  {{ ligne.article_nom }}
+                  @if (ligne.details) {
+                    <span class="detail-ligne">{{ ligne.details }}</span>
+                  }
+                </td>
+                <td class="droite">{{ ligne.quantite }}</td>
+                <td class="droite">{{ formaterMontant(ligne.prix_unitaire) }}</td>
+                <td class="droite">{{ formaterMontant(ligne.sous_total) }}</td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr><td colspan="3">Total</td><td class="droite">{{ formaterMontant(d.montant_total) }}</td></tr>
+          </tfoot>
+        </table>
+
+        @if (d.note_client) {
+          <p class="bloc-texte"><strong>Note du client :</strong> {{ d.note_client }}</p>
+        }
+        <p class="bloc-texte">
+          <strong>Mode de livraison :</strong> {{ d.mode_livraison_libelle }}
+        </p>
+        @if (d.adresse_livraison; as adresse) {
+          <p class="bloc-texte">
+            <strong>Adresse de livraison :</strong> {{ adresse.texte }}
+            @if (lienCarte(d); as carte) {
+              · <a [href]="carte" target="_blank" rel="noopener">Voir sur la carte</a>
+            }
+          </p>
+        }
+      </section>
+
+      <!-- Actions et suivi de livraison -->
+      <section>
+        <h3>Actions</h3>
+        @if (d.transitions_possibles.length === 0 && !d.peut_demander_livreur) {
+          <p class="vide">Aucune action disponible pour cette commande.</p>
+        }
+        <div class="actions">
+          @for (transition of d.transitions_possibles; track transition.action) {
+            <button type="button" class="bouton-principal" (click)="demanderTransition(transition)">
+              {{ transition.libelle }}
+            </button>
+          }
+          @if (d.peut_demander_livreur) {
+            <button type="button" class="bouton-secondaire" (click)="demanderLivreur()">Demander un livreur</button>
+          }
+        </div>
+
+        @if (d.livraison; as livraison) {
+          <div class="suivi-livraison">
+            <h4>Suivi de la livraison</h4>
+            <p><strong>Statut :</strong> {{ livraison.statut_libelle }}</p>
+            @if (livraison.livreur_nom) {
+              <p>
+                <strong>Livreur :</strong> {{ livraison.livreur_nom }}
+                @if (lienTel(livraison.livreur_telephone); as tel) {
+                  · <a [href]="tel">{{ livraison.livreur_telephone }}</a>
+                }
+              </p>
+            } @else {
+              <p class="vide">Aucun livreur affecté pour le moment.</p>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Notes internes -->
+      <section>
+        <h3>Notes internes</h3>
+        <app-notes-commande [commandeId]="d.id" [notes]="d.notes_admin" (noteAjoutee)="ajouterNoteAuDetail($event)" />
+      </section>
+
+      <!-- Historique -->
+      <section>
+        <h3>Historique</h3>
+        <app-historique-commande [evenements]="d.historique" />
+      </section>
+    }
+  </aside>
+</div>
+
+<!-- Confirmation d'une action -->
+@if (confirmation(); as conf) {
+  <div class="voile-confirmation" (click)="annulerConfirmation()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      @if (conf.type === 'transition') {
+        <p>Confirmer l'action « <strong>{{ conf.transition.libelle }}</strong> » sur la commande {{ detail()?.reference }} ?</p>
+        <label for="dca-commentaire">
+          Commentaire {{ conf.transition.commentaire_obligatoire ? '(obligatoire)' : '(optionnel)' }}
+        </label>
+      } @else {
+        <p>Demander un livreur à TeneLivr pour la commande {{ detail()?.reference }} ?</p>
+        <label for="dca-commentaire">Commentaire (optionnel)</label>
+      }
+      <textarea
+        id="dca-commentaire"
+        rows="3"
+        [value]="commentaire()"
+        (input)="commentaire.set($any($event.target).value)"
+      ></textarea>
+      @if (erreurAction()) {
+        <p class="erreur-generale">{{ erreurAction() }}</p>
+      }
+      <div class="actions-confirmation">
+        <button type="button" class="bouton-secondaire" [disabled]="actionEnCours()" (click)="annulerConfirmation()">Annuler</button>
+        <button type="button" class="bouton-principal" [disabled]="actionEnCours()" (click)="confirmer()">
+          {{ actionEnCours() ? 'Envoi…' : 'Confirmer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

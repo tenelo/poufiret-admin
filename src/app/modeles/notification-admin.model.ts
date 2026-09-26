@@ -5,7 +5,12 @@
 
 // pub_soumise : campagne soumise, en attente de paiement.
 // pub_a_valider : paiement confirmé, en attente de validation.
-export type TypeNotificationAdmin = 'pub_soumise' | 'pub_a_valider';
+// commande_nouvelle : nouvelle commande ; commande_annulee_client : commande annulée par le client.
+export type TypeNotificationAdmin =
+  | 'pub_soumise'
+  | 'pub_a_valider'
+  | 'commande_nouvelle'
+  | 'commande_annulee_client';
 
 export interface NotificationAdmin {
   id: number;
@@ -17,6 +22,9 @@ export interface NotificationAdmin {
   // UUID de la campagne concernée.
   publicite_id: string | null;
   statut_publicite: string | null;
+  // Notifications de commande : id de la commande et son groupe (a_traiter, en_cours...).
+  commande_id?: number | null;
+  groupe?: string | null;
 }
 
 /** GET admin/?page_size=10 (option ?non_lues=1). */
@@ -40,7 +48,9 @@ export interface ReponseToutLireNotificationsAdmin {
 }
 
 /** Onglet de statut de la page Publicités > Campagnes ouvert depuis chaque type de notification. */
-export const STATUT_CAMPAGNE_PAR_TYPE: Record<TypeNotificationAdmin, 'en_attente_paiement' | 'en_attente_validation'> = {
+export const STATUT_CAMPAGNE_PAR_TYPE: Partial<
+  Record<TypeNotificationAdmin, 'en_attente_paiement' | 'en_attente_validation'>
+> = {
   pub_soumise: 'en_attente_paiement',
   pub_a_valider: 'en_attente_validation',
 };

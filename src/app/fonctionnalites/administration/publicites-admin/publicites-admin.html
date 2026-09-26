@@ -121,65 +121,17 @@
               <p class="formule">Portée effective : {{ portee }}</p>
             }
 
-            <div class="grille-stats-pub">
-              <div class="stat-pub">
-                <span class="valeur">{{ formaterNombre(pub.nb_impressions ?? 0) }}</span>
-                <span class="libelle">Impressions</span>
-              </div>
-              <div class="stat-pub">
-                <span class="valeur">{{ formaterNombre(pub.nb_clics ?? 0) }}</span>
-                <span class="libelle">Clics</span>
-              </div>
-              <div class="stat-pub">
-                <span class="valeur">{{ pub.taux_clic ?? 0 }}%</span>
-                <span class="libelle">Taux de clic</span>
-              </div>
-              <div class="stat-pub">
-                <span class="valeur">{{ formaterNombre(pub.nb_personnes_touchees ?? 0) }}</span>
-                <span class="libelle">Personnes touchées</span>
-              </div>
-            </div>
-
-            @if (pub.cible_pourcentage) {
-              <div class="jauge-cible">
-                <span class="etiquette-jauge">
-                  Cible {{ pub.cible_pourcentage }}%
-                  <span [class.atteinte]="pub.cible_atteinte">
-                    {{ pub.cible_atteinte ? 'atteinte' : 'en cours' }}
-                  </span>
-                </span>
-                <div class="barre-progression">
-                  <div
-                    class="remplissage"
-                    [class.remplissage-atteint]="pub.cible_atteinte"
-                    [style.width.%]="pub.cible_atteinte ? 100 : pub.cible_pourcentage"
-                  ></div>
-                </div>
-              </div>
+            @if (peutBasculerStats(pub)) {
+              <app-stats-publicite [stats]="pub" />
             }
 
-            @if (entreesImpressionsParType(pub.impressions_par_type).length > 0) {
-              <div class="mini-barres">
-                @for (entree of entreesImpressionsParType(pub.impressions_par_type); track entree.type) {
-                  <div class="mini-barre-ligne">
-                    <span class="mini-barre-libelle">{{ entree.type }}</span>
-                    <div class="mini-barre-piste">
-                      <div
-                        class="mini-barre-remplissage"
-                        [style.width.%]="pourcentageBarre(entree.valeur, pub.impressions_par_type)"
-                      ></div>
-                    </div>
-                    <span class="mini-barre-valeur">{{ entree.valeur }}</span>
-                  </div>
-                }
-              </div>
+            @if (peutBasculerStats(pub)) {
+              <app-interrupteur-stats-visibles
+                [visible]="statsVisibles(pub)"
+                [enCours]="statsEnCoursId() === pub.id"
+                (basculer)="demanderBasculeStats(pub, $event)"
+              />
             }
-
-            <p class="periode">
-              {{ pub.debut_diffusion ? (pub.debut_diffusion | date: 'dd/MM/yyyy') : '—' }}
-              →
-              {{ pub.fin_diffusion ? (pub.fin_diffusion | date: 'dd/MM/yyyy') : '—' }}
-            </p>
 
             @if (peutModerer() && actionsDisponibles(pub).length > 0) {
               <div class="actions-publicite">
@@ -224,6 +176,22 @@
         >
           {{ attente.action.cible === 'terminer' ? 'Arrêter la pub' : 'Confirmer' }}
         </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (statsAConfirmer(); as attente) {
+  <div class="voile-confirmation" (click)="annulerBasculeStats()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      @if (attente.visible) {
+        <p>Rendre les stats de « {{ attente.publicite.titre }} » visibles par le partenaire ?</p>
+      } @else {
+        <p>Masquer les stats de « {{ attente.publicite.titre }} » au partenaire ?</p>
+      }
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annulerBasculeStats()">Annuler</button>
+        <button type="button" class="bouton-action" (click)="confirmerBasculeStats()">Confirmer</button>
       </div>
     </div>
   </div>

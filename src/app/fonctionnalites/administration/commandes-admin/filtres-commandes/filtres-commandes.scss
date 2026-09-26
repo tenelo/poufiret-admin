@@ -1,0 +1,50 @@
+// Les filtres passent à la ligne sur petit écran.
+.filtres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.champ {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 0 1 180px;
+  min-width: 140px;
+
+  label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #6b7280;
+  }
+
+  input,
+  select {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.85rem;
+
+    &:focus {
+      outline: none;
+      border-color: #4f46e5;
+    }
+  }
+}
+
+.champ-large {
+  flex: 1 1 240px;
+}
+
+.champ-partenaire {
+  flex: 0 1 220px;
+}
+
+.champ-date {
+  flex: 0 1 150px;
+}

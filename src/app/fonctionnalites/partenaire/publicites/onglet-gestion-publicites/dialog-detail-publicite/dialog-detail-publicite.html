@@ -12,7 +12,7 @@
 
     <div class="entete-detail">
       <h2>{{ publicite().titre }}</h2>
-      <span class="badge badge-{{ publicite().statut }}">{{ libellesStatut[publicite().statut] }}</span>
+      <span class="badge badge-{{ publicite().statut }}">{{ libelleStatut(publicite()) }}</span>
     </div>
 
     <p class="formule-detail">Formule : {{ libelleFormule() }}</p>

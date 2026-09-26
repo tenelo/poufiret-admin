@@ -1,0 +1,15 @@
+<div class="interrupteur">
+  <button
+    type="button"
+    role="switch"
+    class="piste"
+    [class.actif]="visible()"
+    [attr.aria-checked]="visible()"
+    aria-label="Stats visibles par le partenaire"
+    [disabled]="enCours()"
+    (click)="basculer.emit(!visible())"
+  >
+    <span class="pouce"></span>
+  </button>
+  <span class="libelle">Stats visibles par le partenaire</span>
+</div>

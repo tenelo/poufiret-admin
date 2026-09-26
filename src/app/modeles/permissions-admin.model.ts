@@ -5,7 +5,7 @@
 
 // Les capacités possibles de la grille admin, pour l'autocomplétion lors
 // de la déclaration des entrées de menu / des routes protégées.
-// `gerer_admins`, `gerer_geographie` et `gerer_formules_pub` sont privilégiées : seul un super-admin peut la poser à true
+// `gerer_admins`, `gerer_geographie`, `gerer_formules_pub` et `gerer_commandes` sont privilégiées : seul un super-admin peut la poser à true
 // (le backend ignore silencieusement toute tentative venant d'un non-superuser).
 export type NomCapacite =
   | 'suspendre_client'
@@ -43,7 +43,8 @@ export type NomCapacite =
   | 'exporter_csv'
   | 'gerer_admins'
   | 'gerer_geographie'
-  | 'gerer_formules_pub';
+  | 'gerer_formules_pub'
+  | 'gerer_commandes';
 
 // Corps brut renvoyé par le backend (snake_case).
 export interface ReponsePermissionsAdmin {
@@ -104,4 +105,5 @@ export const LIBELLES_CAPACITE: Record<NomCapacite, string> = {
   gerer_admins: 'Gérer les administrateurs',
   gerer_geographie: 'Gérer la géographie',
   gerer_formules_pub: 'Gérer les formules et paramètres pub',
+  gerer_commandes: 'Gérer le centre des commandes',
 };

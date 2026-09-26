@@ -1,0 +1,62 @@
+<div class="grille-stats-pub">
+  <div class="stat-pub">
+    <span class="valeur">{{ formaterNombre(stats().nb_impressions) }}</span>
+    <span class="libelle">Affichages</span>
+  </div>
+  <div class="stat-pub">
+    <span class="valeur">{{ formaterNombre(stats().nb_clics) }}</span>
+    <span class="libelle">Clics</span>
+  </div>
+  <div class="stat-pub">
+    <span class="valeur">{{ stats().taux_clic ?? 0 }}%</span>
+    <span class="libelle">Taux de clic</span>
+  </div>
+  <div class="stat-pub">
+    <span class="valeur">{{ formaterNombre(stats().nb_personnes_touchees) }}</span>
+    <span class="libelle">Personnes touchées</span>
+  </div>
+</div>
+
+@if (stats().cible_pourcentage) {
+  <div class="jauge-cible">
+    <span class="etiquette-jauge">
+      Cible {{ stats().cible_pourcentage }}%
+      <span [class.atteinte]="stats().cible_atteinte">
+        {{ stats().cible_atteinte ? 'atteinte' : 'en cours' }}
+      </span>
+    </span>
+    <div class="barre-progression">
+      <div
+        class="remplissage"
+        [class.remplissage-atteint]="stats().cible_atteinte"
+        [style.width.%]="stats().cible_atteinte ? 100 : stats().cible_pourcentage"
+      ></div>
+    </div>
+  </div>
+}
+
+@if (entreesImpressionsParType(stats().impressions_par_type).length > 0) {
+  <div class="mini-barres">
+    @for (entree of entreesImpressionsParType(stats().impressions_par_type); track entree.type) {
+      <div class="mini-barre-ligne">
+        <span class="mini-barre-libelle">{{ entree.type }}</span>
+        <div class="mini-barre-piste">
+          <div
+            class="mini-barre-remplissage"
+            [style.width.%]="pourcentageBarre(entree.valeur, stats().impressions_par_type)"
+          ></div>
+        </div>
+        <span class="mini-barre-valeur">{{ entree.valeur }}</span>
+      </div>
+    }
+  </div>
+}
+
+<p class="periode">
+  @if (stats().debut_diffusion && stats().fin_diffusion) {
+    Diffusion du {{ stats().debut_diffusion | date: 'dd/MM/yyyy' }} au
+    {{ stats().fin_diffusion | date: 'dd/MM/yyyy' }}
+  } @else {
+    Diffusion pas encore programmée
+  }
+</p>

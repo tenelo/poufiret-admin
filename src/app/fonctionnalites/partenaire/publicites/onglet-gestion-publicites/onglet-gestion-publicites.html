@@ -41,7 +41,7 @@
           <div class="entete-carte">
             <span class="titre">{{ publicite.titre }}</span>
             <div class="entete-carte-droite">
-              <span class="badge badge-{{ publicite.statut }}">{{ libellesStatut[publicite.statut] }}</span>
+              <span class="badge badge-{{ publicite.statut }}">{{ libelleStatut(publicite) }}</span>
               <button
                 type="button"
                 class="bouton-icone-supprimer"

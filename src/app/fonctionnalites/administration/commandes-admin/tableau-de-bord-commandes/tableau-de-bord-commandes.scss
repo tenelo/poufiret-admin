@@ -1,0 +1,143 @@
+.etat {
+  margin: 0;
+  padding: 2rem 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.etat-erreur {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+
+  p {
+    margin: 0;
+  }
+
+  button {
+    padding: 0.35rem 0.8rem;
+    background: #ffffff;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #b91c1c;
+    cursor: pointer;
+  }
+}
+
+.grille-kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  transition: opacity 0.15s;
+
+  &.rafraichissement {
+    opacity: 0.6;
+  }
+}
+
+.carte-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  .valeur {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .libelle {
+    font-size: 0.78rem;
+    color: #6b7280;
+  }
+}
+
+.carte-kpi-large {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+
+  .valeur {
+    color: #4338ca;
+  }
+}
+
+.kpi-a-traiter .valeur {
+  color: #c2410c;
+}
+
+.grille-graphiques {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+
+  @media (min-width: 900px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.carte-graphique {
+  min-width: 0;
+  padding: 1.1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  h3 {
+    margin: 0 0 0.9rem;
+    font-size: 0.9rem;
+    color: #1a1a1a;
+  }
+
+  .astuce {
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: #9ca3af;
+  }
+
+  &.pleine-largeur {
+    @media (min-width: 900px) {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+.vide {
+  margin: 0;
+  padding: 1.5rem 0;
+  color: #9ca3af;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+// Commandes par partenaire (barres empilées, défilantes) à côté de la part par partenaire (donut).
+.ligne-partenaires {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+
+  @media (min-width: 900px) {
+    grid-column: 1 / -1;
+    grid-template-columns: 2fr 1fr;
+  }
+
+  .carte-graphique {
+    min-width: 0;
+  }
+}
+
+.defilement {
+  max-height: 480px;
+  overflow-y: auto;
+}

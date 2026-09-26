@@ -42,6 +42,8 @@ export interface PubliciteAdmin {
   cible_atteinte?: boolean;
   debut_diffusion?: string | null;
   fin_diffusion?: string | null;
+  // Le partenaire voit-il les stats de cette campagne ? (interrupteur admin, campagnes actives/terminées)
+  stats_visibles_partenaire?: boolean;
   // URLs absolues, fournies par le backend telles quelles.
   image_couverture?: string | null;
   video?: string | null;

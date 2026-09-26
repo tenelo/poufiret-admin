@@ -163,6 +163,15 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'administration/commandes',
+        canActivate: [roleGuard(['admin']), capaciteGuard],
+        data: { capacite: 'gerer_commandes' },
+        loadComponent: () =>
+          import('./fonctionnalites/administration/commandes-admin/commandes-admin').then(
+            (m) => m.CommandesAdmin,
+          ),
+      },
+      {
         path: 'administration/publicites',
         canActivate: [roleGuard(['admin']), capaciteGuard],
         data: { capacite: 'voir_stats' },

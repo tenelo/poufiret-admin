@@ -1,0 +1,142 @@
+.page-commandes-admin {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1a1a1a;
+  }
+}
+
+.actions-entete {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.bouton-secondaire,
+.bouton-principal {
+  padding: 0.55rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.bouton-secondaire {
+  background: #ffffff;
+  border: 1px solid #4f46e5;
+  color: #4f46e5;
+
+  &:hover:not(:disabled) {
+    background: #eef2ff;
+  }
+}
+
+.bouton-principal {
+  background: #1b5e20;
+  border: none;
+  color: #ffffff;
+
+  &:hover:not(:disabled) {
+    background: #164a1a;
+  }
+}
+
+.erreur-generale {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.etat {
+  margin: 0;
+  padding: 2rem 0;
+  color: #6b7280;
+  text-align: center;
+}
+
+.note {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+// Onglets avec compteurs : défilement horizontal si l'écran est trop étroit.
+.barre-onglets {
+  display: flex;
+  gap: 0.25rem;
+  max-width: 100%;
+  margin-bottom: 1.25rem;
+  padding: 0.3rem;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+.onglet {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    color: #1a1a1a;
+  }
+}
+
+.onglet-actif {
+  background: #ffffff;
+  color: #1b5e20;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.compteur {
+  min-width: 1.35rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #374151;
+  font-size: 0.7rem;
+  text-align: center;
+
+  .onglet-actif & {
+    background: #dcfce7;
+    color: #15803d;
+  }
+}
+
+.compteur-a-traiter {
+  background: #fed7aa;
+  color: #9a3412;
+}

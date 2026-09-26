@@ -1,0 +1,77 @@
+@if (erreur()) {
+  <div class="etat-erreur">
+    <p>{{ erreur() }}</p>
+    <button type="button" (click)="reessayer.emit()">Réessayer</button>
+  </div>
+} @else if (chargementEnCours() && commandes().length === 0) {
+  <p class="etat">Chargement des commandes…</p>
+} @else if (commandes().length === 0) {
+  <p class="etat">Aucune commande ne correspond à ces critères.</p>
+} @else {
+  <p class="total">{{ total() }} commande{{ total() > 1 ? 's' : '' }}</p>
+
+  <!-- Grand écran : tableau -->
+  <div class="conteneur-tableau">
+    <table class="tableau">
+      <thead>
+        <tr>
+          <th>Référence</th>
+          <th>Date</th>
+          <th>Client</th>
+          <th>Partenaire</th>
+          <th class="droite">Montant</th>
+          <th>Statut</th>
+          <th>Mode</th>
+          <th>Livraison</th>
+          <th>Âge</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (commande of commandes(); track commande.id) {
+          <tr [class.ligne-ouverte]="commande.id === commandeOuverteId()" (click)="ouvrir.emit(commande.id)">
+            <td class="fort">{{ commande.reference }}</td>
+            <td>{{ formaterDateHeure(commande.cree_le) }}</td>
+            <td>{{ commande.client.nom }}</td>
+            <td>{{ commande.partenaire.nom }}</td>
+            <td class="droite">{{ formaterMontant(commande.montant_total) }}</td>
+            <td><span class="badge badge-{{ commande.groupe }}">{{ commande.statut_libelle }}</span></td>
+            <td>{{ commande.mode_livraison_libelle }}</td>
+            <td>{{ texteLivraison(commande) }}</td>
+            <td [class]="'age ' + classeAge(commande)">{{ formaterAge(commande.age_minutes) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile : cartes -->
+  <div class="cartes">
+    @for (commande of commandes(); track commande.id) {
+      <button type="button" class="carte" [class.ligne-ouverte]="commande.id === commandeOuverteId()" (click)="ouvrir.emit(commande.id)">
+        <span class="carte-entete">
+          <span class="fort">{{ commande.reference }}</span>
+          <span class="badge badge-{{ commande.groupe }}">{{ commande.statut_libelle }}</span>
+        </span>
+        <span class="carte-ligne">{{ commande.client.nom }} → {{ commande.partenaire.nom }}</span>
+        <span class="carte-ligne">
+          <strong>{{ formaterMontant(commande.montant_total) }}</strong> · {{ commande.mode_livraison_libelle }}
+        </span>
+        <span class="carte-ligne">Livraison : {{ texteLivraison(commande) }}</span>
+        <span class="carte-ligne">
+          {{ formaterDateHeure(commande.cree_le) }} ·
+          <span [class]="'age ' + classeAge(commande)">{{ formaterAge(commande.age_minutes) }}</span>
+        </span>
+      </button>
+    }
+  </div>
+
+  @if (nombrePages() > 1) {
+    <div class="pagination">
+      <button type="button" [disabled]="page() === 1" (click)="pageChange.emit(page() - 1)">← Précédent</button>
+      <span>Page {{ page() }} / {{ nombrePages() }}</span>
+      <button type="button" [disabled]="page() >= nombrePages()" (click)="pageChange.emit(page() + 1)">
+        Suivant →
+      </button>
+    </div>
+  }
+}

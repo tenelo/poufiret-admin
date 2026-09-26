@@ -1,0 +1,57 @@
+.frise {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    display: flex;
+    gap: 0.75rem;
+    padding-bottom: 1rem;
+
+    &:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      top: 14px;
+      bottom: 0;
+      left: 5px;
+      width: 2px;
+      background: #e5e7eb;
+    }
+
+    div {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+      font-size: 0.85rem;
+    }
+  }
+
+  .point {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    margin-top: 3px;
+    background: #4f46e5;
+    border-radius: 50%;
+  }
+
+  .commentaire {
+    margin: 0.2rem 0 0;
+    padding: 0.4rem 0.6rem;
+    background: #f9fafb;
+    border-radius: 6px;
+    color: #374151;
+    font-size: 0.8rem;
+  }
+}
+
+.meta {
+  font-size: 0.72rem;
+  color: #6b7280;
+}
+
+.vide {
+  color: #6b7280;
+  font-size: 0.85rem;
+}

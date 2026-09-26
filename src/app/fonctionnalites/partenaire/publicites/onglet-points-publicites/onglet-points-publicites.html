@@ -26,7 +26,7 @@
         <div class="entete-carte">
           <span class="titre">{{ pub.titre }}</span>
           <div class="entete-carte-droite">
-            <span class="badge badge-{{ pub.statut }}">{{ pub.statut }}</span>
+            <span class="badge badge-{{ pub.statut }}">{{ libelleStatut(pub) }}</span>
             <button
               type="button"
               class="bouton-icone-supprimer"
@@ -41,70 +41,9 @@
         <p class="formule">Formule : {{ pub.formule }}</p>
 
         @if (estDetaillee(pub)) {
-          <div class="grille-stats-pub">
-            <div class="stat-pub">
-              <span class="valeur">{{ pub.nb_impressions }}</span>
-              <span class="libelle">Affichages</span>
-            </div>
-            <div class="stat-pub">
-              <span class="valeur">{{ pub.nb_clics }}</span>
-              <span class="libelle">Clics</span>
-            </div>
-            <div class="stat-pub">
-              <span class="valeur">{{ pub.taux_clic }}%</span>
-              <span class="libelle">Taux de clic</span>
-            </div>
-            <div class="stat-pub">
-              <span class="valeur">{{ pub.nb_personnes_touchees }}</span>
-              <span class="libelle">Personnes touchées</span>
-            </div>
-          </div>
-
-          @if (pub.cible_pourcentage !== null) {
-            <div class="jauge-cible">
-              <span class="etiquette-jauge">
-                Cible {{ pub.cible_pourcentage }}%
-                <span [class.atteinte]="pub.cible_atteinte">
-                  {{ pub.cible_atteinte ? 'atteinte' : 'en cours' }}
-                </span>
-              </span>
-              <div class="barre-progression">
-                <div
-                  class="remplissage"
-                  [class.remplissage-atteint]="pub.cible_atteinte"
-                  [style.width.%]="pub.cible_atteinte ? 100 : pub.cible_pourcentage"
-                ></div>
-              </div>
-            </div>
-          }
-
-          @if (entreesImpressionsParType(pub.impressions_par_type).length > 0) {
-            <div class="mini-barres">
-              @for (entree of entreesImpressionsParType(pub.impressions_par_type); track entree.type) {
-                <div class="mini-barre-ligne">
-                  <span class="mini-barre-libelle">{{ entree.type }}</span>
-                  <div class="mini-barre-piste">
-                    <div
-                      class="mini-barre-remplissage"
-                      [style.width.%]="pourcentageBarre(entree.valeur, pub.impressions_par_type)"
-                    ></div>
-                  </div>
-                  <span class="mini-barre-valeur">{{ entree.valeur }}</span>
-                </div>
-              }
-            </div>
-          }
-
-          <p class="periode">
-            @if (pub.debut_diffusion && pub.fin_diffusion) {
-              Diffusion du {{ pub.debut_diffusion | date: 'dd/MM/yyyy' }} au
-              {{ pub.fin_diffusion | date: 'dd/MM/yyyy' }}
-            } @else {
-              Diffusion pas encore programmée
-            }
-          </p>
+          <app-stats-publicite [stats]="pub" />
         } @else {
-          <p class="message-restreint">{{ pub.message }}</p>
+          <p class="message-restreint">{{ messageStats(pub) }}</p>
         }
       </div>
     }

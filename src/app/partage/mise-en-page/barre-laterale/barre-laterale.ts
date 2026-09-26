@@ -92,6 +92,13 @@ const ENTREES_ADMIN: EntreeMenuAdmin[] = [
     capacite: 'voir_stats',
   },
   {
+    // Super-admin (toutes capacités à true côté backend) OU capacité gerer_commandes.
+    libelle: 'Commandes',
+    lien: '/administration/commandes',
+    icone: '🧾',
+    capacite: 'gerer_commandes',
+  },
+  {
     libelle: 'Publicités',
     lien: '/administration/publicites',
     icone: '📣',

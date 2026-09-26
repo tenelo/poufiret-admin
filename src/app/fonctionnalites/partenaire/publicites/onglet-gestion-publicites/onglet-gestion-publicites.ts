@@ -8,7 +8,7 @@ import { DialogReconduction, DonneesReconduction } from './dialog-reconduction/d
 import { extraireMessageErreur } from '../../mes-produits/extraire-message-erreur';
 import {
   FormulePublicite,
-  LIBELLES_STATUT_PUBLICITE,
+  libelleStatutPublicite,
   MaPublicite,
   PorteePublicite,
 } from '../../../../modeles/publicite.model';
@@ -36,7 +36,7 @@ export class OngletGestionPublicites implements OnInit {
   // Portée du forfait (null si indisponible : aucune option grisée à la reconduction).
   readonly porteeForfait = signal<PorteePublicite | null>(null);
 
-  readonly libellesStatut = LIBELLES_STATUT_PUBLICITE;
+  readonly libelleStatut = libelleStatutPublicite;
 
   readonly soumissionEnCoursId = signal<string | null>(null);
   readonly messageErreur = signal<string | null>(null);
@@ -180,8 +180,8 @@ export class OngletGestionPublicites implements OnInit {
         this.publiciteDetail.set(publiciteMaj);
         this.messageSucces.set(
           publiciteMaj.statut === 'en_attente_validation'
-            ? `Image mise à jour. La campagne repasse en validation par l'administration (statut : ${this.libellesStatut[publiciteMaj.statut]}).`
-            : `Image mise à jour avec succès (statut : ${this.libellesStatut[publiciteMaj.statut]}).`,
+            ? `Image mise à jour. La campagne repasse en validation par l'administration (statut : ${this.libelleStatut(publiciteMaj)}).`
+            : `Image mise à jour avec succès (statut : ${this.libelleStatut(publiciteMaj)}).`,
         );
       },
       error: (erreur: unknown) => {
