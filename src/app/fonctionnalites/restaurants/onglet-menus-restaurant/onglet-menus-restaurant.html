@@ -1,0 +1,134 @@
+@if (chargementEnCours()) {
+  <p class="etat">Chargement des menus…</p>
+} @else if (erreurChargement()) {
+  <div class="etat-erreur">
+    <p>{{ erreurChargement() }}</p>
+    <button type="button" (click)="charger()">Réessayer</button>
+  </div>
+} @else {
+  @if (messageSucces()) {
+    <p class="message-succes">{{ messageSucces() }}</p>
+  }
+
+  <!-- Semaine type -->
+  <section class="carte">
+    <div class="entete-carte">
+      <h2>Semaine type</h2>
+      <button type="button" class="bouton-secondaire" (click)="ouvrirCopieConfirmation()">Copier la semaine</button>
+    </div>
+    <div class="conteneur-tableau">
+      <table class="grille-semaine">
+        <thead>
+          <tr>
+            <th>Service</th>
+            @for (jour of joursMenu; track jour.valeur) {
+              <th>{{ jour.libelle }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (option of optionsService; track option.valeur) {
+            <tr>
+              <td class="fort">{{ option.libelle }}</td>
+              @for (jour of joursMenu; track jour.valeur) {
+                <td>
+                  @if (menuCase(jour.valeur, option.valeur); as menu) {
+                    <button type="button" class="case-menu case-remplie" (click)="ouvrirCase(jour.valeur, option.valeur)">
+                      <span class="titre-case">{{ menu.titre || 'Menu' }}</span>
+                      <span class="nb-plats">{{ menu.lignes.length }} plat(s)</span>
+                      @if (!menu.publie) {
+                        <span class="badge-brouillon">Brouillon</span>
+                      }
+                    </button>
+                  } @else {
+                    <button type="button" class="case-menu" (click)="ouvrirCase(jour.valeur, option.valeur)">+ Ajouter</button>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Menus datés -->
+  <section class="carte">
+    <div class="entete-carte">
+      <h2>Menus datés</h2>
+      <button type="button" class="bouton-secondaire" (click)="ouvrirNouveauMenuDate()">+ Nouveau menu daté</button>
+    </div>
+    <ul class="liste-dates">
+      @for (menu of menusDates(); track menu.id) {
+        <li>
+          <button type="button" class="ligne-date" (click)="ouvrirEdition(menu)">
+            <span class="fort">{{ menu.date }}</span>
+            <span>{{ menu.service }}</span>
+            <span>{{ menu.titre || 'Menu' }}</span>
+            <span class="nb-plats">{{ menu.lignes.length }} plat(s)</span>
+            @if (!menu.publie) {
+              <span class="badge-brouillon">Brouillon</span>
+            }
+          </button>
+        </li>
+      } @empty {
+        <li class="vide">Aucun menu daté.</li>
+      }
+    </ul>
+  </section>
+
+  <!-- Aperçu -->
+  <section class="carte">
+    <h2>Ce qui sera servi</h2>
+    <label for="mr-date-apercu">Date</label>
+    <input id="mr-date-apercu" type="date" [value]="dateApercu()" (change)="dateApercu.set($any($event.target).value)" />
+
+    <div class="grille-apercu">
+      @for (option of optionsService; track option.valeur) {
+        <div class="bloc-service">
+          <h3>{{ option.libelle }}</h3>
+          @if (menuDeLApercu(option.valeur); as resultat) {
+            <p class="origine">{{ resultat.origine }}</p>
+            <p class="titre-menu">{{ resultat.menu.titre || 'Menu' }}</p>
+            <ul class="liste-plats-apercu">
+              @for (ligne of resultat.menu.lignes; track ligne.id) {
+                <li>{{ ligne.plat_nom }} — {{ ligne.prix_effectif }} FCFA</li>
+              }
+            </ul>
+          } @else {
+            <p class="vide">Aucun menu.</p>
+          }
+        </div>
+      }
+    </div>
+  </section>
+}
+
+@if (dialogOuvert()) {
+  <app-dialog-menu-restaurant
+    [prefixe]="prefixe()"
+    [menu]="menuEnEdition()"
+    [contexteNouveauMenu]="contexteNouveauMenu()"
+    [plats]="plats()"
+    (ferme)="fermerDialog()"
+    (enregistre)="surDialogEnregistre()"
+    (platCree)="surPlatCree($event)"
+  />
+}
+
+@if (copieConfirmationOuverte()) {
+  <div class="voile-confirmation" (click)="annulerCopie()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>Copier la semaine type actuelle ? Cette action crée de nouveaux menus.</p>
+      @if (erreurCopie()) {
+        <p class="erreur-generale">{{ erreurCopie() }}</p>
+      }
+      <div class="actions-confirmation">
+        <button type="button" class="bouton-secondaire" [disabled]="copieEnCours()" (click)="annulerCopie()">Annuler</button>
+        <button type="button" class="bouton-principal" [disabled]="copieEnCours()" (click)="confirmerCopie()">
+          {{ copieEnCours() ? 'Copie…' : 'Copier' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

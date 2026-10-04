@@ -1,0 +1,252 @@
+.etat {
+  margin: 0;
+  padding: 2rem 0;
+  color: #6b7280;
+  text-align: center;
+}
+
+.etat-erreur {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+
+  p {
+    margin: 0;
+  }
+
+  button {
+    padding: 0.35rem 0.8rem;
+    background: #ffffff;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #b91c1c;
+    cursor: pointer;
+  }
+}
+
+.message-succes {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #15803d;
+  font-size: 0.85rem;
+}
+
+.carte {
+  margin-bottom: 1.25rem;
+  padding: 1.1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  h2 {
+    margin: 0 0 0.9rem;
+    font-size: 1rem;
+    color: #1a1a1a;
+  }
+}
+
+.ligne-statut {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+.badge {
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.badge-ouvert {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.badge-ferme {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.message-statut {
+  color: #4b5563;
+  font-size: 0.85rem;
+}
+
+.avertissement-horaires {
+  margin: 0 0 0.9rem;
+  font-size: 0.82rem;
+  color: #b45309;
+}
+
+.lien-horaires {
+  margin-left: 0.4rem;
+  padding: 0;
+  background: none;
+  border: none;
+  color: #4f46e5;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.ligne-case {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.grille-fermeture {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+
+  label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+  }
+
+  input {
+    padding: 0.45rem 0.65rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.85rem;
+  }
+}
+
+.bouton-secondaire {
+  padding: 0.5rem 1rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.erreur-champ {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: #dc2626;
+}
+
+.grille-services {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+
+  @media (min-width: 720px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.bloc-service {
+  padding: 0.9rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+
+  h3 {
+    margin: 0 0 0.5rem;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #4f46e5;
+  }
+}
+
+.titre-menu {
+  margin: 0 0 0.4rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  font-size: 0.85rem;
+}
+
+.liste-plats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.4rem;
+    color: #374151;
+  }
+
+  .prix {
+    font-weight: 600;
+  }
+
+  .stock {
+    flex-basis: 100%;
+    font-size: 0.72rem;
+    color: #6b7280;
+  }
+
+  .epuise {
+    opacity: 0.6;
+    text-decoration: line-through;
+  }
+}
+
+.vide {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+.raccourcis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.bouton-raccourci {
+  padding: 0.6rem 1.1rem;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  color: #3730a3;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: #e0e7ff;
+  }
+}

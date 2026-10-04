@@ -23,11 +23,18 @@ export interface ModeLivraisonMeta {
   libelle: string;
 }
 
+export interface TypePartenaireMeta {
+  valeur: string;
+  libelle: string;
+}
+
 /** GET meta/. */
 export interface MetaCommandes {
   statuts: StatutCommandeMeta[];
   groupes: GroupeCommandeMeta[];
   modes_livraison: ModeLivraisonMeta[];
+  // Phase restaurants : filtre "Type de partenaire" (ex. "Restaurants uniquement" via restauration=1).
+  types_partenaire?: TypePartenaireMeta[];
 }
 
 export interface LivraisonCommande {
@@ -200,6 +207,9 @@ export interface FiltresCommandesAdmin {
   departement: number | '';
   mode: string;
   statut: string;
+  // Phase restaurants.
+  typePartenaire: string;
+  restauration: boolean;
 }
 
 export const FILTRES_COMMANDES_DEFAUT: FiltresCommandesAdmin = {
@@ -211,6 +221,8 @@ export const FILTRES_COMMANDES_DEFAUT: FiltresCommandesAdmin = {
   departement: '',
   mode: '',
   statut: '',
+  typePartenaire: '',
+  restauration: false,
 };
 
 function formaterDateIso(date: Date): string {

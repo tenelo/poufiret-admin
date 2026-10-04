@@ -1,0 +1,189 @@
+<div class="voile-modale" (click)="ferme.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>{{ menuCourant() ? 'Modifier le menu' : 'Nouveau menu' }}</h2>
+
+    @if (menuCourant()?.modifie_le) {
+      <p class="tracabilite">
+        Dernière modification {{ menuCourant()!.modifie_par_role === 'admin' ? "par l'administration" : 'par le restaurateur' }}
+        @if (menuCourant()!.modifie_par_nom) { ({{ menuCourant()!.modifie_par_nom }}) }
+      </p>
+    }
+
+    <nav class="onglets-dialog">
+      <button type="button" class="onglet" [class.onglet-actif]="ongletActif() === 'infos'" (click)="changerOnglet('infos')">Infos</button>
+      <button type="button" class="onglet" [disabled]="!menuCourant()" [class.onglet-actif]="ongletActif() === 'lignes'" (click)="changerOnglet('lignes')">
+        Plats du menu
+      </button>
+    </nav>
+    @if (!menuCourant()) {
+      <p class="aide">Enregistrez le menu pour y ajouter des plats.</p>
+    }
+
+    @switch (ongletActif()) {
+      @case ('infos') {
+        <form (submit)="$event.preventDefault(); soumettre()">
+          <label for="dm-nature">Nature</label>
+          <select id="dm-nature" (change)="nature.set($any($event.target).value)">
+            <option value="hebdomadaire" [selected]="nature() === 'hebdomadaire'">Semaine type (un jour fixe)</option>
+            <option value="date" [selected]="nature() === 'date'">Daté (une date précise)</option>
+          </select>
+
+          @if (nature() === 'hebdomadaire') {
+            <label for="dm-jour">Jour</label>
+            <select id="dm-jour" (change)="jourSemaine.set(+$any($event.target).value)">
+              @for (jour of joursMenu; track jour.valeur) {
+                <option [value]="jour.valeur" [selected]="jour.valeur === jourSemaine()">{{ jour.libelle }}</option>
+              }
+            </select>
+            @if (erreursChamps()['jour_semaine']) {
+              <p class="erreur-champ">{{ erreursChamps()['jour_semaine'] }}</p>
+            }
+          } @else {
+            <label for="dm-date">Date</label>
+            <input id="dm-date" type="date" [value]="date()" (change)="date.set($any($event.target).value)" />
+            @if (erreursChamps()['date']) {
+              <p class="erreur-champ">{{ erreursChamps()['date'] }}</p>
+            }
+          }
+
+          <label for="dm-service">Service</label>
+          <select id="dm-service" (change)="service_.set($any($event.target).value)">
+            @for (option of optionsService; track option.valeur) {
+              <option [value]="option.valeur" [selected]="option.valeur === service_()">{{ option.libelle }}</option>
+            }
+          </select>
+
+          <div class="grille-champs">
+            <div>
+              <label for="dm-debut">Heure de début</label>
+              <input id="dm-debut" type="time" [value]="heureDebut()" (change)="heureDebut.set($any($event.target).value)" />
+              @if (erreursChamps()['heure_debut']) {
+                <p class="erreur-champ">{{ erreursChamps()['heure_debut'] }}</p>
+              }
+            </div>
+            <div>
+              <label for="dm-fin">Heure de fin</label>
+              <input id="dm-fin" type="time" [value]="heureFin()" (change)="heureFin.set($any($event.target).value)" />
+              @if (erreursChamps()['heure_fin']) {
+                <p class="erreur-champ">{{ erreursChamps()['heure_fin'] }}</p>
+              }
+            </div>
+            <div>
+              <label for="dm-limite">Heure limite de commande</label>
+              <input id="dm-limite" type="time" [value]="heureLimite()" (change)="heureLimite.set($any($event.target).value)" />
+            </div>
+          </div>
+
+          <label for="dm-titre">Titre (optionnel)</label>
+          <input id="dm-titre" type="text" [value]="titre()" (input)="titre.set($any($event.target).value)" />
+
+          <label class="ligne-case">
+            <input type="checkbox" [checked]="publie()" (change)="publie.set($any($event.target).checked)" />
+            Publié
+          </label>
+
+          @if (messageErreur()) {
+            <p class="erreur-generale">{{ messageErreur() }}</p>
+          }
+
+          <div class="actions-modale">
+            @if (menuCourant()) {
+              <button type="button" class="bouton-secondaire" (click)="ouvrirDupliquer()">Dupliquer</button>
+            }
+            <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Fermer</button>
+            <button type="submit" class="bouton-principal" [disabled]="enregistrementEnCours()">
+              {{ enregistrementEnCours() ? 'Enregistrement…' : 'Enregistrer' }}
+            </button>
+          </div>
+        </form>
+      }
+
+      @case ('lignes') {
+        <ul class="liste-lignes">
+          @for (ligne of lignes(); track ligne.id) {
+            <li>
+              <span class="fort">{{ ligne.plat_nom ?? nomPlat(ligne.plat) }}</span>
+              <span class="prix">{{ ligne.prix_effectif }} FCFA</span>
+              @if (ligne.stock_restant !== null) {
+                <span class="stock">{{ ligne.est_epuise ? 'Épuisé' : ligne.stock_restant + ' restant(s)' }}</span>
+              }
+              <button type="button" class="bouton-icone" (click)="supprimerLigne(ligne.id)" aria-label="Retirer">🗑</button>
+            </li>
+          } @empty {
+            <li class="vide">Aucun plat dans ce menu.</li>
+          }
+        </ul>
+
+        <div class="ligne-ajout-ligne">
+          <select [value]="platChoisiId()" (change)="platChoisiId.set($any($event.target).value === '' ? '' : +$any($event.target).value)">
+            <option value="">— Choisir un plat —</option>
+            @for (plat of plats(); track plat.id) {
+              <option [value]="plat.id" [selected]="plat.id === platChoisiId()">{{ plat.nom }}</option>
+            }
+          </select>
+          <input type="number" min="0" placeholder="Prix du menu (optionnel)" [value]="prixLigne()" (input)="prixLigne.set($any($event.target).value)" />
+          <input type="number" min="0" placeholder="Stock (optionnel)" [value]="stockLigne()" (input)="stockLigne.set($any($event.target).value)" />
+          <button type="button" class="bouton-secondaire" [disabled]="ajoutLigneEnCours() || platChoisiId() === ''" (click)="ajouterLigne()">
+            + Ajouter
+          </button>
+        </div>
+        @if (erreurLignes()) {
+          <p class="erreur-champ">{{ erreurLignes() }}</p>
+        }
+
+        @if (!creationPlatOuverte()) {
+          <button type="button" class="lien-creation-rapide" (click)="ouvrirCreationPlat()">
+            + Créer un plat réservé aux menus
+          </button>
+        } @else {
+          <div class="bloc-creation-rapide">
+            <input type="text" placeholder="Nom du plat" [value]="nouveauPlatNom()" (input)="nouveauPlatNom.set($any($event.target).value)" />
+            <input type="number" min="0" placeholder="Prix" [value]="nouveauPlatPrix()" (input)="nouveauPlatPrix.set($any($event.target).value)" />
+            <button type="button" class="bouton-secondaire" [disabled]="creationPlatEnCours()" (click)="creerPlatRapide()">
+              {{ creationPlatEnCours() ? 'Création…' : 'Créer' }}
+            </button>
+            <button type="button" class="bouton-secondaire" (click)="annulerCreationPlat()">Annuler</button>
+          </div>
+          @if (erreurCreationPlat()) {
+            <p class="erreur-champ">{{ erreurCreationPlat() }}</p>
+          }
+        }
+      }
+    }
+  </div>
+</div>
+
+@if (dupliquerOuvert()) {
+  <div class="voile-confirmation" (click)="annulerDupliquer()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>Dupliquer ce menu (nouveau menu non publié) :</p>
+      <label class="ligne-case">
+        <input type="radio" name="dupliquer-vers" [checked]="dupliquerVers() === 'date'" (change)="dupliquerVers.set('date')" />
+        Vers une date
+      </label>
+      @if (dupliquerVers() === 'date') {
+        <input type="date" [value]="dupliquerDate()" (change)="dupliquerDate.set($any($event.target).value)" />
+      }
+      <label class="ligne-case">
+        <input type="radio" name="dupliquer-vers" [checked]="dupliquerVers() === 'jour'" (change)="dupliquerVers.set('jour')" />
+        Vers un jour de la semaine type
+      </label>
+      @if (dupliquerVers() === 'jour') {
+        <select (change)="dupliquerJour.set(+$any($event.target).value)">
+          @for (jour of joursMenu; track jour.valeur) {
+            <option [value]="jour.valeur" [selected]="jour.valeur === dupliquerJour()">{{ jour.libelle }}</option>
+          }
+        </select>
+      }
+      @if (erreurDupliquer()) {
+        <p class="erreur-generale">{{ erreurDupliquer() }}</p>
+      }
+      <div class="actions-confirmation">
+        <button type="button" class="bouton-secondaire" [disabled]="dupliquerEnCours()" (click)="annulerDupliquer()">Annuler</button>
+        <button type="button" class="bouton-principal" [disabled]="dupliquerEnCours()" (click)="confirmerDupliquer()">
+          {{ dupliquerEnCours() ? 'Duplication…' : 'Dupliquer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

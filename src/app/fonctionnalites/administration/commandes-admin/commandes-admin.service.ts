@@ -80,6 +80,8 @@ export class CommandesAdminService {
     if (au) params = params.set('au', au);
     if (filtres.partenaire) params = params.set('partenaire', filtres.partenaire.id);
     if (filtres.departement !== '') params = params.set('departement', filtres.departement);
+    if (filtres.typePartenaire) params = params.set('type_partenaire', filtres.typePartenaire);
+    if (filtres.restauration) params = params.set('restauration', '1');
     return this.http.get<StatsCommandes>(`${this.base}stats/`, { params });
   }
 
@@ -104,6 +106,8 @@ export class CommandesAdminService {
     if (filtres.departement !== '') params = params.set('departement', filtres.departement);
     if (filtres.mode) params = params.set('mode_livraison', filtres.mode);
     if (filtres.recherche.trim()) params = params.set('search', filtres.recherche.trim());
+    if (filtres.typePartenaire) params = params.set('type_partenaire', filtres.typePartenaire);
+    if (filtres.restauration) params = params.set('restauration', '1');
     const { du, au } = bornesPeriode(filtres);
     if (du) params = params.set('du', du);
     if (au) params = params.set('au', au);

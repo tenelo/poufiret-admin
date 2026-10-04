@@ -20,6 +20,24 @@
     <p class="erreur-generale">{{ erreurExport() }}</p>
   }
 
+  @if (!partenaireFixe() && restaurantsBandeau(); as restaurants) {
+    @if (restaurants.length > 0) {
+      <div class="bandeau-restaurants">
+        <span class="etiquette-bandeau">Restaurants :</span>
+        @for (restaurant of restaurants; track restaurant.id) {
+          <button
+            type="button"
+            class="puce-restaurant"
+            [class.puce-active]="filtres().partenaire?.id === restaurant.id"
+            (click)="filtrerSurRestaurant(restaurant)"
+          >
+            {{ restaurant.nom }} <span class="compteur-puce">{{ restaurant.total }}</span>
+          </button>
+        }
+      </div>
+    }
+  }
+
   @if (!pret()) {
     <p class="etat">Chargement du centre des commandes…</p>
   } @else {
@@ -46,6 +64,7 @@
       [meta]="meta()"
       [groupe]="groupeCourant()"
       [modeStats]="onglet() === 'tableau'"
+      [partenaireVerrouille]="!!partenaireFixe()"
       (filtresChange)="surFiltres($event)"
     />
 

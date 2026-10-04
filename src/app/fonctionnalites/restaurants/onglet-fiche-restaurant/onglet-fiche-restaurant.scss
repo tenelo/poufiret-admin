@@ -1,0 +1,268 @@
+.etat {
+  margin: 0;
+  padding: 2rem 0;
+  color: #6b7280;
+  text-align: center;
+}
+
+.etat-erreur {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+
+  button {
+    padding: 0.35rem 0.8rem;
+    background: #ffffff;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #b91c1c;
+    cursor: pointer;
+  }
+}
+
+.message-succes {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #15803d;
+  font-size: 0.85rem;
+}
+
+.tracabilite {
+  margin: 0 0 1rem;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.carte {
+  margin-bottom: 1.25rem;
+  padding: 1.1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  h2 {
+    margin: 0 0 0.9rem;
+    font-size: 1rem;
+    color: #1a1a1a;
+  }
+}
+
+.conteneur-tableau {
+  overflow-x: auto;
+  margin-bottom: 0.9rem;
+}
+
+.tableau-horaires {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+
+  th,
+  td {
+    padding: 0.4rem 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  th {
+    color: #6b7280;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+  }
+
+  input[type='time'],
+  .champ-note {
+    width: 100%;
+    padding: 0.3rem 0.4rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.78rem;
+  }
+}
+
+.fort {
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.liste-telephones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.7rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    font-size: 0.85rem;
+  }
+}
+
+.vide {
+  color: #9ca3af;
+  font-size: 0.82rem;
+}
+
+.ligne-ajout-telephone {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+
+  input {
+    flex: 1 1 160px;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.85rem;
+  }
+}
+
+.bouton-icone {
+  margin-left: auto;
+  padding: 0.2rem 0.4rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.etiquette {
+  display: block;
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.puces-services,
+.puces-specialites {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.puce {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  background: #f3f4f6;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.puce-active {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.puce-retirable {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.65rem;
+  background: #eef2ff;
+  border-radius: 999px;
+  color: #4338ca;
+  font-size: 0.8rem;
+
+  button {
+    background: none;
+    border: none;
+    color: #4338ca;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+}
+
+.grille-champs {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 1rem;
+  margin-bottom: 1rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  label {
+    display: block;
+    margin: 0.5rem 0 0.25rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #6b7280;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.85rem;
+  }
+}
+
+.bouton-principal {
+  padding: 0.55rem 1.2rem;
+  background: #4f46e5;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.bouton-secondaire {
+  padding: 0.5rem 1rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.erreur-champ {
+  margin: 0 0 0.6rem;
+  font-size: 0.8rem;
+  color: #dc2626;
+}

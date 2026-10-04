@@ -12,7 +12,7 @@
     </ul>
   } @else {
     <ul>
-      @for (entree of entreesPartenaire; track entree.libelle) {
+      @for (entree of entreesPartenaire(); track entree.libelle) {
         <li>
           @if (entree.lien) {
             <a [routerLink]="entree.lien" routerLinkActive="actif">{{ entree.libelle }}</a>

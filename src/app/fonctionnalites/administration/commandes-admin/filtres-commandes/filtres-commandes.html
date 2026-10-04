@@ -36,14 +36,16 @@
     </div>
   }
 
-  <div class="champ champ-partenaire">
-    <label for="fc-partenaire">Partenaire</label>
-    <app-selecteur-partenaire
-      idChamp="fc-partenaire"
-      [partenaire]="filtres().partenaire"
-      (partenaireChange)="changerPartenaire($event)"
-    />
-  </div>
+  @if (!partenaireVerrouille()) {
+    <div class="champ champ-partenaire">
+      <label for="fc-partenaire">Partenaire</label>
+      <app-selecteur-partenaire
+        idChamp="fc-partenaire"
+        [partenaire]="filtres().partenaire"
+        (partenaireChange)="changerPartenaire($event)"
+      />
+    </div>
+  }
 
   <div class="champ">
     <label for="fc-departement">Département</label>
@@ -79,5 +81,25 @@
         }
       </select>
     </div>
+  }
+
+  @if (!partenaireVerrouille() && meta()?.types_partenaire?.length) {
+    <div class="champ">
+      <label for="fc-type-partenaire">Type de partenaire</label>
+      <select id="fc-type-partenaire" (change)="changerTypePartenaire($any($event.target).value)">
+        <option value="" [selected]="filtres().typePartenaire === ''">Tous</option>
+        @for (type of meta()!.types_partenaire; track type.valeur) {
+          <option [value]="type.valeur" [selected]="type.valeur === filtres().typePartenaire">{{ type.libelle }}</option>
+        }
+      </select>
+    </div>
+
+    <label class="champ champ-toggle">
+      <span>&nbsp;</span>
+      <span class="ligne-toggle">
+        <input type="checkbox" [checked]="filtres().restauration" (change)="basculerRestauration($any($event.target).checked)" />
+        Restaurants uniquement
+      </span>
+    </label>
   }
 </div>

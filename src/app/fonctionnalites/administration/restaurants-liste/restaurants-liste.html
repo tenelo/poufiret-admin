@@ -1,0 +1,66 @@
+<section class="page-restaurants-liste">
+  <div class="entete">
+    <h1>Restaurants</h1>
+    <button type="button" class="bouton-secondaire" [disabled]="chargementEnCours()" (click)="charger()">
+      {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
+    </button>
+  </div>
+
+  <div class="barre-filtres">
+    <input
+      type="search"
+      class="champ-recherche"
+      placeholder="Rechercher un restaurant ou un département…"
+      [value]="recherche()"
+      (input)="changerRecherche($any($event.target).value)"
+    />
+    @if (departements().length > 0) {
+      <select class="champ-departement" (change)="changerDepartement($any($event.target).value)">
+        <option value="" [selected]="departementFiltre() === ''">Tous les départements</option>
+        @for (departement of departements(); track departement) {
+          <option [value]="departement" [selected]="departement === departementFiltre()">{{ departement }}</option>
+        }
+      </select>
+    }
+  </div>
+
+  @if (chargementEnCours()) {
+    <p class="etat">Chargement des restaurants…</p>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (restaurantsFiltres().length === 0) {
+    <p class="etat">
+      {{ restaurants().length === 0 ? 'Aucun restaurant.' : 'Aucun restaurant ne correspond à ces critères.' }}
+    </p>
+  } @else {
+    <div class="grille-restaurants">
+      @for (restaurant of restaurantsFiltres(); track restaurant.id) {
+        <button type="button" class="carte-restaurant" (click)="ouvrir(restaurant)">
+          <div class="entete-carte">
+            <span class="nom">{{ restaurant.nom }}</span>
+            <span class="badge" [class.badge-ouvert]="restaurant.ouvert" [class.badge-ferme]="!restaurant.ouvert">
+              {{ restaurant.ouvert ? 'Ouvert' : 'Fermé' }}
+            </span>
+          </div>
+          @if (restaurant.departement_nom) {
+            <p class="departement">{{ restaurant.departement_nom }}</p>
+          }
+          <div class="indicateurs">
+            @if (!restaurant.a_une_fiche) {
+              <span class="alerte">⚠ Fiche à compléter</span>
+            }
+            @if (!restaurant.menu_du_jour_publie) {
+              <span class="alerte">⚠ Pas de menu aujourd'hui</span>
+            } @else {
+              <span class="ok">Menu du jour publié</span>
+            }
+            <span class="commandes">{{ restaurant.commandes_du_jour }} commande(s) aujourd'hui</span>
+          </div>
+        </button>
+      }
+    </div>
+  }
+</section>

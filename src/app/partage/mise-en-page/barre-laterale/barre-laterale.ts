@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 
 import { AuthService } from '../../../noyau/auth/auth.service';
 import { PermissionsService } from '../../../noyau/permissions/permissions.service';
+import { ProfilPartenaireContexteService } from '../../../noyau/partenaire/profil-partenaire-contexte.service';
 import { NomCapacite } from '../../../modeles/permissions-admin.model';
 
 interface EntreeMenuPartenaire {
@@ -26,11 +27,24 @@ interface EntreeMenuAdmin {
   toujoursVisible?: boolean;
 }
 
-const ENTREES_PARTENAIRE: EntreeMenuPartenaire[] = [
+// Commun à tous les partenaires. Pour un restaurateur, "Ma carte"/"Mes menus" remplacent
+// "Mes catégories"/"Mes produits" (voir ENTREES_PARTENAIRE_RESTAURATEUR) — même donnée, interface
+// restaurant dédiée (espace restaurant, voir fonctionnalites/restaurants/).
+const ENTREES_PARTENAIRE_STANDARD: EntreeMenuPartenaire[] = [
   { libelle: 'Tableau de bord', lien: '/tableau-de-bord' },
   { libelle: 'Mon profil', lien: '/mon-profil' },
   { libelle: 'Mes catégories', lien: '/mes-categories' },
   { libelle: 'Mes produits', lien: '/mes-produits' },
+  { libelle: 'Mes commandes', lien: '/mes-commandes' },
+  { libelle: 'Publicités', lien: '/publicites' },
+];
+
+const ENTREES_PARTENAIRE_RESTAURATEUR: EntreeMenuPartenaire[] = [
+  { libelle: 'Tableau de bord', lien: '/tableau-de-bord' },
+  { libelle: 'Mon profil', lien: '/mon-profil' },
+  { libelle: 'Mon restaurant', lien: '/mon-restaurant' },
+  { libelle: 'Ma carte', lien: '/ma-carte' },
+  { libelle: 'Mes menus', lien: '/mes-menus' },
   { libelle: 'Mes commandes', lien: '/mes-commandes' },
   { libelle: 'Publicités', lien: '/publicites' },
 ];
@@ -136,6 +150,13 @@ const ENTREES_ADMIN: EntreeMenuAdmin[] = [
     capacite: 'gerer_geographie',
   },
   {
+    // Super-admin (toutes capacités à true côté backend) OU capacité gerer_restaurants.
+    libelle: 'Restaurants',
+    lien: '/administration/restaurants',
+    icone: '🍽️',
+    capacite: 'gerer_restaurants',
+  },
+  {
     // Pas de capacité : réservé au super-admin, voir le filtre ci-dessous.
     libelle: 'Modération de comptes',
     lien: '/administration/moderation',
@@ -167,10 +188,13 @@ const ENTREES_ADMIN: EntreeMenuAdmin[] = [
 export class BarreLaterale {
   private readonly authService = inject(AuthService);
   private readonly permissionsService = inject(PermissionsService);
+  private readonly profilPartenaireContexte = inject(ProfilPartenaireContexteService);
 
   readonly estAdmin = computed(() => this.authService.role() === 'admin');
 
-  readonly entreesPartenaire = ENTREES_PARTENAIRE;
+  readonly entreesPartenaire = computed<EntreeMenuPartenaire[]>(() =>
+    this.profilPartenaireContexte.estRestaurateur() ? ENTREES_PARTENAIRE_RESTAURATEUR : ENTREES_PARTENAIRE_STANDARD,
+  );
 
   readonly entreesAdmin = computed<EntreeMenuAdmin[]>(() =>
     ENTREES_ADMIN.filter((entree) => {

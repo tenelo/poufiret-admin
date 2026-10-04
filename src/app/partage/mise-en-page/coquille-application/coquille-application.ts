@@ -5,6 +5,7 @@ import { EnTete } from '../en-tete/en-tete';
 import { BarreLaterale } from '../barre-laterale/barre-laterale';
 import { AuthService } from '../../../noyau/auth/auth.service';
 import { PermissionsService } from '../../../noyau/permissions/permissions.service';
+import { ProfilPartenaireContexteService } from '../../../noyau/partenaire/profil-partenaire-contexte.service';
 
 // Largeur à partir de laquelle la sidebar redevient fixe (doit rester alignée avec le SCSS).
 const LARGEUR_BUREAU_PX = 992;
@@ -26,6 +27,7 @@ const LARGEUR_BUREAU_PX = 992;
 export class CoquilleApplication implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly permissionsService = inject(PermissionsService);
+  private readonly profilPartenaireContexte = inject(ProfilPartenaireContexteService);
 
   readonly menuOuvert = signal(false);
 
@@ -36,6 +38,10 @@ export class CoquilleApplication implements OnInit {
 
     if (this.authService.role() === 'admin') {
       this.permissionsService.chargerPermissions().subscribe();
+    }
+    if (this.authService.role() === 'partenaire') {
+      // Nécessaire au menu latéral, pour distinguer un restaurateur (menu Restaurants) du reste.
+      this.profilPartenaireContexte.charger().subscribe({ error: () => {} });
     }
   }
 

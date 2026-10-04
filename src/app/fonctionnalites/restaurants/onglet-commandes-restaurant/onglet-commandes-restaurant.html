@@ -1,0 +1,11 @@
+@if (estAdmin()) {
+  @if (peutGererCommandes()) {
+    <app-commandes-admin [partenaireFixe]="partenaireFixe()" />
+  } @else {
+    <div class="acces-refuse">
+      <p>Accès aux commandes : demandez le droit « Gérer le centre des commandes » à un super-admin.</p>
+    </div>
+  }
+} @else {
+  <app-mes-commandes />
+}

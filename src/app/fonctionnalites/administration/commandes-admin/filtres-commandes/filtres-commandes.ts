@@ -32,6 +32,8 @@ export class FiltresCommandes implements OnInit {
   readonly groupe = input<string | null>(null);
   /** Mode tableau de bord : seulement période, partenaire et département. */
   readonly modeStats = input(false);
+  /** Partenaire imposé par le parent (ex. onglet Commandes de l'espace restaurant) : champ masqué. */
+  readonly partenaireVerrouille = input(false);
 
   readonly filtresChange = output<FiltresCommandesAdmin>();
 
@@ -95,5 +97,13 @@ export class FiltresCommandes implements OnInit {
 
   changerAu(valeur: string): void {
     this.maj({ au: valeur });
+  }
+
+  changerTypePartenaire(valeur: string): void {
+    this.maj({ typePartenaire: valeur });
+  }
+
+  basculerRestauration(valeur: boolean): void {
+    this.maj({ restauration: valeur });
   }
 }

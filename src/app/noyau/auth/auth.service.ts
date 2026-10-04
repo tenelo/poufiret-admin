@@ -5,6 +5,7 @@ import { Observable, map, tap, throwError } from 'rxjs';
 
 import { ConfigurationService } from '../config/configuration.service';
 import { PermissionsService } from '../permissions/permissions.service';
+import { ProfilPartenaireContexteService } from '../partenaire/profil-partenaire-contexte.service';
 import {
   ReponseConnexion,
   ReponsePin,
@@ -37,6 +38,7 @@ export class AuthService {
   private readonly configuration = inject(ConfigurationService);
   private readonly router = inject(Router);
   private readonly permissionsService = inject(PermissionsService);
+  private readonly profilPartenaireContexte = inject(ProfilPartenaireContexteService);
 
   private readonly utilisateurCourant = signal<Utilisateur | null>(this.lireUtilisateurStocke());
 
@@ -165,6 +167,7 @@ export class AuthService {
     localStorage.removeItem(CLE_UTILISATEUR);
     this.utilisateurCourant.set(null);
     this.permissionsService.reinitialiser();
+    this.profilPartenaireContexte.reinitialiser();
   }
 
   private lireUtilisateurStocke(): Utilisateur | null {

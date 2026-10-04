@@ -1,0 +1,156 @@
+@if (chargementEnCours()) {
+  <p class="etat">Chargement de la carte…</p>
+} @else if (erreurChargement()) {
+  <div class="etat-erreur">
+    <p>{{ erreurChargement() }}</p>
+    <button type="button" (click)="charger()">Réessayer</button>
+  </div>
+} @else {
+  @if (messageErreur()) {
+    <p class="erreur-generale">{{ messageErreur() }}</p>
+  }
+
+  <div class="barre-haute">
+    <div class="ligne-ajout-section">
+      <input
+        type="text"
+        placeholder="Nouvelle section (ex. Entrées)"
+        [value]="nouvelleSectionNom()"
+        (input)="nouvelleSectionNom.set($any($event.target).value)"
+      />
+      <button type="button" class="bouton-secondaire" [disabled]="ajoutSectionEnCours()" (click)="ajouterSection()">
+        + Section
+      </button>
+    </div>
+    <label class="ligne-case">
+      <input type="checkbox" [checked]="filtreReserves()" (change)="basculerFiltreReserves()" />
+      Plats réservés aux menus uniquement
+    </label>
+  </div>
+
+  <div class="sections" cdkDropList (cdkDropListDropped)="surDepotSection($event)">
+    @for (groupe of platsParSection(); track groupe.section.id) {
+      <section class="bloc-section" [class.non-draggable]="groupe.section.id === -1" [cdkDragDisabled]="groupe.section.id === -1" cdkDrag>
+        <div class="entete-section">
+          @if (groupe.section.id !== -1) {
+            <span class="poignee" cdkDragHandle title="Glisser pour réordonner">⠿</span>
+          }
+          @if (sectionEnEditionId() === groupe.section.id) {
+            <input
+              type="text"
+              class="champ-nom-section"
+              [value]="nomEditionSection()"
+              (input)="nomEditionSection.set($any($event.target).value)"
+            />
+            <button type="button" class="bouton-icone" (click)="enregistrerNomSection(groupe.section)">✔</button>
+            <button type="button" class="bouton-icone" (click)="annulerEditionSection()">✖</button>
+          } @else {
+            <h2>{{ groupe.section.nom }}</h2>
+            @if (groupe.section.id !== -1) {
+              <button type="button" class="bouton-icone" (click)="commencerEditionSection(groupe.section)" aria-label="Renommer">✏️</button>
+              <button type="button" class="bouton-icone" (click)="demanderSuppressionSection(groupe.section)" aria-label="Supprimer">🗑</button>
+            }
+          }
+          @if (groupe.section.id !== -1) {
+            <button type="button" class="bouton-ajout-plat" (click)="ouvrirCreationPlat(groupe.section.id)">+ Plat</button>
+          }
+        </div>
+
+        <div class="grille-plats">
+          @for (plat of groupe.plats; track plat.id) {
+            <div class="carte-plat" [class.plat-inactif]="!plat.est_actif">
+              @if (imagePrincipale(plat); as image) {
+                <img [src]="image" [alt]="plat.nom" class="image-plat" />
+              } @else {
+                <div class="image-vide">Aucune image</div>
+              }
+              <div class="corps-plat">
+                <div class="entete-plat">
+                  <span class="nom-plat">{{ plat.nom }}</span>
+                  <span class="prix-plat">{{ plat.prix }} FCFA</span>
+                </div>
+                <div class="badges-etat">
+                  @if (plat.est_reserve_aux_menus) {
+                    <span class="badge-reserve">Réservé aux menus</span>
+                  }
+                  @if (!plat.est_actif) {
+                    <span class="badge-etat badge-inactif">Inactif</span>
+                  }
+                  @if (!plat.est_disponible) {
+                    <span class="badge-etat badge-indisponible">Indisponible</span>
+                  }
+                  @if (plat.est_epuise) {
+                    <span class="badge-etat badge-epuise">Épuisé</span>
+                  }
+                </div>
+                <label class="ligne-case ligne-epuise">
+                  <input
+                    type="checkbox"
+                    [checked]="plat.est_epuise"
+                    [disabled]="epuisementEnCoursId() === plat.id"
+                    (change)="basculerEpuise(plat)"
+                  />
+                  Marquer comme épuisé
+                </label>
+                <div class="actions-plat">
+                  <button type="button" (click)="ouvrirEditionPlat(plat)">Modifier</button>
+                  <button type="button" class="danger" (click)="demanderSuppressionPlat(plat)">Supprimer</button>
+                </div>
+              </div>
+            </div>
+          } @empty {
+            <p class="vide">Aucun plat dans cette section.</p>
+          }
+        </div>
+      </section>
+    } @empty {
+      <p class="vide">Aucune section. Créez-en une pour organiser votre carte.</p>
+    }
+  </div>
+}
+
+@if (dialogOuvert()) {
+  <app-dialog-plat-carte
+    [prefixe]="prefixe()"
+    [plat]="platEnEdition()"
+    [sections]="sectionsOrdonnees()"
+    [sectionParDefaut]="sectionPourNouveauPlat()"
+    [ordreParDefaut]="ordrePourNouveauPlat()"
+    (ferme)="fermerDialogPlat()"
+    (enregistre)="charger()"
+  />
+}
+
+@if (sectionASupprimer(); as section) {
+  <div class="voile-confirmation" (click)="annulerSuppressionSection()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>Supprimer la section « <strong>{{ section.nom }}</strong> » ?</p>
+      @if (erreurSuppressionSection()) {
+        <p class="erreur-generale">{{ erreurSuppressionSection() }}</p>
+      }
+      <div class="actions-confirmation">
+        <button type="button" class="bouton-secondaire" [disabled]="suppressionSectionEnCours()" (click)="annulerSuppressionSection()">Annuler</button>
+        <button type="button" class="bouton-danger" [disabled]="suppressionSectionEnCours()" (click)="confirmerSuppressionSection()">
+          {{ suppressionSectionEnCours() ? 'Suppression…' : 'Supprimer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (platASupprimer(); as plat) {
+  <div class="voile-confirmation" (click)="annulerSuppressionPlat()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>Supprimer le plat « <strong>{{ plat.nom }}</strong> » ?</p>
+      @if (erreurSuppressionPlat()) {
+        <p class="erreur-generale">{{ erreurSuppressionPlat() }}</p>
+      }
+      <div class="actions-confirmation">
+        <button type="button" class="bouton-secondaire" [disabled]="suppressionPlatEnCours()" (click)="annulerSuppressionPlat()">Annuler</button>
+        <button type="button" class="bouton-danger" [disabled]="suppressionPlatEnCours()" (click)="confirmerSuppressionPlat()">
+          {{ suppressionPlatEnCours() ? 'Suppression…' : 'Supprimer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

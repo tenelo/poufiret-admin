@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, filter, fromEvent, interval, merge } from 'rxjs';
@@ -17,6 +17,7 @@ import {
   MetaCommandes,
   ONGLETS_COMMANDES,
   OngletCommandes,
+  PartenaireDetailCommandes,
 } from '../../../modeles/commande-admin.model';
 
 const TAILLE_PAGE = 20;
@@ -41,6 +42,12 @@ export class CommandesAdmin implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
+  /**
+   * Partenaire imposé par le parent (onglet Commandes de l'espace restaurant, côté admin) : filtre
+   * verrouillé sur ce partenaire, pas de bandeau "Restaurants" (déjà un seul restaurant).
+   */
+  readonly partenaireFixe = input<{ id: number; nom: string } | null>(null);
+
   readonly onglets = ONGLETS_COMMANDES;
   readonly taillePage = TAILLE_PAGE;
 
@@ -62,6 +69,9 @@ export class CommandesAdmin implements OnInit {
   readonly exportEnCours = signal(false);
   readonly erreurExport = signal<string | null>(null);
 
+  // ---- Bandeau de puces "Restaurants" (chaque restaurant + son nb de commandes sur la période) ----
+  readonly restaurantsBandeau = signal<PartenaireDetailCommandes[] | null>(null);
+
   /** Groupe envoyé à l'API (null pour « Toutes » et pour le tableau de bord). */
   readonly groupeCourant = computed<string | null>(() => {
     const onglet = this.onglet();
@@ -72,6 +82,13 @@ export class CommandesAdmin implements OnInit {
   private abonnementListe?: Subscription;
 
   ngOnInit(): void {
+    const partenaireFixe = this.partenaireFixe();
+    if (partenaireFixe) {
+      this.filtres.update((f) => ({ ...f, partenaire: partenaireFixe }));
+    } else {
+      this.chargerBandeauRestaurants();
+    }
+
     this.service.meta().subscribe({
       next: (meta) => this.meta.set(meta),
       // Sans meta, les filtres mode de livraison / statut n'ont pas d'options, le reste fonctionne.
@@ -214,6 +231,24 @@ export class CommandesAdmin implements OnInit {
     this.filtres.set(filtres);
     this.page.set(1);
     this.chargerContenu();
+    if (!this.partenaireFixe()) {
+      this.chargerBandeauRestaurants();
+    }
+  }
+
+  /** Puces "Restaurants" (nb de commandes sur la période courante), cliquables pour filtrer. */
+  private chargerBandeauRestaurants(): void {
+    this.service.stats({ ...this.filtres(), restauration: true }).subscribe({
+      next: (stats) => this.restaurantsBandeau.set(stats.par_partenaire_detail ?? []),
+      error: () => undefined,
+    });
+  }
+
+  filtrerSurRestaurant(restaurant: PartenaireDetailCommandes): void {
+    this.filtres.update((f) => ({ ...f, partenaire: { id: restaurant.id, nom: restaurant.nom } }));
+    this.onglet.set('toutes');
+    this.page.set(1);
+    this.chargerListe();
   }
 
   /** Clic sur un segment du tableau de bord : onglet « Toutes » avec le filtre correspondant. */

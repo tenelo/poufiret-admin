@@ -72,6 +72,37 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./fonctionnalites/partenaire/publicites/publicites').then((m) => m.Publicites),
       },
+      // Espace restaurant (partenaire de type restaurateur) : un seul composant hôte à onglets
+      // (voir fonctionnalites/restaurants/espace-restaurant), 3 entrées de menu pointant vers son
+      // onglet de départ. Accessible même si le partenaire n'est pas restaurateur (le backend
+      // renverra une erreur sur la fiche) : aucun intérêt à dupliquer le guard de rôle ici.
+      {
+        path: 'mon-restaurant',
+        canActivate: [roleGuard(['partenaire'])],
+        data: { ongletInitial: 'apercu' },
+        loadComponent: () =>
+          import('./fonctionnalites/restaurants/espace-restaurant/espace-restaurant').then(
+            (m) => m.EspaceRestaurant,
+          ),
+      },
+      {
+        path: 'ma-carte',
+        canActivate: [roleGuard(['partenaire'])],
+        data: { ongletInitial: 'carte' },
+        loadComponent: () =>
+          import('./fonctionnalites/restaurants/espace-restaurant/espace-restaurant').then(
+            (m) => m.EspaceRestaurant,
+          ),
+      },
+      {
+        path: 'mes-menus',
+        canActivate: [roleGuard(['partenaire'])],
+        data: { ongletInitial: 'menus' },
+        loadComponent: () =>
+          import('./fonctionnalites/restaurants/espace-restaurant/espace-restaurant').then(
+            (m) => m.EspaceRestaurant,
+          ),
+      },
       {
         path: 'acces-refuse',
         loadComponent: () =>
@@ -169,6 +200,25 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./fonctionnalites/administration/commandes-admin/commandes-admin').then(
             (m) => m.CommandesAdmin,
+          ),
+      },
+      {
+        path: 'administration/restaurants',
+        canActivate: [roleGuard(['admin']), capaciteGuard],
+        data: { capacite: 'gerer_restaurants' },
+        loadComponent: () =>
+          import('./fonctionnalites/administration/restaurants-liste/restaurants-liste').then(
+            (m) => m.RestaurantsListe,
+          ),
+      },
+      {
+        // Même composant hôte que côté restaurateur, préfixe admin/<id> (voir EspaceRestaurant.ngOnInit).
+        path: 'administration/restaurants/:id',
+        canActivate: [roleGuard(['admin']), capaciteGuard],
+        data: { capacite: 'gerer_restaurants' },
+        loadComponent: () =>
+          import('./fonctionnalites/restaurants/espace-restaurant/espace-restaurant').then(
+            (m) => m.EspaceRestaurant,
           ),
       },
       {

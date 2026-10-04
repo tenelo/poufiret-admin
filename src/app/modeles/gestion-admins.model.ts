@@ -42,7 +42,8 @@ export interface RequeteModifierCapacites {
 export interface CapaciteDescriptor {
   nom: NomCapacite;
   libelle: string;
-  // true pour `gerer_admins`, `gerer_geographie`, `gerer_formules_pub` et `gerer_commandes` : non modifiable par un admin non-superuser.
+  // true pour `gerer_admins`, `gerer_geographie`, `gerer_formules_pub`, `gerer_commandes` et
+  // `gerer_restaurants` : non modifiable par un admin non-superuser.
   privilegiee?: boolean;
 }
 
@@ -113,6 +114,13 @@ export const GROUPES_CAPACITES: GroupeCapacites[] = [
       { nom: 'valider_paiement', libelle: 'Valider un paiement' },
       // Privilégiée : seul un super-admin peut la modifier (case verrouillée pour les autres).
       { nom: 'gerer_commandes', libelle: 'Gérer le centre des commandes', privilegiee: true },
+    ],
+  },
+  {
+    titre: 'Restaurants',
+    capacites: [
+      // Privilégiée : seul un super-admin peut la modifier (case verrouillée pour les autres).
+      { nom: 'gerer_restaurants', libelle: 'Gérer les restaurants', privilegiee: true },
     ],
   },
   {

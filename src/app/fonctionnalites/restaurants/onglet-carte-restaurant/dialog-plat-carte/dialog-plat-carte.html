@@ -1,0 +1,209 @@
+<div class="voile-modale" (click)="ferme.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>{{ platCourant() ? 'Modifier « ' + platCourant()!.nom + ' »' : 'Nouveau plat' }}</h2>
+
+    @if (platCourant()?.modifie_le) {
+      <p class="tracabilite">
+        Dernière modification {{ platCourant()!.modifie_par_role === 'admin' ? "par l'administration" : 'par le restaurateur' }}
+        @if (platCourant()!.modifie_par_nom) { ({{ platCourant()!.modifie_par_nom }}) }
+      </p>
+    }
+
+    <nav class="onglets-dialog">
+      <button type="button" class="onglet" [class.onglet-actif]="ongletActif() === 'infos'" (click)="changerOnglet('infos')">
+        Infos
+      </button>
+      <button type="button" class="onglet" [disabled]="!platCourant()" [class.onglet-actif]="ongletActif() === 'images'" (click)="changerOnglet('images')">
+        Photos
+      </button>
+      <button type="button" class="onglet" [disabled]="!platCourant()" [class.onglet-actif]="ongletActif() === 'variantes'" (click)="changerOnglet('variantes')">
+        Variantes
+      </button>
+      <button type="button" class="onglet" [disabled]="!platCourant()" [class.onglet-actif]="ongletActif() === 'options'" (click)="changerOnglet('options')">
+        Groupes d'options
+      </button>
+    </nav>
+    @if (!platCourant()) {
+      <p class="aide">Enregistrez le plat pour gérer ses photos, variantes et groupes d'options.</p>
+    }
+
+    @switch (ongletActif()) {
+      @case ('infos') {
+        <form (submit)="$event.preventDefault(); soumettre()">
+          <label for="dp-nom">Nom</label>
+          <input id="dp-nom" type="text" [value]="nom()" (input)="nom.set($any($event.target).value)" />
+          @if (erreursChamps()['nom']) {
+            <p class="erreur-champ">{{ erreursChamps()['nom'] }}</p>
+          }
+
+          <label for="dp-description">Description</label>
+          <textarea id="dp-description" rows="2" [value]="description()" (input)="description.set($any($event.target).value)"></textarea>
+
+          <div class="grille-champs">
+            <div>
+              <label for="dp-prix">Prix de base (FCFA)</label>
+              <input id="dp-prix" type="number" min="0" [value]="prix()" (input)="prix.set($any($event.target).value)" />
+              @if (erreursChamps()['prix']) {
+                <p class="erreur-champ">{{ erreursChamps()['prix'] }}</p>
+              }
+            </div>
+            <div>
+              <label for="dp-section">Section</label>
+              <select id="dp-section" (change)="section.set($any($event.target).value === '' ? '' : +$any($event.target).value)">
+                <option value="" [selected]="section() === ''">— Aucune —</option>
+                @for (s of sections(); track s.id) {
+                  <option [value]="s.id" [selected]="s.id === section()">{{ s.nom }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <label class="ligne-case">
+            <input type="checkbox" [checked]="estActif()" (change)="estActif.set($any($event.target).checked)" />
+            Actif (visible sur la carte)
+          </label>
+          <label class="ligne-case">
+            <input type="checkbox" [checked]="estDisponible()" (change)="estDisponible.set($any($event.target).checked)" />
+            Disponible (peut être commandé)
+          </label>
+          <label class="ligne-case">
+            <input type="checkbox" [checked]="estReserveAuxMenus()" (change)="estReserveAuxMenus.set($any($event.target).checked)" />
+            Réservé aux menus (non vendu à la carte seule)
+          </label>
+
+          @if (platCourant(); as plat) {
+            <p class="etat-epuise">
+              État épuisé : <strong>{{ plat.est_epuise ? 'Oui' : 'Non' }}</strong> — se gère depuis la carte, bouton dédié.
+            </p>
+          }
+
+          @if (messageErreur()) {
+            <p class="erreur-generale">{{ messageErreur() }}</p>
+          }
+
+          <div class="actions-modale">
+            <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Fermer</button>
+            <button type="submit" class="bouton-principal" [disabled]="enregistrementEnCours()">
+              {{ enregistrementEnCours() ? 'Enregistrement…' : 'Enregistrer' }}
+            </button>
+          </div>
+        </form>
+      }
+
+      @case ('images') {
+        @if (platCourant(); as plat) {
+          <app-carte-images [prefixe]="prefixe()" [platId]="plat.id" />
+        }
+      }
+
+      @case ('variantes') {
+        <p class="aide">
+          Saisissez le prix final de chaque variante (ex. « Entier » 6000, « Demi » 3500). Le prix de
+          base du plat est le prix de la variante par défaut.
+        </p>
+        @if (platCourant(); as plat) {
+          <ul class="liste-variantes">
+            @for (variante of plat.variantes; track variante.id) {
+              <li [class.variante-defaut]="variante.est_par_defaut">
+                <span class="nom-variante">{{ variante.nom }}</span>
+                @if (variante.est_par_defaut) {
+                  <span class="badge-defaut">Par défaut</span>
+                  <span class="prix-final">{{ prixFinal(variante) }} FCFA <span class="note-defaut">(= prix de base)</span></span>
+                } @else {
+                  <input
+                    type="number"
+                    class="champ-prix-final"
+                    [value]="prixFinalAffiche(variante)"
+                    (input)="saisirPrixFinal(variante, $any($event.target).value)"
+                  />
+                  <span class="supplement">({{ variante.prix_supplement >= 0 ? '+' : '' }}{{ variante.prix_supplement }} FCFA)</span>
+                  @if (prixFinalModifie(variante)) {
+                    <button type="button" class="bouton-icone" (click)="enregistrerPrixFinal(variante)" aria-label="Enregistrer le prix">💾</button>
+                  }
+                  <button type="button" class="lien-par-defaut" (click)="demanderVarianteParDefaut(variante)">Définir par défaut</button>
+                }
+                <button type="button" class="bouton-icone" (click)="supprimerVariante(variante)" aria-label="Supprimer">🗑</button>
+              </li>
+            } @empty {
+              <li class="vide">Aucune variante.</li>
+            }
+          </ul>
+        }
+        <div class="ligne-ajout">
+          <input type="text" placeholder="Nom (ex. Entier)" [value]="nouvelleVarianteNom()" (input)="nouvelleVarianteNom.set($any($event.target).value)" />
+          <input type="number" min="0" placeholder="Prix final" [value]="nouvelleVariantePrixFinal()" (input)="nouvelleVariantePrixFinal.set($any($event.target).value)" />
+          <button type="button" class="bouton-secondaire" (click)="ajouterVariante()">+ Ajouter</button>
+        </div>
+        @if (erreurVariantes()) {
+          <p class="erreur-champ">{{ erreurVariantes() }}</p>
+        }
+      }
+
+      @case ('options') {
+        @if (platCourant(); as plat) {
+          @for (groupe of plat.groupes_options; track groupe.id) {
+            <div class="groupe-options">
+              <div class="entete-groupe">
+                <strong>{{ groupe.libelle }}</strong>
+                <span class="aide-inline">
+                  Choisir
+                  {{ groupe.min_choix === groupe.max_choix ? 'exactement ' + groupe.min_choix : 'entre ' + groupe.min_choix + ' et ' + groupe.max_choix }}
+                </span>
+                <button type="button" class="bouton-icone" (click)="supprimerGroupe(groupe)" aria-label="Supprimer le groupe">🗑</button>
+              </div>
+              <ul class="liste-sous-ressource">
+                @for (option of groupe.options; track option.id) {
+                  <li>
+                    <span>{{ option.nom }}</span>
+                    <span class="prix">+{{ option.prix_supplement }} FCFA</span>
+                    <button type="button" class="bouton-icone" (click)="supprimerOption(option)" aria-label="Supprimer">🗑</button>
+                  </li>
+                } @empty {
+                  <li class="vide">Aucune option.</li>
+                }
+              </ul>
+              <div class="ligne-ajout">
+                <input type="text" placeholder="Nom de l'option" [value]="texteNouvelleOption(groupe.id)" (input)="saisirNomOption(groupe.id, $any($event.target).value)" />
+                <input type="number" min="0" placeholder="Surcoût" [value]="prixNouvelleOption(groupe.id)" (input)="saisirPrixOption(groupe.id, $any($event.target).value)" />
+                <button type="button" class="bouton-secondaire" (click)="ajouterOption(groupe.id)">+ Ajouter</button>
+              </div>
+            </div>
+          } @empty {
+            <p class="vide">Aucun groupe d'options.</p>
+          }
+        }
+
+        <div class="ligne-ajout-groupe">
+          <input type="text" placeholder="Libellé du groupe (ex. Garniture)" [value]="nouveauGroupeLibelle()" (input)="nouveauGroupeLibelle.set($any($event.target).value)" />
+          <input type="number" min="0" placeholder="Min" [value]="nouveauGroupeMin()" (input)="nouveauGroupeMin.set($any($event.target).value)" />
+          <input type="number" min="0" placeholder="Max" [value]="nouveauGroupeMax()" (input)="nouveauGroupeMax.set($any($event.target).value)" />
+          <button type="button" class="bouton-secondaire" (click)="ajouterGroupe()">+ Groupe</button>
+        </div>
+        @if (erreurGroupes()) {
+          <p class="erreur-champ">{{ erreurGroupes() }}</p>
+        }
+      }
+    }
+  </div>
+</div>
+
+@if (confirmationPrixOuverte()) {
+  <div class="voile-confirmation" (click)="annulerConfirmationPrix()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>{{ confirmationPrixTitre() }}</p>
+      <label class="ligne-case">
+        <input type="checkbox" [checked]="conserverPrixFinaux()" (change)="conserverPrixFinaux.set($any($event.target).checked)" />
+        Conserver les prix finaux actuels des autres variantes (recalcule leurs suppléments)
+      </label>
+      @if (erreurConfirmationPrix()) {
+        <p class="erreur-generale">{{ erreurConfirmationPrix() }}</p>
+      }
+      <div class="actions-confirmation">
+        <button type="button" class="bouton-secondaire" [disabled]="confirmationPrixEnCours()" (click)="annulerConfirmationPrix()">Annuler</button>
+        <button type="button" class="bouton-principal" [disabled]="confirmationPrixEnCours()" (click)="confirmerPrix()">
+          {{ confirmationPrixEnCours() ? 'Application…' : 'Confirmer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

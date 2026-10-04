@@ -1,0 +1,164 @@
+@if (chargementEnCours()) {
+  <p class="etat">Chargement…</p>
+} @else if (erreurChargement()) {
+  <div class="etat-erreur">
+    <p>{{ erreurChargement() }}</p>
+    <button type="button" (click)="charger()">Réessayer</button>
+  </div>
+} @else if (fiche(); as f) {
+  @if (messageSucces()) {
+    <p class="message-succes">{{ messageSucces() }}</p>
+  }
+
+  @if (f.modifie_le) {
+    <p class="tracabilite">
+      Dernière modification {{ f.modifie_par_role === 'admin' ? "par l'administration" : 'par le restaurateur' }}
+      @if (f.modifie_par_nom) { ({{ f.modifie_par_nom }}) }
+      le {{ f.modifie_le | date: 'dd/MM/yyyy HH:mm' }}
+    </p>
+  }
+
+  <!-- Horaires -->
+  <section class="carte">
+    <h2>Horaires</h2>
+    <div class="conteneur-tableau">
+      <table class="tableau-horaires">
+        <thead>
+          <tr>
+            <th>Jour</th>
+            <th>Ouvert</th>
+            <th>Ouverture</th>
+            <th>Fermeture</th>
+            <th>Pause début</th>
+            <th>Pause fin</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (jour of joursHoraire; track jour.valeur) {
+            <tr>
+              <td class="fort">{{ jour.libelle }}</td>
+              <td>
+                <input
+                  type="checkbox"
+                  [checked]="horaireJour(jour.valeur).ouvert"
+                  (change)="majHoraire(jour.valeur, 'ouvert', $any($event.target).checked)"
+                />
+              </td>
+              <td><input type="time" [value]="horaireJour(jour.valeur).heure_ouverture ?? ''" (change)="majHoraire(jour.valeur, 'heure_ouverture', $any($event.target).value)" /></td>
+              <td><input type="time" [value]="horaireJour(jour.valeur).heure_fermeture ?? ''" (change)="majHoraire(jour.valeur, 'heure_fermeture', $any($event.target).value)" /></td>
+              <td><input type="time" [value]="horaireJour(jour.valeur).pause_debut ?? ''" (change)="majHoraire(jour.valeur, 'pause_debut', $any($event.target).value)" /></td>
+              <td><input type="time" [value]="horaireJour(jour.valeur).pause_fin ?? ''" (change)="majHoraire(jour.valeur, 'pause_fin', $any($event.target).value)" /></td>
+              <td><input type="text" class="champ-note" [value]="horaireJour(jour.valeur).note ?? ''" (change)="majHoraire(jour.valeur, 'note', $any($event.target).value)" /></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (erreurHoraires()) {
+      <p class="erreur-champ">{{ erreurHoraires() }}</p>
+    }
+    <button type="button" class="bouton-principal" [disabled]="enregistrementHorairesEnCours()" (click)="enregistrerHoraires()">
+      {{ enregistrementHorairesEnCours() ? 'Enregistrement…' : 'Enregistrer les horaires' }}
+    </button>
+  </section>
+
+  <!-- Téléphones -->
+  <section class="carte">
+    <h2>Téléphones</h2>
+    <ul class="liste-telephones">
+      @for (telephone of telephones(); track telephone.id) {
+        <li>
+          <span class="fort">{{ telephone.libelle }}</span>
+          <span>{{ telephone.numero }}</span>
+          <button
+            type="button"
+            class="bouton-icone"
+            [disabled]="suppressionTelephoneEnCoursId() === telephone.id"
+            (click)="supprimerTelephone(telephone)"
+            aria-label="Supprimer ce téléphone"
+          >
+            🗑
+          </button>
+        </li>
+      } @empty {
+        <li class="vide">Aucun téléphone enregistré.</li>
+      }
+    </ul>
+    <div class="ligne-ajout-telephone">
+      <input type="text" placeholder="Libellé (ex. Réservations)" [value]="nouveauLibelle()" (input)="nouveauLibelle.set($any($event.target).value)" />
+      <input type="tel" placeholder="Numéro" [value]="nouveauNumero()" (input)="nouveauNumero.set($any($event.target).value)" />
+      <button type="button" class="bouton-secondaire" [disabled]="ajoutTelephoneEnCours()" (click)="ajouterTelephone()">
+        + Ajouter
+      </button>
+    </div>
+    @if (erreurTelephones()) {
+      <p class="erreur-champ">{{ erreurTelephones() }}</p>
+    }
+  </section>
+
+  <!-- Infos -->
+  <section class="carte">
+    <h2>Informations</h2>
+
+    <span class="etiquette">Services proposés</span>
+    <div class="puces-services">
+      @for (option of optionsService; track option.valeur) {
+        <label class="puce" [class.puce-active]="serviceCoche(option.valeur)">
+          <input type="checkbox" [checked]="serviceCoche(option.valeur)" (change)="basculerService(option.valeur, $any($event.target).checked)" />
+          {{ option.libelle }}
+        </label>
+      }
+    </div>
+
+    <div class="grille-champs">
+      <div>
+        <label for="fr-delai">Délai de préparation (min)</label>
+        <input id="fr-delai" type="number" min="0" [value]="delaiPreparation()" (input)="delaiPreparation.set($any($event.target).value)" />
+      </div>
+      <div>
+        <label for="fr-adresse">Repères d'adresse</label>
+        <input id="fr-adresse" type="text" [value]="adresseReperes()" (input)="adresseReperes.set($any($event.target).value)" />
+      </div>
+      <div>
+        <label for="fr-facebook">Facebook</label>
+        <input id="fr-facebook" type="text" [value]="facebook()" (input)="facebook.set($any($event.target).value)" />
+      </div>
+      <div>
+        <label for="fr-instagram">Instagram</label>
+        <input id="fr-instagram" type="text" [value]="instagram()" (input)="instagram.set($any($event.target).value)" />
+      </div>
+      <div>
+        <label for="fr-tiktok">TikTok</label>
+        <input id="fr-tiktok" type="text" [value]="tiktok()" (input)="tiktok.set($any($event.target).value)" />
+      </div>
+    </div>
+
+    <span class="etiquette">Spécialités</span>
+    <div class="puces-specialites">
+      @for (specialite of specialites(); track specialite) {
+        <span class="puce-retirable">
+          {{ specialite }}
+          <button type="button" (click)="retirerSpecialite(specialite)" aria-label="Retirer">×</button>
+        </span>
+      }
+    </div>
+    <div class="ligne-ajout-telephone">
+      <input
+        type="text"
+        placeholder="Ajouter une spécialité…"
+        [value]="nouvelleSpecialite()"
+        (input)="nouvelleSpecialite.set($any($event.target).value)"
+        (keydown.enter)="$event.preventDefault(); ajouterSpecialite()"
+      />
+      <button type="button" class="bouton-secondaire" (click)="ajouterSpecialite()">+ Ajouter</button>
+    </div>
+
+    @if (erreurInfos()) {
+      <p class="erreur-champ">{{ erreurInfos() }}</p>
+    }
+    <button type="button" class="bouton-principal" [disabled]="enregistrementInfosEnCours()" (click)="enregistrerInfos()">
+      {{ enregistrementInfosEnCours() ? 'Enregistrement…' : 'Enregistrer les informations' }}
+    </button>
+  </section>
+}

@@ -1,0 +1,98 @@
+@if (chargementEnCours()) {
+  <p class="etat">Chargement…</p>
+} @else if (erreurChargement()) {
+  <div class="etat-erreur">
+    <p>{{ erreurChargement() }}</p>
+    <button type="button" (click)="charger()">Réessayer</button>
+  </div>
+} @else if (fiche(); as f) {
+  @if (messageSucces()) {
+    <p class="message-succes">{{ messageSucces() }}</p>
+  }
+
+  <!-- Statut -->
+  <section class="carte">
+    <div class="ligne-statut">
+      <span class="badge" [class.badge-ouvert]="f.est_ouvert" [class.badge-ferme]="!f.est_ouvert">
+        {{ f.est_ouvert ? 'Ouvert' : 'Fermé' }}
+      </span>
+      @if (messageStatutDistinct(f)) {
+        <span class="message-statut">{{ f.message_statut }}</span>
+      }
+    </div>
+
+    @if (aucunHoraireRenseigne(f)) {
+      <p class="avertissement-horaires">
+        Horaires non renseignés.
+        <button type="button" class="lien-horaires" (click)="allerA.emit('fiche')">Renseigner les horaires</button>
+      </p>
+    }
+
+    <label class="ligne-case">
+      <input
+        type="checkbox"
+        [checked]="f.ferme_exceptionnellement"
+        [disabled]="enregistrementFermetureEnCours()"
+        (change)="basculerFermeture($any($event.target).checked)"
+      />
+      Fermé exceptionnellement
+    </label>
+
+    @if (f.ferme_exceptionnellement) {
+      <div class="grille-fermeture">
+        <div>
+          <label for="ar-motif">Motif</label>
+          <input id="ar-motif" type="text" [value]="motifFermeture()" (input)="motifFermeture.set($any($event.target).value)" />
+        </div>
+        <div>
+          <label for="ar-jusqua">Jusqu'au</label>
+          <input id="ar-jusqua" type="date" [value]="fermeJusquAu()" (change)="fermeJusquAu.set($any($event.target).value)" />
+        </div>
+        <button type="button" class="bouton-secondaire" [disabled]="enregistrementFermetureEnCours()" (click)="enregistrerFermeture(true)">
+          {{ enregistrementFermetureEnCours() ? 'Enregistrement…' : 'Enregistrer le motif' }}
+        </button>
+      </div>
+    }
+
+    @if (erreurFermeture()) {
+      <p class="erreur-champ">{{ erreurFermeture() }}</p>
+    }
+  </section>
+
+  <!-- Menu du jour -->
+  <section class="carte">
+    <h2>Menu en vigueur aujourd'hui</h2>
+    <div class="grille-services">
+      @for (option of optionsService; track option.valeur) {
+        <div class="bloc-service">
+          <h3>{{ option.libelle }}</h3>
+          @if (menuDuService(option.valeur); as menu) {
+            <p class="titre-menu">{{ menu.titre || 'Menu' }}</p>
+            <ul class="liste-plats">
+              @for (ligne of menu.lignes; track ligne.id) {
+                <li [class.epuise]="ligne.est_epuise">
+                  <span>{{ ligne.plat_nom }}</span>
+                  <span class="prix">{{ ligne.prix_effectif }} FCFA</span>
+                  @if (ligne.stock_restant !== null) {
+                    <span class="stock">{{ ligne.est_epuise ? 'Épuisé' : ligne.stock_restant + ' restant(s)' }}</span>
+                  }
+                </li>
+              } @empty {
+                <li class="vide">Aucun plat.</li>
+              }
+            </ul>
+          } @else {
+            <p class="vide">Aucun menu publié pour ce service aujourd'hui.</p>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Raccourcis -->
+  <section class="raccourcis">
+    <button type="button" class="bouton-raccourci" (click)="allerA.emit('menus')">📅 Gérer les menus</button>
+    <button type="button" class="bouton-raccourci" (click)="allerA.emit('carte')">📋 Gérer la carte</button>
+    <button type="button" class="bouton-raccourci" (click)="allerA.emit('commandes')">🧾 Commandes du restaurant</button>
+  </section>
+}
