@@ -1,0 +1,68 @@
+<div class="position-gps">
+  <div #conteneurCarte class="conteneur-carte"></div>
+
+  <div class="barre-actions">
+    <button
+      type="button"
+      class="bouton-secondaire"
+      [disabled]="geolocalisationEnCours()"
+      (click)="utiliserMaPosition()"
+    >
+      {{ geolocalisationEnCours() ? 'Localisation en cours…' : '📍 Utiliser ma position' }}
+    </button>
+  </div>
+
+  @if (erreurGeolocalisation()) {
+    <p class="erreur-champ">{{ erreurGeolocalisation() }}</p>
+  }
+  @if (avertissementPrecision()) {
+    <p class="avertissement">{{ avertissementPrecision() }}</p>
+  }
+
+  <div class="champ-collage">
+    <label for="lien-position-gps">Coller un lien Google Maps ou des coordonnées</label>
+    <div class="ligne-collage">
+      <input
+        id="lien-position-gps"
+        type="text"
+        placeholder="https://maps.google.com/... ou 5.359951, -4.008256"
+        [value]="texteCollage()"
+        (input)="changerTexteCollage($any($event.target).value)"
+        (keydown.enter)="extraireDuTexteCollage()"
+      />
+      <button type="button" class="bouton-secondaire" (click)="extraireDuTexteCollage()">Extraire</button>
+    </div>
+    @if (erreurCollage()) {
+      <p class="erreur-champ">{{ erreurCollage() }}</p>
+    }
+  </div>
+
+  @if (brouillon(); as position) {
+    <p class="coordonnees">{{ position.latitude.toFixed(6) }}, {{ position.longitude.toFixed(6) }}</p>
+    @if (horsCoteDIvoire()) {
+      <p class="avertissement">⚠️ Ce point semble situé hors de Côte d'Ivoire.</p>
+    }
+  } @else {
+    <p class="indice">Aucune position définie.</p>
+  }
+
+  @if (mentionModification()) {
+    <p class="mention-modification">{{ mentionModification() }}</p>
+  }
+
+  @if (erreur()) {
+    <p class="erreur-champ">{{ erreur() }}</p>
+  }
+
+  <div class="actions-formulaire">
+    <button type="button" class="bouton-tertiaire" [disabled]="!brouillon()" (click)="effacer()">Effacer</button>
+    <button
+      type="button"
+      class="bouton-principal"
+      [disabled]="enregistrementEnCours()"
+      (click)="confirmerEnregistrement()"
+    >
+      {{ enregistrementEnCours() ? 'Enregistrement…' : 'Enregistrer' }}
+    </button>
+  </div>
+</div>

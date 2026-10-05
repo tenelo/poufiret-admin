@@ -19,6 +19,11 @@ export interface PartenaireListe {
   // Localisation structurée (P2) : absente si le partenaire n'a pas encore été rapproché.
   localite_nom?: string | null;
   quartier_nom?: string | null;
+  // Position GPS (composant partagé "Position du commerce").
+  latitude: number | null;
+  longitude: number | null;
+  position_modifiee_le?: string | null;
+  position_modifiee_par_role?: string | null;
   telephone_compte: string;
   telephone_pro: string;
   whatsapp: string;

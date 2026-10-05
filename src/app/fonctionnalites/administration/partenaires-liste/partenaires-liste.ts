@@ -6,6 +6,8 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { PartenairesListeService } from './partenaires-liste.service';
 import { extraireMessageErreur, erreurChamp } from '../tableau-de-bord-admin/extraire-message-erreur';
 import { formaterLocalisation } from '../../../partage/formater-localisation';
+import { CoordonneesGps, PositionGps } from '../../../partage/position-gps/position-gps';
+import { formaterMentionModificationPosition } from '../../../partage/position-gps/coordonnees-texte';
 import { PermissionsService } from '../../../noyau/permissions/permissions.service';
 import { Departement } from '../../../modeles/departement.model';
 import { OPTIONS_TYPE_PARTENAIRE } from '../../../modeles/profil-partenaire.model';
@@ -30,7 +32,7 @@ const DEBOUNCE_RECHERCHE_MS = 350;
  */
 @Component({
   selector: 'app-partenaires-liste',
-  imports: [],
+  imports: [PositionGps],
   templateUrl: './partenaires-liste.html',
   styleUrl: './partenaires-liste.scss',
 })
@@ -65,6 +67,13 @@ export class PartenairesListe implements OnInit {
     () =>
       (this.permissionsService.permissionsActuelles()?.isSuperuser ?? false) ||
       this.permissionsService.aLaCapacite('modifier_identifiant_partenaire'),
+  );
+
+  // PATCH .../position/ exige côté backend la capacité creer_partenaire (super-admin toujours autorisé).
+  readonly peutModifierPosition = computed(
+    () =>
+      (this.permissionsService.permissionsActuelles()?.isSuperuser ?? false) ||
+      this.permissionsService.aLaCapacite('creer_partenaire'),
   );
 
   // Historique des numéros de connexion de la ligne actuellement dépliée
@@ -113,6 +122,12 @@ export class PartenairesListe implements OnInit {
     }
     return extraireMessageErreur(erreur);
   });
+
+  // Dialog "Position du commerce".
+  readonly dialogPositionOuvertPour = signal<PartenaireListe | null>(null);
+  readonly enregistrementPositionEnCours = signal(false);
+  readonly erreurPosition = signal<string | null>(null);
+  readonly avertissementPosition = signal<string | null>(null);
 
   private readonly rechercheSubject = new Subject<string>();
 
@@ -293,6 +308,55 @@ export class PartenairesListe implements OnInit {
       });
   }
 
+  ouvrirDialogPosition(partenaire: PartenaireListe): void {
+    this.dialogPositionOuvertPour.set(partenaire);
+    this.erreurPosition.set(null);
+    this.avertissementPosition.set(null);
+  }
+
+  fermerDialogPosition(): void {
+    if (this.enregistrementPositionEnCours()) {
+      return;
+    }
+    this.dialogPositionOuvertPour.set(null);
+  }
+
+  enregistrerPosition(position: CoordonneesGps | null): void {
+    const partenaire = this.dialogPositionOuvertPour();
+    if (!partenaire || this.enregistrementPositionEnCours()) {
+      return;
+    }
+
+    this.enregistrementPositionEnCours.set(true);
+    this.erreurPosition.set(null);
+
+    this.service
+      .modifierPosition(partenaire.id, {
+        latitude: position?.latitude ?? null,
+        longitude: position?.longitude ?? null,
+      })
+      .subscribe({
+        next: (reponse) => {
+          this.enregistrementPositionEnCours.set(false);
+          this.partenaires.update((liste) =>
+            liste.map((p) => (p.id === partenaire.id ? { ...p, ...reponse } : p)),
+          );
+          if (reponse.avertissement_position) {
+            // On garde le dialog ouvert pour que l'avertissement reste visible sous la carte.
+            this.avertissementPosition.set(reponse.avertissement_position);
+            this.dialogPositionOuvertPour.set({ ...partenaire, ...reponse });
+          } else {
+            this.dialogPositionOuvertPour.set(null);
+            this.messageSuccesChangement.set('Position du commerce mise à jour.');
+          }
+        },
+        error: (erreur: unknown) => {
+          this.enregistrementPositionEnCours.set(false);
+          this.erreurPosition.set(extraireMessageErreur(erreur));
+        },
+      });
+  }
+
   /** Numéros secondaires à afficher seulement s'ils diffèrent du téléphone du compte. */
   numerosSecondaires(partenaire: PartenaireListe): { libelle: string; valeur: string }[] {
     const secondaires: { libelle: string; valeur: string }[] = [];
@@ -312,6 +376,14 @@ export class PartenairesListe implements OnInit {
   /** « Quartier, Localité (Département) » à partir des noms rattachés, sinon repli sur les anciens textes. */
   localite(partenaire: PartenaireListe): string {
     return formaterLocalisation(partenaire);
+  }
+
+  /** "Modifiée par… le…" pour l'affichage en lecture seule de la position (sans droit). */
+  mentionPosition(partenaire: PartenaireListe): string | null {
+    return formaterMentionModificationPosition(
+      partenaire.position_modifiee_le ?? null,
+      partenaire.position_modifiee_par_role ?? null,
+    );
   }
 
   formaterDateCourte(iso: string): string {

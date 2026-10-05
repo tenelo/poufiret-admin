@@ -34,6 +34,11 @@ export interface ProfilPartenaire {
   departement_nom?: string;
   latitude: number | null;
   longitude: number | null;
+  // Horodatage/rôle du dernier changement de position (composant partagé "Position du
+  // commerce") ; absents si jamais modifiée. Valeurs de rôle supposées 'admin'/'partenaire'
+  // (mêmes valeurs qu'AuthService.role()) — non confirmé verbatim par le backend.
+  position_modifiee_le?: string | null;
+  position_modifiee_par_role?: string | null;
   description_acces: string;
   telephone_pro: string;
   whatsapp: string;

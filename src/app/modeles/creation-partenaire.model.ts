@@ -55,6 +55,9 @@ export interface RequeteCreationPartenaire {
   departement?: number;
   localite_id?: number;
   quartier_id?: number;
+  // Position GPS (composant partagé "Position du commerce"), optionnelle à la création.
+  latitude?: number;
+  longitude?: number;
   telephone_pro?: string;
   whatsapp?: string;
   email_pro?: string;

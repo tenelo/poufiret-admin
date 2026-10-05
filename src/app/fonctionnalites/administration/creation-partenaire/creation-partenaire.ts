@@ -7,6 +7,7 @@ import { CreationPartenaireService } from './creation-partenaire.service';
 import { extraireMessageErreur } from '../tableau-de-bord-admin/extraire-message-erreur';
 import { LocaliteQuartierService } from '../../../noyau/geo/localite-quartier.service';
 import { PermissionsService } from '../../../noyau/permissions/permissions.service';
+import { CoordonneesGps, PositionGps } from '../../../partage/position-gps/position-gps';
 import { Departement } from '../../../modeles/departement.model';
 import { OptionGeo } from '../../../modeles/geographie.model';
 import {
@@ -27,7 +28,7 @@ import {
  */
 @Component({
   selector: 'app-creation-partenaire',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, PositionGps],
   templateUrl: './creation-partenaire.html',
   styleUrl: './creation-partenaire.scss',
 })
@@ -57,6 +58,12 @@ export class CreationPartenaire implements OnInit {
   readonly quartiers = signal<OptionGeo[]>([]);
   readonly chargementQuartiers = signal(false);
   readonly erreurQuartiers = signal<string | null>(null);
+
+  // Position GPS optionnelle, capturée localement puis envoyée avec le reste du
+  // formulaire à la création (pas d'appel réseau indépendant : le partenaire n'existe pas encore).
+  // Pas de réinitialisation explicite nécessaire : le composant est démonté puis remonté par le
+  // @if/@else du template entre le panneau de succès et le formulaire (voir creerUnAutre()).
+  readonly positionChoisie = signal<CoordonneesGps | null>(null);
 
   readonly categoriesAplaties = signal<CategorieCatalogueAplatie[]>([]);
   readonly chargementCategories = signal(true);
@@ -160,6 +167,10 @@ export class CreationPartenaire implements OnInit {
     if (localite) {
       this.chargerQuartiers(Number(localite));
     }
+  }
+
+  definirPosition(position: CoordonneesGps | null): void {
+    this.positionChoisie.set(position);
   }
 
   private chargerLocalites(departementId: number): void {
@@ -319,6 +330,7 @@ export class CreationPartenaire implements OnInit {
     this.quartiers.set([]);
     this.erreurLocalites.set(null);
     this.erreurQuartiers.set(null);
+    this.positionChoisie.set(null);
     this.formulaire.reset({
       telephone: '',
       prenom: '',

@@ -170,6 +170,14 @@ const ENTREES_ADMIN: EntreeMenuAdmin[] = [
     icone: '👥',
     capacite: 'gerer_admins',
   },
+  {
+    // Super-admin (toutes capacités à true côté backend) OU capacité gerer_parametres.
+    // En bas du menu : accueillera d'autres réglages transverses à l'avenir.
+    libelle: 'Paramètres',
+    lien: '/administration/parametres',
+    icone: '⚙️',
+    capacite: 'gerer_parametres',
+  },
 ];
 
 /**

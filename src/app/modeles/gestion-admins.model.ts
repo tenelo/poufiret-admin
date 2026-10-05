@@ -43,8 +43,8 @@ export interface CapaciteDescriptor {
   nom: NomCapacite;
   libelle: string;
   // true pour `gerer_admins`, `gerer_geographie`, `gerer_formules_pub`, `gerer_commandes`,
-  // `gerer_restaurants` et `modifier_identifiant_partenaire` : non modifiable par un admin
-  // non-superuser.
+  // `gerer_restaurants`, `modifier_identifiant_partenaire` et `gerer_parametres` : non
+  // modifiable par un admin non-superuser.
   privilegiee?: boolean;
 }
 
@@ -132,7 +132,11 @@ export const GROUPES_CAPACITES: GroupeCapacites[] = [
   },
   {
     titre: 'Configuration',
-    capacites: [{ nom: 'modifier_plans_formules', libelle: 'Modifier les plans et formules' }],
+    capacites: [
+      { nom: 'modifier_plans_formules', libelle: 'Modifier les plans et formules' },
+      // Privilégiée : seul un super-admin peut la modifier (case verrouillée pour les autres).
+      { nom: 'gerer_parametres', libelle: 'Gérer les paramètres', privilegiee: true },
+    ],
   },
   {
     titre: 'Consultation & données',

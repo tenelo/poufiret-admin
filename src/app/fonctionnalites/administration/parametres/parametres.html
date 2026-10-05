@@ -1,0 +1,25 @@
+<section class="page-parametres">
+  <h1>Paramètres</h1>
+
+  <nav class="barre-onglets" aria-label="Sections">
+    @for (onglet of onglets; track onglet.valeur) {
+      <button
+        type="button"
+        class="onglet"
+        [class.onglet-actif]="ongletActif() === onglet.valeur"
+        (click)="changerOnglet(onglet.valeur)"
+      >
+        {{ onglet.libelle }}
+      </button>
+    }
+  </nav>
+
+  @switch (ongletActif()) {
+    @case ('categories') {
+      <app-onglet-categories-parametres />
+    }
+    @default {
+      <app-onglet-recherche-parametres />
+    }
+  }
+</section>

@@ -11,6 +11,10 @@ import {
   ReponseHistoriqueTelephone,
   RequeteChangerTelephone,
 } from '../../../modeles/changement-telephone-partenaire.model';
+import {
+  ReponsePositionPartenaire,
+  RequeteModifierPositionPartenaire,
+} from '../../../modeles/position-partenaire-admin.model';
 import { declencherTelechargementFichier, nomFichierHorodate } from '../telecharger-fichier';
 
 // DRF peut renvoyer soit un tableau brut, soit une page paginée {results: [...]}.
@@ -76,6 +80,14 @@ export class PartenairesListeService {
         `${this.configuration.apiUrl}/administration/partenaires/${id}/historique-telephone/`,
       )
       .pipe(map((reponse) => reponse.resultats));
+  }
+
+  /** PATCH /administration/partenaires/<id>/position/ : composant partagé "Position du commerce". */
+  modifierPosition(id: number, donnees: RequeteModifierPositionPartenaire): Observable<ReponsePositionPartenaire> {
+    return this.http.patch<ReponsePositionPartenaire>(
+      `${this.configuration.apiUrl}/administration/partenaires/${id}/position/`,
+      donnees,
+    );
   }
 
   private construireParams(filtres: FiltresPartenairesListe): HttpParams {

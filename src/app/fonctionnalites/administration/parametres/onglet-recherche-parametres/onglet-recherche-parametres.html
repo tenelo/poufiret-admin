@@ -1,0 +1,268 @@
+<div class="onglet-recherche">
+  @if (message(); as m) {
+    <p [class]="m.erreur ? 'erreur-generale' : 'message-succes'">{{ m.texte }}</p>
+  }
+
+  <!-- ==================== Recherches sans résultat ==================== -->
+  <section class="bloc">
+    <h2>Recherches sans résultat</h2>
+
+    @if (compteurs(); as c) {
+      <div class="compteurs">
+        <div class="compteur">
+          <span class="valeur">{{ c.a_traiter }}</span>
+          <span class="etiquette">À traiter</span>
+        </div>
+        <div class="compteur">
+          <span class="valeur">{{ c.traite }}</span>
+          <span class="etiquette">Traités</span>
+        </div>
+        <div class="compteur">
+          <span class="valeur">{{ c.ignore }}</span>
+          <span class="etiquette">Ignorés</span>
+        </div>
+      </div>
+    }
+
+    <div class="barre-filtres">
+      <select class="filtre" [value]="filtreStatut()" (change)="changerFiltreStatut($any($event.target).value)">
+        @for (option of optionsStatut; track option.valeur) {
+          <option [value]="option.valeur">{{ option.libelle }}</option>
+        }
+      </select>
+      <label class="champ-date">
+        Du
+        <input type="date" [value]="filtreDu()" (change)="changerFiltreDu($any($event.target).value)" />
+      </label>
+      <label class="champ-date">
+        Au
+        <input type="date" [value]="filtreAu()" (change)="changerFiltreAu($any($event.target).value)" />
+      </label>
+    </div>
+
+    @if (chargementRecherches()) {
+      <p class="indice">Chargement…</p>
+    } @else if (erreurRecherches()) {
+      <div class="etat-erreur">
+        <p>{{ erreurRecherches() }}</p>
+        <button type="button" (click)="chargerRecherches()">Réessayer</button>
+      </div>
+    } @else if (recherches().length === 0) {
+      <p class="indice">Aucune recherche pour ce filtre.</p>
+    } @else {
+      <div class="liste-recherches">
+        @for (recherche of recherches(); track recherche.id) {
+          <div class="ligne-recherche">
+            <div class="infos-recherche">
+              <span class="terme">{{ recherche.terme }}</span>
+              <span class="meta">
+                {{ recherche.nb_recherches }} recherche{{ recherche.nb_recherches > 1 ? 's' : '' }} — dernière le
+                {{ recherche.derniere_recherche | date: 'dd/MM/yyyy' }}
+              </span>
+            </div>
+            @if (recherche.statut === 'a_traiter') {
+              <div class="actions-recherche">
+                <button
+                  type="button"
+                  class="bouton-secondaire"
+                  [disabled]="traitementEnCoursId() !== null"
+                  (click)="ouvrirAjoutMotCle(recherche)"
+                >
+                  Ajouter comme mot-clé à…
+                </button>
+                <button
+                  type="button"
+                  class="bouton-lien"
+                  [disabled]="traitementEnCoursId() !== null"
+                  (click)="ignorer(recherche)"
+                >
+                  Ignorer
+                </button>
+              </div>
+            } @else {
+              <span class="badge badge-{{ recherche.statut }}">
+                {{ recherche.statut === 'traite' ? 'Traité' : 'Ignoré' }}
+              </span>
+            }
+          </div>
+        }
+      </div>
+    }
+  </section>
+
+  <!-- ==================== Mots-clés par catégorie ==================== -->
+  <section class="bloc">
+    <h2>Mots-clés par catégorie</h2>
+
+    @if (chargementCategories()) {
+      <p class="indice">Chargement…</p>
+    } @else if (erreurCategories()) {
+      <div class="etat-erreur">
+        <p>{{ erreurCategories() }}</p>
+        <button type="button" (click)="chargerCategories()">Réessayer</button>
+      </div>
+    } @else {
+      <div class="liste-categories-mots-cles">
+        @for (groupe of groupes(); track groupe.categorie.id) {
+          <div class="carte-categorie">
+            <div class="entete-categorie">
+              @if (groupe.enfants.length > 0) {
+                <button type="button" class="bouton-deplier" (click)="basculerDeplie(groupe.categorie.id)">
+                  {{ estDeplie(groupe.categorie.id) ? '▾' : '▸' }}
+                </button>
+              }
+              <span class="nom-categorie">{{ groupe.categorie.nom }}</span>
+            </div>
+
+            <ng-container
+              *ngTemplateOutlet="editeurMotsCles; context: { categorie: groupe.categorie }"
+            ></ng-container>
+
+            @if (groupe.enfants.length > 0 && estDeplie(groupe.categorie.id)) {
+              <div class="sous-categories">
+                @for (enfant of groupe.enfants; track enfant.id) {
+                  <div class="carte-categorie carte-sous-categorie">
+                    <div class="entete-categorie">
+                      <span class="nom-categorie">{{ enfant.nom }}</span>
+                    </div>
+                    <ng-container
+                      *ngTemplateOutlet="editeurMotsCles; context: { categorie: enfant }"
+                    ></ng-container>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </section>
+
+  <!-- ==================== Tester la recherche ==================== -->
+  <section class="bloc">
+    <h2>Tester la recherche</h2>
+
+    <div class="barre-test">
+      <input
+        type="text"
+        placeholder="Un terme à rechercher…"
+        [value]="texteTest()"
+        (input)="changerTexteTest($any($event.target).value)"
+        (keydown.enter)="tester()"
+      />
+      <button type="button" class="bouton-principal" [disabled]="chargementTest()" (click)="tester()">
+        {{ chargementTest() ? 'Test en cours…' : 'Tester' }}
+      </button>
+    </div>
+
+    @if (erreurTest()) {
+      <p class="erreur-generale">{{ erreurTest() }}</p>
+    }
+
+    @if (resultatTest(); as resultat) {
+      <div class="resultats-test">
+        <p class="total-test">{{ resultat.total }} résultat{{ resultat.total > 1 ? 's' : '' }}</p>
+        <div class="groupes-resultats">
+          <div class="groupe-resultat">
+            <span class="etiquette">Catégories ({{ resultat.categories.length }})</span>
+            @if (resultat.categories.length === 0) {
+              <p class="indice">Aucune</p>
+            } @else {
+              <ul>
+                @for (item of resultat.categories; track item.id) {
+                  <li>{{ item.nom }}</li>
+                }
+              </ul>
+            }
+          </div>
+          <div class="groupe-resultat">
+            <span class="etiquette">Partenaires ({{ resultat.partenaires.length }})</span>
+            @if (resultat.partenaires.length === 0) {
+              <p class="indice">Aucun</p>
+            } @else {
+              <ul>
+                @for (item of resultat.partenaires; track item.id) {
+                  <li>{{ item.nom }}</li>
+                }
+              </ul>
+            }
+          </div>
+          <div class="groupe-resultat">
+            <span class="etiquette">Articles ({{ resultat.articles.length }})</span>
+            @if (resultat.articles.length === 0) {
+              <p class="indice">Aucun</p>
+            } @else {
+              <ul>
+                @for (item of resultat.articles; track item.id) {
+                  <li>{{ item.nom }}</li>
+                }
+              </ul>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </section>
+</div>
+
+<!-- Gabarit réutilisé pour une catégorie racine ou une sous-catégorie. -->
+<ng-template #editeurMotsCles let-categorie="categorie">
+  <div class="puces-mots-cles">
+    @for (motCle of motsClesPour(categorie.id); track motCle) {
+      <span class="puce-mot-cle">
+        {{ motCle }}
+        <button type="button" aria-label="Supprimer" (click)="supprimerMotCle(categorie.id, motCle)">×</button>
+      </span>
+    }
+    <input
+      type="text"
+      class="champ-mot-cle"
+      placeholder="Ajouter un mot-clé…"
+      [value]="texteMotCle(categorie.id)"
+      (input)="changerTexteMotCle(categorie.id, $any($event.target).value)"
+      (keydown)="surToucheMotCle(categorie.id, $event)"
+    />
+  </div>
+  @if (erreurMotsCles(categorie.id)) {
+    <p class="erreur-champ">{{ erreurMotsCles(categorie.id) }}</p>
+  }
+  <button
+    type="button"
+    class="bouton-secondaire bouton-enregistrer-mots-cles"
+    [disabled]="enregistrementMotsClesEnCoursId() !== null"
+    (click)="enregistrerMotsCles(categorie)"
+  >
+    {{ enregistrementMotsClesEnCoursId() === categorie.id ? 'Enregistrement…' : 'Enregistrer' }}
+  </button>
+</ng-template>
+
+@if (rechercheEnAjout(); as recherche) {
+  <div class="voile-modale" (click)="fermerAjoutMotCle()">
+    <div class="modale" (click)="$event.stopPropagation()">
+      <h2>Ajouter comme mot-clé</h2>
+      <p class="sous-titre">« {{ recherche.terme }} » sera ajouté aux mots-clés de la catégorie choisie.</p>
+
+      <label for="categorie-ajout">Catégorie</label>
+      <select id="categorie-ajout" [value]="categorieChoisieId()" (change)="changerCategorieChoisie($any($event.target).value)">
+        <option value="">— Choisir —</option>
+        @for (categorie of categoriesAplaties(); track categorie.id) {
+          <option [value]="categorie.id">
+            {{ categorie.profondeur > 0 ? '— ' : '' }}{{ categorie.nom }}
+          </option>
+        }
+      </select>
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="fermerAjoutMotCle()">Annuler</button>
+        <button
+          type="button"
+          class="bouton-principal"
+          [disabled]="!categorieChoisieId() || traitementEnCoursId() !== null"
+          (click)="confirmerAjoutMotCle()"
+        >
+          Ajouter
+        </button>
+      </div>
+    </div>
+  </div>
+}

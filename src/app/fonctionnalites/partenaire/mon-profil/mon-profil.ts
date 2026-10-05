@@ -9,6 +9,7 @@ import { Departement } from '../../../modeles/departement.model';
 import { OptionGeo } from '../../../modeles/geographie.model';
 import { formaterLocalisation } from '../../../partage/formater-localisation';
 import { CarteMonCompte } from '../../../partage/mon-compte/carte-mon-compte/carte-mon-compte';
+import { CoordonneesGps, PositionGps } from '../../../partage/position-gps/position-gps';
 import {
   OPTIONS_TYPE_PARTENAIRE,
   ProfilPartenaire,
@@ -28,7 +29,7 @@ type ChampImage = 'logo' | 'photo_couverture';
  */
 @Component({
   selector: 'app-mon-profil',
-  imports: [ReactiveFormsModule, CarteMonCompte],
+  imports: [ReactiveFormsModule, CarteMonCompte, PositionGps],
   templateUrl: './mon-profil.html',
   styleUrl: './mon-profil.scss',
 })
@@ -60,6 +61,9 @@ export class MonProfil implements OnInit, OnDestroy {
   readonly chargementQuartiers = signal(false);
   readonly erreurQuartiers = signal<string | null>(null);
 
+  readonly enregistrementPositionEnCours = signal(false);
+  readonly erreurPosition = signal<string | null>(null);
+
   // Aperçus locaux (URL.createObjectURL) des images sélectionnées mais pas encore envoyées.
   readonly apercuLogo = signal<string | null>(null);
   readonly apercuCouverture = signal<string | null>(null);
@@ -85,8 +89,6 @@ export class MonProfil implements OnInit, OnDestroy {
     localite_id: [''],
     quartier_id: [''],
     secteur: [''],
-    latitude: [''],
-    longitude: [''],
     description_acces: [''],
     telephone_pro: [''],
     whatsapp: [''],
@@ -246,8 +248,6 @@ export class MonProfil implements OnInit, OnDestroy {
       secteur: v.secteur,
       localite_id: v.localite_id ? Number(v.localite_id) : null,
       quartier_id: v.quartier_id ? Number(v.quartier_id) : null,
-      latitude: v.latitude !== '' ? Number(v.latitude) : null,
-      longitude: v.longitude !== '' ? Number(v.longitude) : null,
       description_acces: v.description_acces,
       telephone_pro: v.telephone_pro,
       whatsapp: v.whatsapp,
@@ -266,12 +266,23 @@ export class MonProfil implements OnInit, OnDestroy {
     return this.departements().find((d) => d.id === profil.departement)?.nom ?? `Département #${profil.departement}`;
   }
 
-  /** Point GPS affiché en lecture. */
-  pointGpsAffiche(profil: ProfilPartenaire): string {
-    if (profil.latitude === null || profil.longitude === null) {
-      return 'non défini';
-    }
-    return `${profil.latitude}, ${profil.longitude}`;
+  /** Enregistre la position GPS (appel réseau indépendant du reste du formulaire). */
+  enregistrerPosition(position: CoordonneesGps | null): void {
+    this.enregistrementPositionEnCours.set(true);
+    this.erreurPosition.set(null);
+
+    this.profilPartenaireService
+      .modifierProfil({ latitude: position?.latitude ?? null, longitude: position?.longitude ?? null })
+      .subscribe({
+        next: (profil) => {
+          this.enregistrementPositionEnCours.set(false);
+          this.appliquerProfil(profil);
+        },
+        error: (erreur: unknown) => {
+          this.enregistrementPositionEnCours.set(false);
+          this.erreurPosition.set(this.extraireMessageErreur(erreur));
+        },
+      });
   }
 
   /** Appelé lors du choix d'un fichier pour le logo ou la photo de couverture. */
@@ -365,8 +376,6 @@ export class MonProfil implements OnInit, OnDestroy {
         localite_id: profil.localite_id !== null ? String(profil.localite_id) : '',
         quartier_id: profil.quartier_id !== null ? String(profil.quartier_id) : '',
         secteur: profil.secteur,
-        latitude: profil.latitude !== null ? String(profil.latitude) : '',
-        longitude: profil.longitude !== null ? String(profil.longitude) : '',
         description_acces: profil.description_acces,
         telephone_pro: profil.telephone_pro,
         whatsapp: profil.whatsapp,

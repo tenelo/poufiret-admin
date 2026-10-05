@@ -66,10 +66,6 @@
               <span class="valeur">{{ profilActuel.secteur || '—' }}</span>
             </div>
             <div class="champ-lecture">
-              <span class="etiquette">Point GPS</span>
-              <span class="valeur">{{ pointGpsAffiche(profilActuel) }}</span>
-            </div>
-            <div class="champ-lecture">
               <span class="etiquette">Téléphone professionnel</span>
               <span class="valeur">{{ profilActuel.telephone_pro || 'non renseigné' }}</span>
             </div>
@@ -312,19 +308,21 @@
           <label for="adresse">Adresse</label>
           <input id="adresse" type="text" formControlName="adresse" />
 
-          <div class="ligne-champs">
-            <div class="champ">
-              <label for="latitude">Latitude</label>
-              <input id="latitude" type="number" step="any" formControlName="latitude" />
-            </div>
-            <div class="champ">
-              <label for="longitude">Longitude</label>
-              <input id="longitude" type="number" step="any" formControlName="longitude" />
-            </div>
-          </div>
-
           <label for="description_acces">Comment accéder au commerce</label>
           <textarea id="description_acces" formControlName="description_acces" rows="3"></textarea>
+        </section>
+
+        <section class="section">
+          <h2>Position du commerce</h2>
+          <app-position-gps
+            [latitude]="profilActuel.latitude"
+            [longitude]="profilActuel.longitude"
+            [modifieeLe]="profilActuel.position_modifiee_le ?? null"
+            [modifieeParRole]="profilActuel.position_modifiee_par_role ?? null"
+            [enregistrementEnCours]="enregistrementPositionEnCours()"
+            [erreur]="erreurPosition()"
+            (enregistrer)="enregistrerPosition($event)"
+          />
         </section>
 
         @if (messageErreur()) {

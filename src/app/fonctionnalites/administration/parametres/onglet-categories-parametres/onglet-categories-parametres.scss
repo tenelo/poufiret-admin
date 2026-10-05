@@ -1,0 +1,224 @@
+.onglet-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.erreur-generale {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.indice {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+.etat-erreur {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.9rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+}
+
+.bloc {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.25rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #1a1a1a;
+  }
+}
+
+.aide {
+  margin: -0.4rem 0 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+// ---- Aperçu grille ----
+
+.grille-apercu {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  .grille-apercu {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.case-apercu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.9rem 0.5rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  text-align: center;
+
+  img {
+    width: 36px;
+    height: 36px;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+
+  .icone-apercu {
+    font-size: 1.6rem;
+  }
+
+  .nom-apercu {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #374151;
+  }
+}
+
+// ---- Liste ordonnable ----
+
+.liste-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.carte-categorie {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+}
+
+.carte-sous-categorie {
+  background: #ffffff;
+}
+
+.entete-categorie {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.poignee {
+  cursor: grab;
+  color: #9ca3af;
+  font-size: 1rem;
+}
+
+.bouton-deplier {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.icone-categorie {
+  font-size: 1.1rem;
+}
+
+.nom-categorie {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.nb-partenaires {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.actions-mobiles {
+  display: flex;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.bouton-icone {
+  padding: 0.25rem 0.5rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: #f4f5f7;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.interrupteur {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: #374151;
+  cursor: pointer;
+  white-space: nowrap;
+
+  input {
+    width: auto;
+  }
+}
+
+.sous-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0 1.5rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid #e5e7eb;
+}
+
+// CDK drag-drop : retour visuel pendant le déplacement.
+.cdk-drag-preview {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  border-radius: 10px;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.3;
+}
+
+.cdk-drop-list-dragging .carte-categorie:not(.cdk-drag-placeholder) {
+  transition: transform 200ms ease;
+}
+
+@media (max-width: 575.98px) {
+  .entete-categorie {
+    gap: 0.4rem;
+  }
+
+  .actions-mobiles {
+    margin-left: 0;
+  }
+}

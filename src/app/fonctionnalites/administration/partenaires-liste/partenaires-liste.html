@@ -175,6 +175,28 @@
                       }
                     </div>
 
+                    <div class="champ-detail">
+                      <span class="etiquette">Position du commerce</span>
+                      <p class="valeur">
+                        {{
+                          partenaire.latitude !== null && partenaire.longitude !== null
+                            ? partenaire.latitude.toFixed(6) + ', ' + partenaire.longitude.toFixed(6)
+                            : 'Non définie'
+                        }}
+                      </p>
+                      @if (peutModifierPosition()) {
+                        <button
+                          type="button"
+                          class="bouton-secondaire bouton-numero"
+                          (click)="ouvrirDialogPosition(partenaire); $event.stopPropagation()"
+                        >
+                          Position du commerce
+                        </button>
+                      } @else if (mentionPosition(partenaire); as mention) {
+                        <p class="mention-position-lecture">{{ mention }}</p>
+                      }
+                    </div>
+
                     @if (chargementHistorique()) {
                       <p class="indice-historique">Chargement de l'historique…</p>
                     } @else if (historiqueTelephone() && historiqueTelephone()!.length > 0) {
@@ -302,6 +324,32 @@
         >
           {{ envoiChangementEnCours() ? 'Envoi en cours…' : 'Confirmer' }}
         </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (dialogPositionOuvertPour(); as partenaire) {
+  <div class="voile-modale" (click)="fermerDialogPosition()">
+    <div class="modale modale-position" (click)="$event.stopPropagation()">
+      <h2>Position du commerce</h2>
+      <p class="sous-titre">{{ partenaire.nom_commerce }}</p>
+
+      <app-position-gps
+        [latitude]="partenaire.latitude"
+        [longitude]="partenaire.longitude"
+        [modifieeLe]="partenaire.position_modifiee_le ?? null"
+        [modifieeParRole]="partenaire.position_modifiee_par_role ?? null"
+        [enregistrementEnCours]="enregistrementPositionEnCours()"
+        [erreur]="erreurPosition()"
+        (enregistrer)="enregistrerPosition($event)"
+      />
+      @if (avertissementPosition()) {
+        <p class="avertissement-deconnexion">{{ avertissementPosition() }}</p>
+      }
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="fermerDialogPosition()">Fermer</button>
       </div>
     </div>
   </div>

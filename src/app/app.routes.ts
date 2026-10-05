@@ -288,6 +288,14 @@ export const routes: Routes = [
             (m) => m.GestionAdmins,
           ),
       },
+      {
+        // Super-admin (le backend renvoie toutes les capacités à true) OU capacité gerer_parametres.
+        path: 'administration/parametres',
+        canActivate: [roleGuard(['admin']), capaciteGuard],
+        data: { capacite: 'gerer_parametres' },
+        loadComponent: () =>
+          import('./fonctionnalites/administration/parametres/parametres').then((m) => m.Parametres),
+      },
       { path: '', pathMatch: 'full', redirectTo: 'tableau-de-bord' },
     ],
   },

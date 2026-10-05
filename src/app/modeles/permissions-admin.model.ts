@@ -5,9 +5,9 @@
 
 // Les capacités possibles de la grille admin, pour l'autocomplétion lors
 // de la déclaration des entrées de menu / des routes protégées.
-// `gerer_admins`, `gerer_geographie`, `gerer_formules_pub`, `gerer_commandes`, `gerer_restaurants`
-// et `modifier_identifiant_partenaire` sont privilégiées : seul un super-admin peut la poser à true
-// (le backend ignore silencieusement toute tentative venant d'un non-superuser).
+// `gerer_admins`, `gerer_geographie`, `gerer_formules_pub`, `gerer_commandes`, `gerer_restaurants`,
+// `modifier_identifiant_partenaire` et `gerer_parametres` sont privilégiées : seul un super-admin
+// peut la poser à true (le backend ignore silencieusement toute tentative d'un non-superuser).
 export type NomCapacite =
   | 'suspendre_client'
   | 'suspendre_partenaire'
@@ -47,7 +47,8 @@ export type NomCapacite =
   | 'gerer_formules_pub'
   | 'gerer_commandes'
   | 'gerer_restaurants'
-  | 'modifier_identifiant_partenaire';
+  | 'modifier_identifiant_partenaire'
+  | 'gerer_parametres';
 
 // Corps brut renvoyé par le backend (snake_case).
 export interface ReponsePermissionsAdmin {
@@ -111,4 +112,5 @@ export const LIBELLES_CAPACITE: Record<NomCapacite, string> = {
   gerer_commandes: 'Gérer le centre des commandes',
   gerer_restaurants: 'Gérer les restaurants',
   modifier_identifiant_partenaire: "Modifier le numéro de connexion d'un partenaire",
+  gerer_parametres: 'Gérer les paramètres',
 };

@@ -1,0 +1,113 @@
+<div class="onglet-categories">
+  @if (messageErreur()) {
+    <p class="erreur-generale">{{ messageErreur() }}</p>
+  }
+
+  @if (chargementEnCours()) {
+    <p class="indice">Chargement…</p>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else {
+    <section class="bloc">
+      <h2>Aperçu — grille de l'application</h2>
+      <p class="aide">Les 8 premières catégories actives, dans leur ordre d'affichage.</p>
+      <div class="grille-apercu">
+        @for (categorie of apercuGrille(); track categorie.id) {
+          <div class="case-apercu">
+            @if (categorie.image) {
+              <img [src]="categorie.image" [alt]="categorie.nom" />
+            } @else {
+              <span class="icone-apercu">{{ categorie.icone || '📁' }}</span>
+            }
+            <span class="nom-apercu">{{ categorie.nom }}</span>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="bloc">
+      <h2>Ordre et visibilité</h2>
+
+      <div class="liste-categories" cdkDropList (cdkDropListDropped)="surDepotRacines($event)">
+        @for (groupe of groupes(); track groupe.categorie.id) {
+          <div class="carte-categorie" cdkDrag>
+            <div class="entete-categorie">
+              @if (groupe.enfants.length > 0) {
+                <button type="button" class="bouton-deplier" (click)="basculerDeplie(groupe.categorie.id)">
+                  {{ estDeplie(groupe.categorie.id) ? '▾' : '▸' }}
+                </button>
+              }
+              <ng-container *ngTemplateOutlet="ligneCategorie; context: { categorie: groupe.categorie }"></ng-container>
+            </div>
+
+            @if (groupe.enfants.length > 0 && estDeplie(groupe.categorie.id)) {
+              <div
+                class="sous-categories"
+                cdkDropList
+                (cdkDropListDropped)="surDepotEnfants(groupe.categorie.id, $event)"
+              >
+                @for (enfant of groupe.enfants; track enfant.id) {
+                  <div class="carte-categorie carte-sous-categorie" cdkDrag>
+                    <div class="entete-categorie">
+                      <ng-container *ngTemplateOutlet="ligneCategorie; context: { categorie: enfant }"></ng-container>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  }
+</div>
+
+<!-- Gabarit réutilisé pour une catégorie racine ou une sous-catégorie. -->
+<ng-template #ligneCategorie let-categorie="categorie">
+  <span class="poignee" cdkDragHandle title="Glisser pour réordonner">⠿</span>
+  @if (categorie.icone) {
+    <span class="icone-categorie">{{ categorie.icone }}</span>
+  }
+  <span class="nom-categorie">{{ categorie.nom }}</span>
+  <span class="nb-partenaires">
+    {{ categorie.nb_partenaires }} partenaire{{ categorie.nb_partenaires > 1 ? 's' : '' }}
+  </span>
+
+  <div class="actions-mobiles">
+    <button
+      type="button"
+      class="bouton-icone"
+      [disabled]="!peutMonter(categorie)"
+      (click)="monterEnPremiere(categorie)"
+      aria-label="Monter en 1re position"
+    >
+      ⤒
+    </button>
+    <button
+      type="button"
+      class="bouton-icone"
+      [disabled]="!peutMonter(categorie)"
+      (click)="monter(categorie)"
+      aria-label="Monter"
+    >
+      ↑
+    </button>
+    <button
+      type="button"
+      class="bouton-icone"
+      [disabled]="!peutDescendre(categorie)"
+      (click)="descendre(categorie)"
+      aria-label="Descendre"
+    >
+      ↓
+    </button>
+  </div>
+
+  <label class="interrupteur">
+    <input type="checkbox" [checked]="categorie.est_active" (change)="basculerActive(categorie)" />
+    Visible
+  </label>
+</ng-template>
