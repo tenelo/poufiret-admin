@@ -5,6 +5,12 @@ import { Observable, map, tap } from 'rxjs';
 import { ConfigurationService } from '../../../noyau/config/configuration.service';
 import { Departement } from '../../../modeles/departement.model';
 import { FiltresPartenairesListe, ReponsePartenairesListe } from '../../../modeles/partenaire-liste.model';
+import {
+  EntreeHistoriqueTelephone,
+  ReponseChangerTelephone,
+  ReponseHistoriqueTelephone,
+  RequeteChangerTelephone,
+} from '../../../modeles/changement-telephone-partenaire.model';
 import { declencherTelechargementFichier, nomFichierHorodate } from '../telecharger-fichier';
 
 // DRF peut renvoyer soit un tableau brut, soit une page paginée {results: [...]}.
@@ -50,6 +56,26 @@ export class PartenairesListeService {
     return this.http
       .get<ReponseListe<Departement>>(`${this.configuration.apiUrl}/geo/departements/`)
       .pipe(map(normaliserListe));
+  }
+
+  /**
+   * POST /administration/partenaires/<id>/changer-telephone/ : change le numéro de
+   * connexion d'un partenaire (capacité `modifier_identifiant_partenaire`, privilégiée).
+   */
+  changerTelephone(id: number, donnees: RequeteChangerTelephone): Observable<ReponseChangerTelephone> {
+    return this.http.post<ReponseChangerTelephone>(
+      `${this.configuration.apiUrl}/administration/partenaires/${id}/changer-telephone/`,
+      donnees,
+    );
+  }
+
+  /** GET /administration/partenaires/<id>/historique-telephone/ */
+  historiqueTelephone(id: number): Observable<EntreeHistoriqueTelephone[]> {
+    return this.http
+      .get<ReponseHistoriqueTelephone>(
+        `${this.configuration.apiUrl}/administration/partenaires/${id}/historique-telephone/`,
+      )
+      .pipe(map((reponse) => reponse.resultats));
   }
 
   private construireParams(filtres: FiltresPartenairesListe): HttpParams {

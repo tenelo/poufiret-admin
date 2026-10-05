@@ -42,8 +42,9 @@ export interface RequeteModifierCapacites {
 export interface CapaciteDescriptor {
   nom: NomCapacite;
   libelle: string;
-  // true pour `gerer_admins`, `gerer_geographie`, `gerer_formules_pub`, `gerer_commandes` et
-  // `gerer_restaurants` : non modifiable par un admin non-superuser.
+  // true pour `gerer_admins`, `gerer_geographie`, `gerer_formules_pub`, `gerer_commandes`,
+  // `gerer_restaurants` et `modifier_identifiant_partenaire` : non modifiable par un admin
+  // non-superuser.
   privilegiee?: boolean;
 }
 
@@ -96,6 +97,12 @@ export const GROUPES_CAPACITES: GroupeCapacites[] = [
       { nom: 'accorder_faveur', libelle: 'Accorder une faveur de plan' },
       { nom: 'valider_devenir_partenaire', libelle: 'Valider une demande de partenariat' },
       { nom: 'creer_partenaire', libelle: 'Créer un partenaire' },
+      // Privilégiée : seul un super-admin peut la modifier (case verrouillée pour les autres).
+      {
+        nom: 'modifier_identifiant_partenaire',
+        libelle: "Modifier le numéro de connexion d'un partenaire",
+        privilegiee: true,
+      },
     ],
   },
   {

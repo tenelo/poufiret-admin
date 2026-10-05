@@ -138,6 +138,10 @@
               <tr class="ligne-detail">
                 <td colspan="7">
                   <div class="panneau-detail">
+                    @if (messageSuccesChangement()) {
+                      <p class="message-succes-detail">{{ messageSuccesChangement() }}</p>
+                    }
+
                     <div class="champ-detail">
                       <span class="etiquette">Localité complète</span>
                       <p class="valeur">{{ localite(partenaire) }}</p>
@@ -156,6 +160,39 @@
                       <span class="etiquette">Inscrit le</span>
                       <p class="valeur">{{ formaterDateComplete(partenaire.created_at) }}</p>
                     </div>
+
+                    <div class="champ-detail">
+                      <span class="etiquette">Numéro de connexion</span>
+                      <p class="valeur">{{ partenaire.telephone_compte }}</p>
+                      @if (peutModifierIdentifiant()) {
+                        <button
+                          type="button"
+                          class="bouton-secondaire bouton-numero"
+                          (click)="ouvrirDialogTelephone(partenaire); $event.stopPropagation()"
+                        >
+                          Changer le numéro de connexion
+                        </button>
+                      }
+                    </div>
+
+                    @if (chargementHistorique()) {
+                      <p class="indice-historique">Chargement de l'historique…</p>
+                    } @else if (historiqueTelephone() && historiqueTelephone()!.length > 0) {
+                      <div class="bloc-historique">
+                        <span class="etiquette">Historique des numéros</span>
+                        <ul class="liste-historique">
+                          @for (entree of historiqueTelephone()!; track entree.cree_le + entree.nouveau) {
+                            <li class="entree-historique">
+                              <span class="changement">{{ entree.ancien }} → {{ entree.nouveau }}</span>
+                              <span class="motif-historique">{{ entree.motif }}</span>
+                              <span class="meta-historique">
+                                {{ entree.auteur_nom }} — {{ formaterDateComplete(entree.cree_le) }}
+                              </span>
+                            </li>
+                          }
+                        </ul>
+                      </div>
+                    }
                   </div>
                 </td>
               </tr>
@@ -166,3 +203,106 @@
     </div>
   }
 </section>
+
+@if (dialogTelephoneOuvertPour(); as partenaire) {
+  <div class="voile-modale" (click)="fermerDialogTelephone()">
+    <div class="modale" (click)="$event.stopPropagation()">
+      <h2>Changer le numéro de connexion</h2>
+      <p class="sous-titre">{{ partenaire.nom_commerce }}</p>
+
+      @if (erreurGeneraleChangement()) {
+        <p class="erreur-generale">{{ erreurGeneraleChangement() }}</p>
+      }
+
+      <label>Numéro actuel</label>
+      <input type="text" [value]="partenaire.telephone_compte" disabled />
+
+      <label for="nouveau-telephone">Nouveau numéro</label>
+      <div class="champ-telephone">
+        <span class="prefixe-telephone">+225</span>
+        <input
+          id="nouveau-telephone"
+          type="tel"
+          inputmode="numeric"
+          maxlength="10"
+          placeholder="0700000000"
+          [value]="nouveauTelephoneSaisi()"
+          (input)="changerNouveauTelephoneSaisi($any($event.target).value)"
+        />
+      </div>
+      @if (erreurNouveauTelephone()) {
+        <p class="erreur-champ">{{ erreurNouveauTelephone() }}</p>
+      } @else if (nouveauTelephoneSaisi().length > 0 && !nouveauTelephoneValide()) {
+        <p class="erreur-champ">Le numéro doit contenir exactement 10 chiffres.</p>
+      }
+
+      <label for="motif-changement">Motif</label>
+      <textarea
+        id="motif-changement"
+        rows="2"
+        placeholder="Raison du changement de numéro…"
+        [value]="motifChangement()"
+        (input)="changerMotifChangement($any($event.target).value)"
+      ></textarea>
+      @if (erreurMotifChangement()) {
+        <p class="erreur-champ">{{ erreurMotifChangement() }}</p>
+      }
+
+      <label class="case-aussi-pro">
+        <input
+          type="checkbox"
+          [checked]="aussiTelephonePro()"
+          (change)="changerAussiTelephonePro($any($event.target).checked)"
+        />
+        Mettre aussi à jour le téléphone professionnel
+      </label>
+
+      <div class="avertissement-deconnexion">
+        ⚠️ Le partenaire sera déconnecté de tous ses appareils. Il devra se reconnecter avec le
+        nouveau numéro et son PIN actuel.
+      </div>
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="fermerDialogTelephone()">
+          Annuler
+        </button>
+        <button
+          type="button"
+          class="bouton-principal"
+          [disabled]="!formulaireTelephoneValide() || envoiChangementEnCours()"
+          (click)="demanderConfirmationChangement()"
+        >
+          Changer le numéro
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (confirmationChangementAffichee() && dialogTelephoneOuvertPour(); as partenaire) {
+  <div class="voile-confirmation" (click)="annulerConfirmationChangement()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>
+        Changer le numéro de connexion de « {{ partenaire.nom_commerce }} » de
+        {{ partenaire.telephone_compte }} vers +225{{ nouveauTelephoneSaisi() }} ?
+      </p>
+      <p class="rappel-deconnexion">
+        Le partenaire sera déconnecté de tous ses appareils et devra se reconnecter avec le nouveau
+        numéro et son PIN actuel.
+      </p>
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annulerConfirmationChangement()">
+          Annuler
+        </button>
+        <button
+          type="button"
+          class="bouton-confirmer"
+          [disabled]="envoiChangementEnCours()"
+          (click)="confirmerChangementTelephone()"
+        >
+          {{ envoiChangementEnCours() ? 'Envoi en cours…' : 'Confirmer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

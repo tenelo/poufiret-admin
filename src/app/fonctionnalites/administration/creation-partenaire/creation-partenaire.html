@@ -69,6 +69,9 @@
             <option [value]="option.valeur">{{ option.libelle }}</option>
           }
         </select>
+        <p class="aide">
+          Le métier du partenaire : il détermine ses fonctionnalités (ex. Restaurateur → carte et menus).
+        </p>
 
         <label for="description">Description</label>
         <textarea id="description" formControlName="description" rows="3"></textarea>
@@ -137,6 +140,7 @@
 
       <section class="section">
         <h2>Catégories <span class="optionnel">(optionnel)</span></h2>
+        <p class="aide">Les rayons où il apparaît dans l'application. Plusieurs choix possibles.</p>
 
         @if (chargementCategories()) {
           <p class="indice">Chargement des catégories…</p>
@@ -157,9 +161,15 @@
                   (change)="basculerCategorie(categorie.id)"
                 />
                 {{ categorie.libelle }}
+                @if (estCategoriePrincipale(categorie.id)) {
+                  <span class="badge-principale">Principale</span>
+                }
               </label>
             }
           </div>
+          @if (avertissementCategorieDecochee()) {
+            <p class="avertissement-categorie">{{ avertissementCategorieDecochee() }}</p>
+          }
         }
       </section>
 

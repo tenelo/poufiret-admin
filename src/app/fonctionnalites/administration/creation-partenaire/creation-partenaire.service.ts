@@ -9,6 +9,10 @@ import {
   ReponseCreationPartenaire,
   RequeteCreationPartenaire,
 } from '../../../modeles/creation-partenaire.model';
+import {
+  CorrespondanceTypeCategorie,
+  ReponseCorrespondancesTypes,
+} from '../../../modeles/correspondance-type-categorie.model';
 
 // DRF peut renvoyer soit un tableau brut, soit une page paginée {results: [...]}.
 // (Le contrat confirmé pour ces deux endpoints décrit un tableau brut ; on
@@ -45,5 +49,12 @@ export class CreationPartenaireService {
     return this.http
       .get<ReponseListe<CategorieCatalogue>>(`${this.configuration.apiUrl}/catalogue/categories/`)
       .pipe(map(normaliserListe));
+  }
+
+  /** GET /catalogue/correspondances-types/ : catégorie correspondant à chaque type de partenaire. */
+  listerCorrespondancesTypes(): Observable<CorrespondanceTypeCategorie[]> {
+    return this.http
+      .get<ReponseCorrespondancesTypes>(`${this.configuration.apiUrl}/catalogue/correspondances-types/`)
+      .pipe(map((reponse) => reponse.correspondances));
   }
 }

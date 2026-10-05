@@ -27,3 +27,16 @@ export function extraireMessageErreur(erreur: unknown): string {
   }
   return "Une erreur est survenue. Veuillez réessayer.";
 }
+
+/** Premier message DRF ({champ: ["msg"]} ou {champ: "msg"}) pour un champ donné, sinon null. */
+export function erreurChamp(erreur: unknown, champ: string): string | null {
+  if (!(erreur instanceof HttpErrorResponse) || erreur.status !== 400) {
+    return null;
+  }
+  const corps = erreur.error;
+  const source = corps?.details && typeof corps.details === 'object' ? corps.details : corps;
+  const valeur = source?.[champ];
+  if (typeof valeur === 'string') return valeur;
+  if (Array.isArray(valeur) && typeof valeur[0] === 'string') return valeur[0];
+  return null;
+}

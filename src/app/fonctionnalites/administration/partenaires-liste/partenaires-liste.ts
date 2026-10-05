@@ -1,9 +1,11 @@
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { PartenairesListeService } from './partenaires-liste.service';
-import { extraireMessageErreur } from '../tableau-de-bord-admin/extraire-message-erreur';
+import { extraireMessageErreur, erreurChamp } from '../tableau-de-bord-admin/extraire-message-erreur';
+import { PermissionsService } from '../../../noyau/permissions/permissions.service';
 import { Departement } from '../../../modeles/departement.model';
 import { OPTIONS_TYPE_PARTENAIRE } from '../../../modeles/profil-partenaire.model';
 import {
@@ -13,15 +15,17 @@ import {
   StatutPartenaireListe,
   classeChipStatutPartenaireListe,
 } from '../../../modeles/partenaire-liste.model';
+import { EntreeHistoriqueTelephone } from '../../../modeles/changement-telephone-partenaire.model';
 
 // Délai de silence avant de relancer la recherche (filtrage backend).
 const DEBOUNCE_RECHERCHE_MS = 350;
 
 /**
- * Écran "Partenaires" (lecture seule, capacité voir_indicateurs) : liste
- * plate filtrable (recherche, type, statut, département — filtrage backend),
- * export CSV respectant les filtres courants, détail secondaire au clic sur
- * une ligne. Aucune action de modification.
+ * Écran "Partenaires" (capacité voir_indicateurs) : liste plate filtrable
+ * (recherche, type, statut, département — filtrage backend), export CSV
+ * respectant les filtres courants, détail secondaire au clic sur une ligne.
+ * Seule action de modification : changer le numéro de connexion d'un
+ * partenaire (capacité `modifier_identifiant_partenaire`, privilégiée).
  */
 @Component({
   selector: 'app-partenaires-liste',
@@ -31,6 +35,7 @@ const DEBOUNCE_RECHERCHE_MS = 350;
 })
 export class PartenairesListe implements OnInit {
   private readonly service = inject(PartenairesListeService);
+  private readonly permissionsService = inject(PermissionsService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly optionsType = OPTIONS_TYPE_PARTENAIRE;
@@ -54,6 +59,59 @@ export class PartenairesListe implements OnInit {
 
   // Ligne dont le détail secondaire est déplié, ou null.
   readonly partenaireOuvertId = signal<number | null>(null);
+
+  readonly peutModifierIdentifiant = computed(
+    () =>
+      (this.permissionsService.permissionsActuelles()?.isSuperuser ?? false) ||
+      this.permissionsService.aLaCapacite('modifier_identifiant_partenaire'),
+  );
+
+  // Historique des numéros de connexion de la ligne actuellement dépliée
+  // (null = pas encore chargé, [] = chargé et vide → section masquée).
+  readonly historiqueTelephone = signal<EntreeHistoriqueTelephone[] | null>(null);
+  readonly chargementHistorique = signal(false);
+
+  readonly messageSuccesChangement = signal<string | null>(null);
+
+  // Dialog "Changer le numéro de connexion".
+  readonly dialogTelephoneOuvertPour = signal<PartenaireListe | null>(null);
+  readonly nouveauTelephoneSaisi = signal('');
+  readonly motifChangement = signal('');
+  readonly aussiTelephonePro = signal(false);
+  readonly confirmationChangementAffichee = signal(false);
+  readonly envoiChangementEnCours = signal(false);
+  private readonly derniereErreurChangement = signal<unknown>(null);
+
+  readonly nouveauTelephoneValide = computed(() => /^\d{10}$/.test(this.nouveauTelephoneSaisi()));
+  readonly motifChangementValide = computed(() => this.motifChangement().trim().length > 0);
+  readonly formulaireTelephoneValide = computed(
+    () => this.nouveauTelephoneValide() && this.motifChangementValide(),
+  );
+
+  readonly erreurNouveauTelephone = computed(() =>
+    erreurChamp(this.derniereErreurChangement(), 'nouveau_telephone'),
+  );
+  readonly erreurMotifChangement = computed(() => erreurChamp(this.derniereErreurChangement(), 'motif'));
+
+  readonly erreurGeneraleChangement = computed(() => {
+    const erreur = this.derniereErreurChangement();
+    if (!erreur) {
+      return null;
+    }
+    if (erreur instanceof HttpErrorResponse && erreur.status === 409) {
+      const corps = erreur.error;
+      return typeof corps?.message === 'string'
+        ? corps.message
+        : 'Ce numéro est déjà utilisé par un autre compte.';
+    }
+    if (erreur instanceof HttpErrorResponse && erreur.status === 400) {
+      // Les erreurs de champ (numéro, motif) sont déjà affichées sous les champs concernés.
+      if (this.erreurNouveauTelephone() || this.erreurMotifChangement()) {
+        return null;
+      }
+    }
+    return extraireMessageErreur(erreur);
+  });
 
   private readonly rechercheSubject = new Subject<string>();
 
@@ -139,9 +197,99 @@ export class PartenairesListe implements OnInit {
   }
 
   basculerDetail(partenaire: PartenaireListe): void {
-    this.partenaireOuvertId.set(
-      this.partenaireOuvertId() === partenaire.id ? null : partenaire.id,
-    );
+    const nouvelId = this.partenaireOuvertId() === partenaire.id ? null : partenaire.id;
+    this.partenaireOuvertId.set(nouvelId);
+    this.historiqueTelephone.set(null);
+    this.messageSuccesChangement.set(null);
+    if (nouvelId !== null && this.peutModifierIdentifiant()) {
+      this.chargerHistoriqueTelephone(nouvelId);
+    }
+  }
+
+  private chargerHistoriqueTelephone(id: number): void {
+    this.chargementHistorique.set(true);
+    this.service.historiqueTelephone(id).subscribe({
+      next: (entrees) => {
+        this.chargementHistorique.set(false);
+        this.historiqueTelephone.set(entrees);
+      },
+      error: () => {
+        this.chargementHistorique.set(false);
+        this.historiqueTelephone.set([]);
+      },
+    });
+  }
+
+  ouvrirDialogTelephone(partenaire: PartenaireListe): void {
+    this.dialogTelephoneOuvertPour.set(partenaire);
+    this.nouveauTelephoneSaisi.set('');
+    this.motifChangement.set('');
+    this.aussiTelephonePro.set(partenaire.telephone_pro === partenaire.telephone_compte);
+    this.derniereErreurChangement.set(null);
+    this.confirmationChangementAffichee.set(false);
+  }
+
+  fermerDialogTelephone(): void {
+    if (this.envoiChangementEnCours()) {
+      return;
+    }
+    this.dialogTelephoneOuvertPour.set(null);
+    this.confirmationChangementAffichee.set(false);
+  }
+
+  changerNouveauTelephoneSaisi(valeur: string): void {
+    this.nouveauTelephoneSaisi.set(valeur.replace(/\D/g, '').slice(0, 10));
+  }
+
+  changerMotifChangement(valeur: string): void {
+    this.motifChangement.set(valeur);
+  }
+
+  changerAussiTelephonePro(valeur: boolean): void {
+    this.aussiTelephonePro.set(valeur);
+  }
+
+  demanderConfirmationChangement(): void {
+    if (!this.formulaireTelephoneValide()) {
+      return;
+    }
+    this.confirmationChangementAffichee.set(true);
+  }
+
+  annulerConfirmationChangement(): void {
+    this.confirmationChangementAffichee.set(false);
+  }
+
+  confirmerChangementTelephone(): void {
+    const partenaire = this.dialogTelephoneOuvertPour();
+    if (!partenaire || this.envoiChangementEnCours()) {
+      return;
+    }
+
+    this.envoiChangementEnCours.set(true);
+    this.derniereErreurChangement.set(null);
+
+    this.service
+      .changerTelephone(partenaire.id, {
+        nouveau_telephone: `+225${this.nouveauTelephoneSaisi()}`,
+        motif: this.motifChangement().trim(),
+        aussi_telephone_pro: this.aussiTelephonePro(),
+      })
+      .subscribe({
+        next: (reponse) => {
+          this.envoiChangementEnCours.set(false);
+          this.dialogTelephoneOuvertPour.set(null);
+          this.confirmationChangementAffichee.set(false);
+          this.messageSuccesChangement.set(reponse.message);
+          this.charger();
+          this.chargerHistoriqueTelephone(partenaire.id);
+        },
+        error: (erreur: unknown) => {
+          this.envoiChangementEnCours.set(false);
+          this.confirmationChangementAffichee.set(false);
+          this.derniereErreurChangement.set(erreur);
+        },
+      });
   }
 
   /** Numéros secondaires à afficher seulement s'ils diffèrent du téléphone du compte. */

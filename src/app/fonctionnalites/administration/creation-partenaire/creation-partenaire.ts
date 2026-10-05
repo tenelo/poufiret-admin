@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { CreationPartenaireService } from './creation-partenaire.service';
@@ -8,6 +9,7 @@ import {
   CategorieCatalogueAplatie,
   aplatirCategories,
 } from '../../../modeles/categorie-catalogue.model';
+import { CorrespondanceTypeCategorie } from '../../../modeles/correspondance-type-categorie.model';
 import {
   OPTIONS_TYPE_PARTENAIRE_CREATION,
   ReponseCreationPartenaire,
@@ -28,6 +30,7 @@ import {
 export class CreationPartenaire implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
   private readonly service = inject(CreationPartenaireService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly optionsTypePartenaire = OPTIONS_TYPE_PARTENAIRE_CREATION;
 
@@ -39,6 +42,13 @@ export class CreationPartenaire implements OnInit {
   readonly chargementCategories = signal(true);
   readonly erreurCategories = signal<string | null>(null);
   readonly categoriesSelectionnees = signal<Set<number>>(new Set());
+
+  // ---- Catégorie cochée automatiquement selon le type (voir OPTIONS_TYPE_PARTENAIRE_CREATION) ----
+  readonly correspondances = signal<CorrespondanceTypeCategorie[]>([]);
+  // Id de la catégorie actuellement auto-cochée pour le type en cours, tant qu'elle n'a pas été
+  // touchée à la main — sert uniquement à savoir si un futur changement de type doit la décocher.
+  private categorieAutoId: number | null = null;
+  readonly avertissementCategorieDecochee = signal<string | null>(null);
 
   readonly envoiEnCours = signal(false);
   readonly messageErreur = signal<string | null>(null);
@@ -65,6 +75,11 @@ export class CreationPartenaire implements OnInit {
   ngOnInit(): void {
     this.chargerDepartements();
     this.chargerCategories();
+    this.chargerCorrespondances();
+
+    this.formulaire.controls.type_partenaire.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((valeur) => this.appliquerChangementType(valeur));
   }
 
   chargerDepartements(): void {
@@ -100,6 +115,8 @@ export class CreationPartenaire implements OnInit {
   }
 
   basculerCategorie(id: number): void {
+    const etaitCochee = this.categoriesSelectionnees().has(id);
+
     this.categoriesSelectionnees.update((ensemble) => {
       const copie = new Set(ensemble);
       if (copie.has(id)) {
@@ -109,6 +126,69 @@ export class CreationPartenaire implements OnInit {
       }
       return copie;
     });
+
+    if (id === this.categorieAutoId) {
+      // Touchée à la main : un futur changement de type ne la décochera plus silencieusement.
+      this.categorieAutoId = null;
+    }
+
+    const correspondance = this.correspondancePourTypeActuel();
+    if (correspondance?.categorie_id === id) {
+      this.avertissementCategorieDecochee.set(
+        etaitCochee
+          ? `Ce partenaire n'apparaîtra pas dans le rayon « ${correspondance.categorie_nom} ». Le backend l'y ajoutera quand même à l'enregistrement.`
+          : null,
+      );
+    }
+  }
+
+  /** Vrai si cette catégorie est celle que le type actuellement choisi ajoute automatiquement. */
+  estCategoriePrincipale(id: number): boolean {
+    return this.correspondancePourTypeActuel()?.categorie_id === id;
+  }
+
+  private correspondancePourTypeActuel(): CorrespondanceTypeCategorie | undefined {
+    return this.correspondancePour(this.formulaire.controls.type_partenaire.value);
+  }
+
+  private correspondancePour(type: string): CorrespondanceTypeCategorie | undefined {
+    return this.correspondances().find((c) => c.type_partenaire === type);
+  }
+
+  private chargerCorrespondances(): void {
+    this.service.listerCorrespondancesTypes().subscribe({
+      next: (correspondances) => {
+        this.correspondances.set(correspondances);
+        // Rattrape le cas où un type avait déjà été choisi avant que les correspondances arrivent.
+        const typeActuel = this.formulaire.controls.type_partenaire.value;
+        if (typeActuel && this.categorieAutoId === null) {
+          this.appliquerChangementType(typeActuel);
+        }
+      },
+      // Si l'endpoint échoue : le formulaire fonctionne comme avant, sans automatisme.
+      error: () => undefined,
+    });
+  }
+
+  /** Au choix ou au changement du type : décoche l'ancienne catégorie auto (si non touchée à la
+   *  main), coche la nouvelle catégorie correspondante. Les autres catégories restent inchangées. */
+  private appliquerChangementType(type: string): void {
+    if (this.categorieAutoId !== null) {
+      const ancienId = this.categorieAutoId;
+      this.categoriesSelectionnees.update((ensemble) => {
+        const copie = new Set(ensemble);
+        copie.delete(ancienId);
+        return copie;
+      });
+    }
+    this.categorieAutoId = null;
+    this.avertissementCategorieDecochee.set(null);
+
+    const correspondance = this.correspondancePour(type);
+    if (correspondance) {
+      this.categoriesSelectionnees.update((ensemble) => new Set(ensemble).add(correspondance.categorie_id));
+      this.categorieAutoId = correspondance.categorie_id;
+    }
   }
 
   soumettre(): void {
@@ -137,6 +217,8 @@ export class CreationPartenaire implements OnInit {
     this.pinCopie.set(false);
     this.messageErreur.set(null);
     this.categoriesSelectionnees.set(new Set());
+    this.categorieAutoId = null;
+    this.avertissementCategorieDecochee.set(null);
     this.formulaire.reset({
       telephone: '',
       prenom: '',
