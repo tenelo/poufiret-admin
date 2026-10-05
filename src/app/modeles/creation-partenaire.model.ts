@@ -40,7 +40,9 @@ export const OPTIONS_TYPE_PARTENAIRE_CREATION: { valeur: TypePartenaireCreation;
 ];
 
 // Corps de POST /auth/partenaires/creer/ : seuls telephone et nom_commerce sont requis,
-// le reste ne doit être envoyé que si réellement renseigné.
+// le reste ne doit être envoyé que si réellement renseigné. Localisation saisie via la
+// cascade Département → Localité → Quartier (localite_id/quartier_id) ; les anciens champs
+// libres "ville"/"quartier" ne sont plus envoyés par ce formulaire (P2).
 export interface RequeteCreationPartenaire {
   telephone: string;
   nom_commerce: string;
@@ -49,10 +51,10 @@ export interface RequeteCreationPartenaire {
   type_partenaire?: TypePartenaireCreation;
   description?: string;
   adresse?: string;
-  quartier?: string;
   secteur?: string;
-  ville?: string;
   departement?: number;
+  localite_id?: number;
+  quartier_id?: number;
   telephone_pro?: string;
   whatsapp?: string;
   email_pro?: string;

@@ -11,9 +11,14 @@ export interface PartenaireListe {
   type_partenaire: string;
   type_partenaire_libelle: string;
   categories: string[];
+  // Anciens champs texte libres, conservés pour le repli d'affichage tant que le
+  // partenaire n'a pas été rapproché à la géographie structurée (voir écran Rapprochement).
   ville: string;
   quartier: string;
   departement_nom: string;
+  // Localisation structurée (P2) : absente si le partenaire n'a pas encore été rapproché.
+  localite_nom?: string | null;
+  quartier_nom?: string | null;
   telephone_compte: string;
   telephone_pro: string;
   whatsapp: string;

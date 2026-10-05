@@ -1,9 +1,13 @@
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { ProfilPartenaireService } from './profil-partenaire.service';
+import { LocaliteQuartierService } from '../../../noyau/geo/localite-quartier.service';
 import { Departement } from '../../../modeles/departement.model';
+import { OptionGeo } from '../../../modeles/geographie.model';
+import { formaterLocalisation } from '../../../partage/formater-localisation';
 import { CarteMonCompte } from '../../../partage/mon-compte/carte-mon-compte/carte-mon-compte';
 import {
   OPTIONS_TYPE_PARTENAIRE,
@@ -31,6 +35,8 @@ type ChampImage = 'logo' | 'photo_couverture';
 export class MonProfil implements OnInit, OnDestroy {
   private readonly formBuilder = inject(FormBuilder);
   private readonly profilPartenaireService = inject(ProfilPartenaireService);
+  private readonly localiteQuartierService = inject(LocaliteQuartierService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly chargementEnCours = signal(true);
   readonly erreurChargement = signal<string | null>(null);
@@ -45,6 +51,14 @@ export class MonProfil implements OnInit, OnDestroy {
   readonly modeEdition = signal(false);
 
   readonly departements = signal<Departement[]>([]);
+
+  readonly localites = signal<OptionGeo[]>([]);
+  readonly chargementLocalites = signal(false);
+  readonly erreurLocalites = signal<string | null>(null);
+
+  readonly quartiers = signal<OptionGeo[]>([]);
+  readonly chargementQuartiers = signal(false);
+  readonly erreurQuartiers = signal<string | null>(null);
 
   // Aperçus locaux (URL.createObjectURL) des images sélectionnées mais pas encore envoyées.
   readonly apercuLogo = signal<string | null>(null);
@@ -68,10 +82,9 @@ export class MonProfil implements OnInit, OnDestroy {
     description: [''],
     type_partenaire: ['', [Validators.required]],
     adresse: [''],
-    quartier: [''],
+    localite_id: [''],
+    quartier_id: [''],
     secteur: [''],
-    ville: [''],
-    departement: [''],
     latitude: [''],
     longitude: [''],
     description_acces: [''],
@@ -83,6 +96,67 @@ export class MonProfil implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.chargerProfil();
     this.chargerDepartements();
+
+    this.formulaire.controls.localite_id.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((valeur) => this.appliquerChangementLocalite(valeur));
+  }
+
+  /** Changer la localité réinitialise le quartier, puis recharge les quartiers. */
+  private appliquerChangementLocalite(valeur: string): void {
+    this.formulaire.patchValue({ quartier_id: '' }, { emitEvent: false });
+    this.quartiers.set([]);
+    this.erreurQuartiers.set(null);
+    if (valeur) {
+      this.chargerQuartiers(Number(valeur));
+    }
+  }
+
+  private chargerLocalites(departementId: number): void {
+    this.chargementLocalites.set(true);
+    this.erreurLocalites.set(null);
+
+    this.localiteQuartierService.listerLocalites(departementId).subscribe({
+      next: (localites) => {
+        this.chargementLocalites.set(false);
+        this.localites.set(localites);
+      },
+      error: (erreur: unknown) => {
+        this.chargementLocalites.set(false);
+        this.erreurLocalites.set(this.extraireMessageErreur(erreur));
+      },
+    });
+  }
+
+  private chargerQuartiers(localiteId: number): void {
+    this.chargementQuartiers.set(true);
+    this.erreurQuartiers.set(null);
+
+    this.localiteQuartierService.listerQuartiers(localiteId).subscribe({
+      next: (quartiers) => {
+        this.chargementQuartiers.set(false);
+        this.quartiers.set(quartiers);
+      },
+      error: (erreur: unknown) => {
+        this.chargementQuartiers.set(false);
+        this.erreurQuartiers.set(this.extraireMessageErreur(erreur));
+      },
+    });
+  }
+
+  /** « Quartier, Localité (Département) » à partir des noms rattachés, sinon repli sur les anciens textes. */
+  localisationAffichee(profil: ProfilPartenaire): string {
+    return formaterLocalisation(profil);
+  }
+
+  /** Ancien texte "ville" à proposer tant que la localité n'a pas été rattachée, sinon null. */
+  indiceAncienneLocalite(profil: ProfilPartenaire): string | null {
+    return profil.localite_id === null && profil.ville ? profil.ville : null;
+  }
+
+  /** Ancien texte "quartier" à proposer tant que le quartier n'a pas été rattaché, sinon null. */
+  indiceAncienQuartier(profil: ProfilPartenaire): string | null {
+    return profil.quartier_id === null && profil.quartier ? profil.quartier : null;
   }
 
   ngOnDestroy(): void {
@@ -169,10 +243,9 @@ export class MonProfil implements OnInit, OnDestroy {
       description: v.description,
       type_partenaire: v.type_partenaire,
       adresse: v.adresse,
-      quartier: v.quartier,
       secteur: v.secteur,
-      ville: v.ville,
-      departement: v.departement ? Number(v.departement) : null,
+      localite_id: v.localite_id ? Number(v.localite_id) : null,
+      quartier_id: v.quartier_id ? Number(v.quartier_id) : null,
       latitude: v.latitude !== '' ? Number(v.latitude) : null,
       longitude: v.longitude !== '' ? Number(v.longitude) : null,
       description_acces: v.description_acces,
@@ -283,22 +356,41 @@ export class MonProfil implements OnInit, OnDestroy {
 
   private appliquerProfil(profil: ProfilPartenaire): void {
     this.profil.set(profil);
-    this.formulaire.patchValue({
-      nom_commerce: profil.nom_commerce,
-      description: profil.description,
-      type_partenaire: profil.type_partenaire,
-      adresse: profil.adresse,
-      quartier: profil.quartier,
-      secteur: profil.secteur,
-      ville: profil.ville,
-      departement: profil.departement !== null ? String(profil.departement) : '',
-      latitude: profil.latitude !== null ? String(profil.latitude) : '',
-      longitude: profil.longitude !== null ? String(profil.longitude) : '',
-      description_acces: profil.description_acces,
-      telephone_pro: profil.telephone_pro,
-      whatsapp: profil.whatsapp,
-      email_pro: profil.email_pro,
-    });
+    this.formulaire.patchValue(
+      {
+        nom_commerce: profil.nom_commerce,
+        description: profil.description,
+        type_partenaire: profil.type_partenaire,
+        adresse: profil.adresse,
+        localite_id: profil.localite_id !== null ? String(profil.localite_id) : '',
+        quartier_id: profil.quartier_id !== null ? String(profil.quartier_id) : '',
+        secteur: profil.secteur,
+        latitude: profil.latitude !== null ? String(profil.latitude) : '',
+        longitude: profil.longitude !== null ? String(profil.longitude) : '',
+        description_acces: profil.description_acces,
+        telephone_pro: profil.telephone_pro,
+        whatsapp: profil.whatsapp,
+        email_pro: profil.email_pro,
+      },
+      // emitEvent: false — évite que le patch de localite_id ne réinitialise quartier_id
+      // via appliquerChangementLocalite() avant que chargerCascadeInitiale() ne l'ait chargé.
+      { emitEvent: false },
+    );
+    this.chargerCascadeInitiale(profil);
+  }
+
+  /** Précharge les localités du département du partenaire, puis les quartiers de sa localité. */
+  private chargerCascadeInitiale(profil: ProfilPartenaire): void {
+    this.localites.set([]);
+    this.quartiers.set([]);
+    this.erreurLocalites.set(null);
+    this.erreurQuartiers.set(null);
+    if (profil.departement !== null) {
+      this.chargerLocalites(profil.departement);
+    }
+    if (profil.localite_id !== null) {
+      this.chargerQuartiers(profil.localite_id);
+    }
   }
 
   private extraireMessageErreur(erreur: unknown): string {

@@ -58,20 +58,12 @@
               <span class="valeur">{{ profilActuel.adresse || '—' }}</span>
             </div>
             <div class="champ-lecture">
-              <span class="etiquette">Quartier</span>
-              <span class="valeur">{{ profilActuel.quartier || '—' }}</span>
+              <span class="etiquette">Localisation</span>
+              <span class="valeur">{{ localisationAffichee(profilActuel) }}</span>
             </div>
             <div class="champ-lecture">
               <span class="etiquette">Secteur</span>
               <span class="valeur">{{ profilActuel.secteur || '—' }}</span>
-            </div>
-            <div class="champ-lecture">
-              <span class="etiquette">Ville</span>
-              <span class="valeur">{{ profilActuel.ville || '—' }}</span>
-            </div>
-            <div class="champ-lecture">
-              <span class="etiquette">Département</span>
-              <span class="valeur">{{ nomDepartement(profilActuel) }}</span>
             </div>
             <div class="champ-lecture">
               <span class="etiquette">Point GPS</span>
@@ -276,19 +268,43 @@
         <section class="section">
           <h2>Localisation</h2>
 
-          <label for="ville">Ville</label>
-          <input id="ville" type="text" formControlName="ville" />
+          <label>Département</label>
+          <p class="valeur-fixe">{{ nomDepartement(profilActuel) }}</p>
+          <p class="aide">Le département est géré par l'administration : contactez-la pour le modifier.</p>
 
-          <label for="departement">Département</label>
-          <select id="departement" formControlName="departement">
-            <option value="">— Non renseigné —</option>
-            @for (departement of departements(); track departement.id) {
-              <option [value]="departement.id">{{ departement.nom }} ({{ departement.region }})</option>
-            }
-          </select>
+          <label for="localite_id">Localité</label>
+          @if (chargementLocalites()) {
+            <p class="indice">Chargement des localités…</p>
+          } @else if (erreurLocalites()) {
+            <p class="erreur-champ">{{ erreurLocalites() }}</p>
+          } @else {
+            <select id="localite_id" formControlName="localite_id" [disabled]="localites().length === 0">
+              <option value="">— Non renseigné —</option>
+              @for (localite of localites(); track localite.id) {
+                <option [value]="localite.id">{{ localite.nom }}</option>
+              }
+            </select>
+          }
+          @if (indiceAncienneLocalite(profilActuel); as ancienneLocalite) {
+            <p class="aide">Ancienne saisie : {{ ancienneLocalite }} — choisissez dans la liste.</p>
+          }
 
-          <label for="quartier">Quartier</label>
-          <input id="quartier" type="text" formControlName="quartier" />
+          <label for="quartier_id">Quartier</label>
+          @if (chargementQuartiers()) {
+            <p class="indice">Chargement des quartiers…</p>
+          } @else if (erreurQuartiers()) {
+            <p class="erreur-champ">{{ erreurQuartiers() }}</p>
+          } @else {
+            <select id="quartier_id" formControlName="quartier_id" [disabled]="quartiers().length === 0">
+              <option value="">— Non renseigné —</option>
+              @for (quartier of quartiers(); track quartier.id) {
+                <option [value]="quartier.id">{{ quartier.nom }}</option>
+              }
+            </select>
+          }
+          @if (indiceAncienQuartier(profilActuel); as ancienQuartier) {
+            <p class="aide">Ancienne saisie : {{ ancienQuartier }} — choisissez dans la liste.</p>
+          }
 
           <label for="secteur">Secteur</label>
           <input id="secteur" type="text" formControlName="secteur" />

@@ -15,8 +15,16 @@ export interface ProfilPartenaire {
   photo_couverture: string | null;
   type_partenaire: string;
   adresse: string;
-  quartier: string;
   secteur: string;
+  // Localisation structurée (P2) : seuls localite_id/quartier_id sont modifiables par le
+  // partenaire — departement ne l'est plus (piloté par l'administration).
+  localite_id: number | null;
+  localite_nom: string | null;
+  quartier_id: number | null;
+  quartier_nom: string | null;
+  // Anciens champs texte libres, conservés en lecture seule pour le repli d'affichage et
+  // l'indice "Ancienne saisie" tant que le partenaire n'a pas été rapproché (P2).
+  quartier: string;
   ville: string;
   // departement (FK id) et latitude/longitude : non confirmés dans la doc API
   // déjà vérifiée pour mon-profil-partenaire (voir reference_api_poufiret_auth) —
@@ -48,6 +56,8 @@ export interface ProfilPartenaire {
 }
 
 // Corps de la requête PATCH /auth/mon-profil-partenaire/ : sous-ensemble des champs modifiables.
+// departement et les anciens champs texte ville/quartier ne sont plus envoyés (P2) : la
+// localisation s'écrit désormais via localite_id/quartier_id.
 export type RequeteMiseAJourProfilPartenaire = Partial<
   Pick<
     ProfilPartenaire,
@@ -55,10 +65,9 @@ export type RequeteMiseAJourProfilPartenaire = Partial<
     | 'description'
     | 'type_partenaire'
     | 'adresse'
-    | 'quartier'
     | 'secteur'
-    | 'ville'
-    | 'departement'
+    | 'localite_id'
+    | 'quartier_id'
     | 'latitude'
     | 'longitude'
     | 'description_acces'

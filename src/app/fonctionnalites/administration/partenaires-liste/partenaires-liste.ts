@@ -5,6 +5,7 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { PartenairesListeService } from './partenaires-liste.service';
 import { extraireMessageErreur, erreurChamp } from '../tableau-de-bord-admin/extraire-message-erreur';
+import { formaterLocalisation } from '../../../partage/formater-localisation';
 import { PermissionsService } from '../../../noyau/permissions/permissions.service';
 import { Departement } from '../../../modeles/departement.model';
 import { OPTIONS_TYPE_PARTENAIRE } from '../../../modeles/profil-partenaire.model';
@@ -308,8 +309,9 @@ export class PartenairesListe implements OnInit {
     return secondaires;
   }
 
+  /** « Quartier, Localité (Département) » à partir des noms rattachés, sinon repli sur les anciens textes. */
   localite(partenaire: PartenaireListe): string {
-    return [partenaire.ville, partenaire.quartier, partenaire.departement_nom].filter(Boolean).join(', ') || '—';
+    return formaterLocalisation(partenaire);
   }
 
   formaterDateCourte(iso: string): string {

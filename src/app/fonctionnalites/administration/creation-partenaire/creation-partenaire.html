@@ -99,16 +99,55 @@
           </select>
         }
 
-        <div class="ligne-champs">
-          <div class="champ">
-            <label for="ville">Ville</label>
-            <input id="ville" type="text" formControlName="ville" />
-          </div>
-          <div class="champ">
-            <label for="quartier">Quartier</label>
-            <input id="quartier" type="text" formControlName="quartier" />
-          </div>
-        </div>
+        <label for="localite">Localité</label>
+        @if (chargementLocalites()) {
+          <p class="indice">Chargement des localités…</p>
+        } @else if (erreurLocalites()) {
+          <p class="erreur-champ">
+            {{ erreurLocalites() }}
+            <button type="button" class="lien-reessayer" (click)="chargerLocalitesPourDepartementActuel()">
+              Réessayer
+            </button>
+          </p>
+        } @else {
+          <select id="localite" formControlName="localite_id" [disabled]="!formulaire.controls.departement.value">
+            <option value="">— Non renseigné —</option>
+            @for (localite of localites(); track localite.id) {
+              <option [value]="localite.id">{{ localite.nom }}</option>
+            }
+          </select>
+          @if (!formulaire.controls.departement.value) {
+            <p class="aide">Choisissez d'abord un département.</p>
+          }
+        }
+
+        <label for="quartier">Quartier</label>
+        @if (chargementQuartiers()) {
+          <p class="indice">Chargement des quartiers…</p>
+        } @else if (erreurQuartiers()) {
+          <p class="erreur-champ">
+            {{ erreurQuartiers() }}
+            <button type="button" class="lien-reessayer" (click)="chargerQuartiersPourLocaliteActuelle()">
+              Réessayer
+            </button>
+          </p>
+        } @else {
+          <select id="quartier" formControlName="quartier_id" [disabled]="!formulaire.controls.localite_id.value">
+            <option value="">— Non renseigné —</option>
+            @for (quartier of quartiers(); track quartier.id) {
+              <option [value]="quartier.id">{{ quartier.nom }}</option>
+            }
+          </select>
+          @if (formulaire.controls.departement.value && !formulaire.controls.localite_id.value) {
+            <p class="aide">Choisissez d'abord une localité.</p>
+          }
+        }
+
+        @if (peutGererGeographie()) {
+          <a class="lien-geographie" routerLink="/administration/geographie">
+            Quartier absent ? Ajoutez-le dans Géographie
+          </a>
+        }
 
         <label for="secteur">Secteur</label>
         <input id="secteur" type="text" formControlName="secteur" />

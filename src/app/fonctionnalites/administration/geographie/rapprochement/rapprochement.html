@@ -1,0 +1,150 @@
+<section class="page-rapprochement">
+  @if (compteurs(); as c) {
+    <div class="compteurs">
+      <div class="compteur">
+        <span class="valeur">{{ c.exact }}</span>
+        <span class="etiquette">Exact</span>
+      </div>
+      <div class="compteur">
+        <span class="valeur">{{ c.proposition }}</span>
+        <span class="etiquette">Proposition</span>
+      </div>
+      <div class="compteur">
+        <span class="valeur">{{ c.aucun }}</span>
+        <span class="etiquette">Aucun</span>
+      </div>
+      <div class="compteur compteur-rapproches">
+        <span class="valeur">{{ c.rapproches }}</span>
+        <span class="etiquette">Rapprochés</span>
+      </div>
+    </div>
+  }
+
+  @if (message(); as m) {
+    <p [class]="m.erreur ? 'erreur-generale' : 'message-succes'">{{ m.texte }}</p>
+  }
+
+  <div class="barre-filtres">
+    <select class="filtre" [value]="filtre()" (change)="changerFiltre($any($event.target).value)">
+      @for (option of optionsFiltre; track option.valeur) {
+        <option [value]="option.valeur">{{ option.libelle }}</option>
+      }
+    </select>
+  </div>
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (lignes().length === 0) {
+    <div class="etat-vide">
+      <p>Aucun partenaire pour ce filtre.</p>
+    </div>
+  } @else {
+    <div class="liste-lignes">
+      @for (ligne of lignes(); track ligne.partenaire_id) {
+        <div class="carte-ligne">
+          <div class="entete-ligne">
+            <div class="identite-partenaire">
+              <span class="nom">{{ ligne.nom }}</span>
+              <span class="departement">{{ ligne.departement_nom }}</span>
+            </div>
+            <span class="badge badge-{{ ligne.statut }}">{{ ligne.statut }}</span>
+          </div>
+
+          <div class="anciens-textes">
+            <span>Ville : {{ ligne.ville_texte || '—' }}</span>
+            <span>Quartier : {{ ligne.quartier_texte || '—' }}</span>
+          </div>
+
+          @if (erreurValidation()?.id === ligne.partenaire_id) {
+            <p class="erreur-champ">{{ erreurValidation()?.message }}</p>
+          }
+
+          @if (ligne.departement_id === null) {
+            <p class="indice-blocage">Renseignez d'abord le département du partenaire.</p>
+          } @else {
+            <div class="selecteurs-rapprochement">
+              <div class="champ-selecteur">
+                <label>Localité</label>
+                @if (chargementLocalitesParPartenaire()[ligne.partenaire_id]) {
+                  <p class="indice">Chargement…</p>
+                } @else if (erreurLocalitesParPartenaire()[ligne.partenaire_id]) {
+                  <p class="erreur-champ">{{ erreurLocalitesParPartenaire()[ligne.partenaire_id] }}</p>
+                } @else if (localitesPour(ligne.partenaire_id).length === 0) {
+                  <p class="indice-blocage">
+                    Ce département ne possède aucune localité.
+                    <a routerLink="/administration/geographie">Gérez les localités</a>
+                  </p>
+                } @else {
+                  <select
+                    [value]="selectionLocalite()[ligne.partenaire_id]"
+                    (change)="changerLocaliteSelectionnee(ligne, $any($event.target).value)"
+                  >
+                    <option value="">— Choisir —</option>
+                    @for (option of localitesPour(ligne.partenaire_id); track option.id) {
+                      <option [value]="option.id">
+                        {{ option.nom }}{{ option.score !== undefined ? ' (' + option.score + '%)' : '' }}
+                      </option>
+                    }
+                  </select>
+                }
+              </div>
+
+              <div class="champ-selecteur">
+                <label>Quartier</label>
+                @if (chargementQuartiersParPartenaire()[ligne.partenaire_id]) {
+                  <p class="indice">Chargement…</p>
+                } @else if (erreurQuartiersParPartenaire()[ligne.partenaire_id]) {
+                  <p class="erreur-champ">{{ erreurQuartiersParPartenaire()[ligne.partenaire_id] }}</p>
+                } @else {
+                  <select
+                    [value]="selectionQuartier()[ligne.partenaire_id]"
+                    [disabled]="!selectionLocalite()[ligne.partenaire_id]"
+                    (change)="changerQuartierSelectionne(ligne.partenaire_id, $any($event.target).value)"
+                  >
+                    <option value="">— Choisir —</option>
+                    @for (option of quartiersPour(ligne.partenaire_id); track option.id) {
+                      <option [value]="option.id">
+                        {{ option.nom }}{{ option.score !== undefined ? ' (' + option.score + '%)' : '' }}
+                      </option>
+                    }
+                  </select>
+                }
+                <button type="button" class="lien-ajouter-quartier" (click)="ouvrirAjoutQuartier(ligne)">
+                  Ajouter ce quartier
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="bouton-principal"
+              [disabled]="!peutValider(ligne.partenaire_id) || validationEnCours() !== null"
+              (click)="valider(ligne)"
+            >
+              {{ validationEnCours() === ligne.partenaire_id ? 'Validation en cours…' : 'Valider' }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+  }
+</section>
+
+@if (dialogQuartierOuvert()) {
+  <app-dialog-geographie
+    [niveau]="'quartiers'"
+    [nomInitial]="nomQuartierInitial()"
+    [enregistrementEnCours]="enregistrementQuartierEnCours()"
+    [erreurs]="erreursDialogQuartier()"
+    (soumis)="enregistrerQuartier($event)"
+    (annule)="fermerAjoutQuartier()"
+  />
+}

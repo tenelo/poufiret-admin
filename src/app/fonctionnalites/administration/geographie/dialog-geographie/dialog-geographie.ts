@@ -28,6 +28,8 @@ export class DialogGeographie implements OnInit {
   readonly niveau = input.required<NiveauGeo>();
   /** Ligne à modifier ; null = création. */
   readonly ligne = input<LigneGeo | null>(null);
+  /** Nom prérempli en création (ex. depuis l'écran Rapprochement) ; ignoré en édition. */
+  readonly nomInitial = input('');
   readonly enregistrementEnCours = input(false);
   readonly erreurs = input<ErreursGeo | null>(null);
 
@@ -49,6 +51,7 @@ export class DialogGeographie implements OnInit {
       this.nom.set(ligne.nom);
       void this.cascade.preremplir(ligne);
     } else {
+      this.nom.set(this.nomInitial());
       this.cascade.demarrer();
     }
   }
