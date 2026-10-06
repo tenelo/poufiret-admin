@@ -1,28 +1,47 @@
 <div class="zone-onglets">
-  <nav class="barre-onglets" aria-label="Sections">
-    <button
-      type="button"
-      class="onglet"
-      [class.onglet-actif]="ongletActif() === 'liste'"
-      (click)="changerOnglet('liste')"
-    >
-      Liste
-    </button>
-    <button
-      type="button"
-      class="onglet"
-      [class.onglet-actif]="ongletActif() === 'statistiques'"
-      (click)="changerOnglet('statistiques')"
-    >
-      Statistiques
-    </button>
-  </nav>
+  <div class="ligne-onglets">
+    <nav class="barre-onglets" aria-label="Sections">
+      @for (onglet of onglets(); track onglet.valeur) {
+        <button
+          type="button"
+          class="onglet"
+          [class.onglet-actif]="ongletActifEffectif() === onglet.valeur"
+          (click)="changerOnglet(onglet.valeur)"
+        >
+          {{ onglet.libelle }}
+        </button>
+      }
+    </nav>
+
+    @if (peutCreer()) {
+      <button type="button" class="bouton-ajouter-partenaire" (click)="changerOnglet('nouveau')">
+        + Ajouter un partenaire
+      </button>
+    }
+  </div>
 </div>
 
-@if (ongletActif() === 'statistiques') {
-  <div class="zone-statistiques">
-    <app-statistiques-partenaires />
-  </div>
-} @else {
-  <app-partenaires-liste />
+@switch (ongletActifEffectif()) {
+  @case ('statistiques') {
+    <div class="zone-statistiques">
+      <app-statistiques-partenaires />
+    </div>
+  }
+  @case ('nouveau') {
+    <app-creation-partenaire />
+  }
+  @case ('demandes') {
+    <app-demandes-partenariat />
+  }
+  @case ('indicateurs') {
+    <app-indicateurs-partenaires />
+  }
+  @case ('liste') {
+    <app-partenaires-liste />
+  }
+  @default {
+    <div class="zone-statistiques">
+      <p class="indice-aucun-droit">Vous n'avez accès à aucune section de cet écran.</p>
+    </div>
+  }
 }

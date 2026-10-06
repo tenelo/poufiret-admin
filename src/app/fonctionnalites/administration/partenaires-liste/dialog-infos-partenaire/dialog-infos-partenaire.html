@@ -1,0 +1,135 @@
+<div class="voile-modale" (click)="ferme.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    @if (mode() === 'edition') {
+      <app-creation-partenaire [partenaireId]="partenaire().id" (enregistre)="surEnregistrement($event)" />
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Fermer</button>
+      </div>
+    } @else {
+      <div class="corps-infos">
+        <div class="entete-infos">
+          <h2>{{ partenaire().nom_commerce }}</h2>
+          <span class="badge {{ classeChipStatut(partenaire().statut) }}">{{ partenaire().statut_libelle }}</span>
+        </div>
+
+        @if (chargementInfos()) {
+          <p class="indice">Chargement des informations…</p>
+        } @else if (erreurInfos()) {
+          <p class="erreur-generale">
+            {{ erreurInfos() }}
+            <button type="button" class="lien-reessayer" (click)="charger()">Réessayer</button>
+          </p>
+        } @else if (infos(); as i) {
+          <div class="bloc-infos">
+            @if (i.photo_couverture) {
+              <img [src]="i.photo_couverture" alt="Photo de couverture" class="couverture-infos" />
+            }
+            <div class="identite-infos">
+              @if (i.logo) {
+                <img [src]="i.logo" alt="Logo" class="logo-infos" />
+              }
+              <div>
+                <p class="nom-contact">{{ i.prenom }} {{ i.nom }}</p>
+                <p class="type-infos">{{ partenaire().type_partenaire_libelle }}</p>
+              </div>
+            </div>
+
+            @if (i.description) {
+              <p class="description-infos">{{ i.description }}</p>
+            }
+
+            <div class="grille-infos">
+              <div class="champ-detail">
+                <span class="etiquette">Département</span>
+                <p class="valeur">{{ i.departement_nom || '—' }}</p>
+              </div>
+              <div class="champ-detail">
+                <span class="etiquette">Localité</span>
+                <p class="valeur">{{ i.localite_nom || '—' }}</p>
+              </div>
+              <div class="champ-detail">
+                <span class="etiquette">Quartier</span>
+                <p class="valeur">{{ i.quartier_nom || '—' }}</p>
+              </div>
+              <div class="champ-detail">
+                <span class="etiquette">Secteur</span>
+                <p class="valeur">{{ i.secteur || '—' }}</p>
+              </div>
+              <div class="champ-detail champ-pleine-largeur">
+                <span class="etiquette">Adresse</span>
+                <p class="valeur">{{ i.adresse || '—' }}</p>
+              </div>
+              <div class="champ-detail">
+                <span class="etiquette">Numéro de connexion</span>
+                <p class="valeur">{{ partenaire().telephone_compte }}</p>
+              </div>
+              <div class="champ-detail">
+                <span class="etiquette">Téléphone professionnel</span>
+                <p class="valeur">{{ i.telephone_pro || '—' }}</p>
+              </div>
+              <div class="champ-detail">
+                <span class="etiquette">WhatsApp</span>
+                <p class="valeur">{{ i.whatsapp || '—' }}</p>
+              </div>
+              <div class="champ-detail">
+                <span class="etiquette">Email professionnel</span>
+                <p class="valeur">{{ i.email_pro || '—' }}</p>
+              </div>
+              <div class="champ-detail">
+                <span class="etiquette">Position du commerce</span>
+                <p class="valeur">
+                  {{
+                    partenaire().latitude !== null && partenaire().longitude !== null
+                      ? partenaire().latitude!.toFixed(6) + ', ' + partenaire().longitude!.toFixed(6)
+                      : 'Non définie'
+                  }}
+                </p>
+              </div>
+              <div class="champ-detail">
+                <span class="etiquette">Plan</span>
+                <p class="valeur">{{ partenaire().plan_libelle || '—' }}</p>
+              </div>
+              <div class="champ-detail">
+                <span class="etiquette">Fin d'abonnement</span>
+                <p class="valeur">
+                  {{ partenaire().abonnement_fin ? (partenaire().abonnement_fin | date: 'dd/MM/yyyy') : '—' }}
+                </p>
+              </div>
+              <div class="champ-detail">
+                <span class="etiquette">Visible sur l'application</span>
+                <p class="valeur">{{ partenaire().est_visible ? 'Oui' : 'Non' }}</p>
+              </div>
+              <div class="champ-detail">
+                <span class="etiquette">Vues</span>
+                <p class="valeur">{{ partenaire().nb_vues }}</p>
+              </div>
+              <div class="champ-detail">
+                <span class="etiquette">Inscrit le</span>
+                <p class="valeur">{{ partenaire().created_at | date: 'dd/MM/yyyy HH:mm' }}</p>
+              </div>
+            </div>
+
+            @if (i.categories.length > 0) {
+              <div class="champ-detail champ-pleine-largeur">
+                <span class="etiquette">Catégories</span>
+                <div class="puces-categorie">
+                  @for (categorie of i.categories; track categorie.id) {
+                    <span class="puce">{{ categorie.nom }}</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Fermer</button>
+        @if (peutModifier()) {
+          <button type="button" class="bouton-principal" (click)="passerEnEdition()">Modifier</button>
+        }
+      </div>
+    }
+  </div>
+</div>

@@ -68,6 +68,15 @@
   } @else {
     <div class="conteneur-tableau">
       <table class="tableau-partenaires">
+        <colgroup>
+          <col style="width: 22%" />
+          <col style="width: 18%" />
+          <col style="width: 16%" />
+          <col style="width: 14%" />
+          <col style="width: 10%" />
+          <col style="width: 12%" />
+          <col style="width: 8%" />
+        </colgroup>
         <thead>
           <tr>
             <th>Commerce</th>
@@ -142,58 +151,69 @@
                       <p class="message-succes-detail">{{ messageSuccesChangement() }}</p>
                     }
 
-                    <div class="champ-detail">
-                      <span class="etiquette">Localité complète</span>
-                      <p class="valeur">{{ localite(partenaire) }}</p>
-                    </div>
-                    <div class="champ-detail">
-                      <span class="etiquette">Visible sur l'application</span>
-                      <p class="valeur">{{ partenaire.est_visible ? 'Oui' : 'Non' }}</p>
-                    </div>
-                    <div class="champ-detail">
-                      <span class="etiquette">Fin d'abonnement</span>
-                      <p class="valeur">
-                        {{ partenaire.abonnement_fin ? formaterDateCourte(partenaire.abonnement_fin) : '—' }}
-                      </p>
-                    </div>
-                    <div class="champ-detail">
-                      <span class="etiquette">Inscrit le</span>
-                      <p class="valeur">{{ formaterDateComplete(partenaire.created_at) }}</p>
+                    <div class="grille-detail">
+                      <div class="champ-detail">
+                        <span class="etiquette">Localité complète</span>
+                        <p class="valeur">{{ localite(partenaire) }}</p>
+                      </div>
+                      <div class="champ-detail">
+                        <span class="etiquette">Visible sur l'application</span>
+                        <p class="valeur">{{ partenaire.est_visible ? 'Oui' : 'Non' }}</p>
+                      </div>
+                      <div class="champ-detail">
+                        <span class="etiquette">Fin d'abonnement</span>
+                        <p class="valeur">
+                          {{ partenaire.abonnement_fin ? formaterDateCourte(partenaire.abonnement_fin) : '—' }}
+                        </p>
+                      </div>
+                      <div class="champ-detail">
+                        <span class="etiquette">Inscrit le</span>
+                        <p class="valeur">{{ formaterDateComplete(partenaire.created_at) }}</p>
+                      </div>
+                      <div class="champ-detail">
+                        <span class="etiquette">Numéro de connexion</span>
+                        <p class="valeur">{{ partenaire.telephone_compte }}</p>
+                      </div>
+                      <div class="champ-detail">
+                        <span class="etiquette">Position du commerce</span>
+                        <p class="valeur">
+                          {{
+                            partenaire.latitude !== null && partenaire.longitude !== null
+                              ? partenaire.latitude.toFixed(6) + ', ' + partenaire.longitude.toFixed(6)
+                              : 'Non définie'
+                          }}
+                        </p>
+                        @if (!peutModifierPosition() && mentionPosition(partenaire); as mention) {
+                          <p class="mention-position-lecture">{{ mention }}</p>
+                        }
+                      </div>
                     </div>
 
-                    <div class="champ-detail">
-                      <span class="etiquette">Numéro de connexion</span>
-                      <p class="valeur">{{ partenaire.telephone_compte }}</p>
+                    <div class="actions-detail">
+                      <button
+                        type="button"
+                        class="bouton-secondaire"
+                        (click)="ouvrirDialogInfos(partenaire); $event.stopPropagation()"
+                      >
+                        Voir les informations
+                      </button>
                       @if (peutModifierIdentifiant()) {
                         <button
                           type="button"
-                          class="bouton-secondaire bouton-numero"
+                          class="bouton-secondaire"
                           (click)="ouvrirDialogTelephone(partenaire); $event.stopPropagation()"
                         >
                           Changer le numéro de connexion
                         </button>
                       }
-                    </div>
-
-                    <div class="champ-detail">
-                      <span class="etiquette">Position du commerce</span>
-                      <p class="valeur">
-                        {{
-                          partenaire.latitude !== null && partenaire.longitude !== null
-                            ? partenaire.latitude.toFixed(6) + ', ' + partenaire.longitude.toFixed(6)
-                            : 'Non définie'
-                        }}
-                      </p>
                       @if (peutModifierPosition()) {
                         <button
                           type="button"
-                          class="bouton-secondaire bouton-numero"
+                          class="bouton-secondaire"
                           (click)="ouvrirDialogPosition(partenaire); $event.stopPropagation()"
                         >
                           Position du commerce
                         </button>
-                      } @else if (mentionPosition(partenaire); as mention) {
-                        <p class="mention-position-lecture">{{ mention }}</p>
                       }
                     </div>
 
@@ -353,4 +373,13 @@
       </div>
     </div>
   </div>
+}
+
+@if (dialogInfosOuvertPour(); as partenaire) {
+  <app-dialog-infos-partenaire
+    [partenaire]="partenaire"
+    [peutModifier]="peutModifierInformations()"
+    (ferme)="fermerDialogInfos()"
+    (enregistre)="surInformationsModifiees()"
+  />
 }

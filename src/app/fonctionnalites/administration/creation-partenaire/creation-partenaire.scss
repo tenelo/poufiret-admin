@@ -269,3 +269,76 @@
     background: #eef2ff;
   }
 }
+
+.message-succes {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #15803d;
+  font-size: 0.85rem;
+}
+
+.bloc-image {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+
+  .etiquette-image {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+  }
+}
+
+.apercu-image {
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  object-fit: cover;
+}
+
+.apercu-logo {
+  width: 72px;
+  height: 72px;
+}
+
+.apercu-couverture {
+  width: 100%;
+  max-width: 320px;
+  height: 120px;
+}
+
+.apercu-vide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f5f7;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.actions-image {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .bouton-secondaire {
+    align-self: auto;
+    margin: 0;
+  }
+}
+
+.bouton-lien {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #dc2626;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}

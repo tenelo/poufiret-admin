@@ -45,7 +45,6 @@
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
 
   &:hover:not(:disabled) {
     background: #eef2ff;
@@ -180,6 +179,9 @@
 
 .tableau-partenaires {
   width: 100%;
+  // Colonnes en %, ignorant le contenu (dont le panneau-detail replié) : la ligne
+  // dépliée ne peut jamais forcer le tableau à s'élargir/se décaler.
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 0.85rem;
 
@@ -332,15 +334,24 @@
 
 .panneau-detail {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
+  flex-direction: column;
+  gap: 0.75rem;
   padding: 1rem 1.25rem;
   background: #f9fafb;
 }
 
+.grille-detail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 1rem 1.5rem;
+}
+
+.champ-pleine-largeur {
+  grid-column: 1 / -1;
+}
+
 .champ-detail {
-  flex: 1;
-  min-width: 180px;
+  min-width: 0;
 
   .etiquette {
     display: block;
@@ -360,6 +371,12 @@
   }
 }
 
+.actions-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
 .message-succes-detail {
   width: 100%;
   margin: 0;
@@ -369,12 +386,6 @@
   border-radius: 8px;
   color: #15803d;
   font-size: 0.85rem;
-}
-
-.bouton-numero {
-  margin-top: 0.5rem;
-  font-size: 0.78rem;
-  padding: 0.4rem 0.8rem;
 }
 
 .mention-position-lecture {

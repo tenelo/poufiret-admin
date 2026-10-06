@@ -6,7 +6,9 @@ import { roleGuard } from './noyau/auth/role.guard';
 import { capaciteGuard } from './noyau/permissions/capacite.guard';
 import { superAdminGuard } from './noyau/permissions/super-admin.guard';
 import { gestionAdminsGuard } from './noyau/permissions/gestion-admins.guard';
+import { partenairesMenuGuard } from './noyau/permissions/partenaires-menu.guard';
 import { redirectionRacineGuard } from './noyau/auth/redirection-racine.guard';
+import { redirectionOngletPartenaires } from './noyau/auth/redirection-onglet-partenaires';
 import { AuthService } from './noyau/auth/auth.service';
 import { livraisonGuard } from './fonctionnalites/livraison/livraison.guard';
 import { niveauDepuisEspace, racineNiveau } from './fonctionnalites/livraison/niveau-livraison';
@@ -122,31 +124,28 @@ export const routes: Routes = [
           ),
       },
       {
+        // Ancienne route, désormais l'onglet "Indicateurs" du menu Partenaires unique.
         path: 'administration/indicateurs-partenaires',
-        canActivate: [roleGuard(['admin']), capaciteGuard],
-        data: { capacite: 'voir_indicateurs' },
-        loadComponent: () =>
-          import('./fonctionnalites/administration/indicateurs-partenaires/indicateurs-partenaires').then(
-            (m) => m.IndicateursPartenairesComponent,
-          ),
+        canActivate: [roleGuard(['admin']), redirectionOngletPartenaires('indicateurs')],
+        children: [],
       },
       {
+        // Menu "Partenaires" unique : onglets Liste/Statistiques/Nouveau partenaire/
+        // Demandes de partenariat/Indicateurs, chacun gardant son propre droit
+        // (voir PartenairesOnglets et partenairesMenuGuard, qui n'exige qu'AU MOINS
+        // une des capacités requises par ces onglets).
         path: 'administration/partenaires-liste',
-        canActivate: [roleGuard(['admin']), capaciteGuard],
-        data: { capacite: 'voir_indicateurs' },
+        canActivate: [roleGuard(['admin']), partenairesMenuGuard],
         loadComponent: () =>
           import(
             './fonctionnalites/administration/partenaires-liste/partenaires-onglets/partenaires-onglets'
           ).then((m) => m.PartenairesOnglets),
       },
       {
+        // Ancienne route, désormais l'onglet "Demandes de partenariat" du menu Partenaires unique.
         path: 'administration/demandes-partenariat',
-        canActivate: [roleGuard(['admin']), capaciteGuard],
-        data: { capacite: 'valider_devenir_partenaire' },
-        loadComponent: () =>
-          import('./fonctionnalites/administration/demandes-partenariat/demandes-partenariat').then(
-            (m) => m.DemandesPartenariat,
-          ),
+        canActivate: [roleGuard(['admin']), redirectionOngletPartenaires('demandes')],
+        children: [],
       },
       {
         path: 'administration/journal',
@@ -245,13 +244,10 @@ export const routes: Routes = [
           import('./fonctionnalites/administration/faveur-plan/faveur-plan').then((m) => m.FaveurPlan),
       },
       {
+        // Ancienne route, désormais l'onglet "Nouveau partenaire" du menu Partenaires unique.
         path: 'administration/creer-partenaire',
-        canActivate: [roleGuard(['admin']), capaciteGuard],
-        data: { capacite: 'creer_partenaire' },
-        loadComponent: () =>
-          import('./fonctionnalites/administration/creation-partenaire/creation-partenaire').then(
-            (m) => m.CreationPartenaire,
-          ),
+        canActivate: [roleGuard(['admin']), redirectionOngletPartenaires('nouveau')],
+        children: [],
       },
       {
         // Super-admin (le backend renvoie toutes les capacités à true) OU capacité gerer_geographie.

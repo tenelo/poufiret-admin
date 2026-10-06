@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { PartenairesListeService } from './partenaires-liste.service';
+import { DialogInfosPartenaire } from './dialog-infos-partenaire/dialog-infos-partenaire';
 import { extraireMessageErreur, erreurChamp } from '../tableau-de-bord-admin/extraire-message-erreur';
 import { formaterLocalisation } from '../../../partage/formater-localisation';
 import { CoordonneesGps, PositionGps } from '../../../partage/position-gps/position-gps';
@@ -32,7 +33,7 @@ const DEBOUNCE_RECHERCHE_MS = 350;
  */
 @Component({
   selector: 'app-partenaires-liste',
-  imports: [PositionGps],
+  imports: [PositionGps, DialogInfosPartenaire],
   templateUrl: './partenaires-liste.html',
   styleUrl: './partenaires-liste.scss',
 })
@@ -71,6 +72,13 @@ export class PartenairesListe implements OnInit {
 
   // PATCH .../position/ exige côté backend la capacité creer_partenaire (super-admin toujours autorisé).
   readonly peutModifierPosition = computed(
+    () =>
+      (this.permissionsService.permissionsActuelles()?.isSuperuser ?? false) ||
+      this.permissionsService.aLaCapacite('creer_partenaire'),
+  );
+
+  // GET/PATCH .../edition/ exige la même capacité creer_partenaire (super-admin toujours autorisé).
+  readonly peutModifierInformations = computed(
     () =>
       (this.permissionsService.permissionsActuelles()?.isSuperuser ?? false) ||
       this.permissionsService.aLaCapacite('creer_partenaire'),
@@ -128,6 +136,10 @@ export class PartenairesListe implements OnInit {
   readonly enregistrementPositionEnCours = signal(false);
   readonly erreurPosition = signal<string | null>(null);
   readonly avertissementPosition = signal<string | null>(null);
+
+  // Dialog "Voir les informations" (composant dédié DialogInfosPartenaire : vue lecture
+  // complète + bascule vers l'édition dans le même dialog, sans le rouvrir).
+  readonly dialogInfosOuvertPour = signal<PartenaireListe | null>(null);
 
   private readonly rechercheSubject = new Subject<string>();
 
@@ -355,6 +367,20 @@ export class PartenairesListe implements OnInit {
           this.erreurPosition.set(extraireMessageErreur(erreur));
         },
       });
+  }
+
+  ouvrirDialogInfos(partenaire: PartenaireListe): void {
+    this.dialogInfosOuvertPour.set(partenaire);
+  }
+
+  fermerDialogInfos(): void {
+    this.dialogInfosOuvertPour.set(null);
+  }
+
+  /** Après succès du formulaire d'édition (depuis le dialog "Voir les informations"). */
+  surInformationsModifiees(): void {
+    this.messageSuccesChangement.set('Informations du partenaire mises à jour.');
+    this.charger();
   }
 
   /** Numéros secondaires à afficher seulement s'ils diffèrent du téléphone du compte. */

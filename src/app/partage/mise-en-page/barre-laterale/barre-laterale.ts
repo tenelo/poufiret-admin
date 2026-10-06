@@ -20,7 +20,9 @@ interface EntreeMenuAdmin {
   libelle: string;
   lien: string;
   icone: string;
-  capacite?: NomCapacite;
+  // Un tableau teste en OU (visible si au moins une des capacités est présente) —
+  // ex. le menu "Partenaires" unique, dont les onglets ont chacun leur propre droit.
+  capacite?: NomCapacite | NomCapacite[];
   // Sans `capacite` : visible pour tout admin connecté (ex. Mon profil), à la
   // différence d'une entrée sans `capacite` ET sans ce flag, réservée au
   // super-admin (ex. Modération de comptes).
@@ -58,22 +60,13 @@ const ENTREES_ADMIN: EntreeMenuAdmin[] = [
     toujoursVisible: true,
   },
   {
-    libelle: 'Indicateurs partenaires',
-    lien: '/administration/indicateurs-partenaires',
-    icone: '📈',
-    capacite: 'voir_indicateurs',
-  },
-  {
+    // Menu unique à onglets (Liste/Statistiques/Nouveau partenaire/Demandes de
+    // partenariat/Indicateurs) : visible si au moins un de ces droits est présent,
+    // chaque onglet restant individuellement masqué sans son propre droit.
     libelle: 'Partenaires',
     lien: '/administration/partenaires-liste',
     icone: '🏪',
-    capacite: 'voir_indicateurs',
-  },
-  {
-    libelle: 'Demandes de partenariat',
-    lien: '/administration/demandes-partenariat',
-    icone: '🤝',
-    capacite: 'valider_devenir_partenaire',
+    capacite: ['voir_indicateurs', 'creer_partenaire', 'valider_devenir_partenaire'],
   },
   {
     libelle: "Journal d'audit",
@@ -129,12 +122,6 @@ const ENTREES_ADMIN: EntreeMenuAdmin[] = [
     lien: '/administration/faveur-plan',
     icone: '⭐',
     capacite: 'accorder_faveur',
-  },
-  {
-    libelle: 'Créer un partenaire',
-    lien: '/administration/creer-partenaire',
-    icone: '➕',
-    capacite: 'creer_partenaire',
   },
   {
     libelle: 'Paiements',
@@ -214,7 +201,8 @@ export class BarreLaterale {
   readonly entreesAdmin = computed<EntreeMenuAdmin[]>(() =>
     ENTREES_ADMIN.filter((entree) => {
       if (entree.capacite) {
-        return this.permissionsService.aLaCapacite(entree.capacite);
+        const capacites = Array.isArray(entree.capacite) ? entree.capacite : [entree.capacite];
+        return capacites.some((c) => this.permissionsService.aLaCapacite(c));
       }
       if (entree.toujoursVisible) {
         return true;

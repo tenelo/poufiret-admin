@@ -1,7 +1,14 @@
 <section class="page-creation-partenaire">
-  <h1>Créer un partenaire</h1>
+  <h1>{{ modeEdition() ? 'Modifier ' + (formulaire.controls.nom_commerce.value || 'le partenaire') : 'Créer un partenaire' }}</h1>
 
-  @if (reponseSucces(); as reponse) {
+  @if (modeEdition() && chargementEdition()) {
+    <p class="indice">Chargement des informations…</p>
+  } @else if (modeEdition() && erreurChargementEdition()) {
+    <p class="erreur-generale">
+      {{ erreurChargementEdition() }}
+      <button type="button" class="lien-reessayer" (click)="chargerPourEdition(partenaireId()!)">Réessayer</button>
+    </p>
+  } @else if (!modeEdition() && reponseSucces(); as reponse) {
     <div class="panneau-succes">
       <h2>Partenaire créé avec succès</h2>
       <p class="recap">
@@ -28,30 +35,52 @@
     @if (messageErreur()) {
       <p class="erreur-generale">{{ messageErreur() }}</p>
     }
+    @if (modeEdition() && messageSuccesEdition()) {
+      <p class="message-succes">{{ messageSuccesEdition() }}</p>
+    }
+    @if (modeEdition() && erreurGeneraleEdition()) {
+      <p class="erreur-generale">{{ erreurGeneraleEdition() }}</p>
+    }
 
     <form class="formulaire-creation" [formGroup]="formulaire" (ngSubmit)="soumettre()">
-      <section class="section">
-        <h2>Identité du compte</h2>
+      @if (!modeEdition()) {
+        <section class="section">
+          <h2>Identité du compte</h2>
 
-        <label for="telephone">Téléphone</label>
-        <input id="telephone" type="tel" formControlName="telephone" placeholder="+225..." />
-        @if (formulaire.controls.telephone.invalid && formulaire.controls.telephone.touched) {
-          <p class="erreur-champ">
-            Le téléphone est requis et doit commencer par "+" suivi de chiffres (ex. +2250700000000).
-          </p>
-        }
+          <label for="telephone">Téléphone</label>
+          <input id="telephone" type="tel" formControlName="telephone" placeholder="+225..." />
+          @if (formulaire.controls.telephone.invalid && formulaire.controls.telephone.touched) {
+            <p class="erreur-champ">
+              Le téléphone est requis et doit commencer par "+" suivi de chiffres (ex. +2250700000000).
+            </p>
+          }
 
-        <div class="ligne-champs">
-          <div class="champ">
-            <label for="prenom">Prénom</label>
-            <input id="prenom" type="text" formControlName="prenom" />
+          <div class="ligne-champs">
+            <div class="champ">
+              <label for="prenom">Prénom</label>
+              <input id="prenom" type="text" formControlName="prenom" />
+            </div>
+            <div class="champ">
+              <label for="nom">Nom</label>
+              <input id="nom" type="text" formControlName="nom" />
+            </div>
           </div>
-          <div class="champ">
-            <label for="nom">Nom</label>
-            <input id="nom" type="text" formControlName="nom" />
+        </section>
+      } @else {
+        <section class="section">
+          <h2>Identité</h2>
+          <div class="ligne-champs">
+            <div class="champ">
+              <label for="prenom">Prénom</label>
+              <input id="prenom" type="text" formControlName="prenom" />
+            </div>
+            <div class="champ">
+              <label for="nom">Nom</label>
+              <input id="nom" type="text" formControlName="nom" />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      }
 
       <section class="section">
         <h2>Enseigne</h2>
@@ -60,6 +89,9 @@
         <input id="nom_commerce" type="text" formControlName="nom_commerce" />
         @if (formulaire.controls.nom_commerce.invalid && formulaire.controls.nom_commerce.touched) {
           <p class="erreur-champ">Le nom du commerce est requis.</p>
+        }
+        @if (modeEdition() && erreurChampEdition('nom_commerce'); as erreurChamp) {
+          <p class="erreur-champ">{{ erreurChamp }}</p>
         }
 
         <label for="type_partenaire">Type de partenaire</label>
@@ -72,6 +104,9 @@
         <p class="aide">
           Le métier du partenaire : il détermine ses fonctionnalités (ex. Restaurateur → carte et menus).
         </p>
+        @if (modeEdition() && erreurChampEdition('type_partenaire'); as erreurChamp) {
+          <p class="erreur-champ">{{ erreurChamp }}</p>
+        }
 
         <label for="description">Description</label>
         <textarea id="description" formControlName="description" rows="3"></textarea>
@@ -98,6 +133,9 @@
             }
           </select>
         }
+        @if (modeEdition() && erreurChampEdition('departement'); as erreurChamp) {
+          <p class="erreur-champ">{{ erreurChamp }}</p>
+        }
 
         <label for="localite">Localité</label>
         @if (chargementLocalites()) {
@@ -119,6 +157,9 @@
           @if (!formulaire.controls.departement.value) {
             <p class="aide">Choisissez d'abord un département.</p>
           }
+        }
+        @if (modeEdition() && erreurChampEdition('localite_id'); as erreurChamp) {
+          <p class="erreur-champ">{{ erreurChamp }}</p>
         }
 
         <label for="quartier">Quartier</label>
@@ -142,6 +183,9 @@
             <p class="aide">Choisissez d'abord une localité.</p>
           }
         }
+        @if (modeEdition() && erreurChampEdition('quartier_id'); as erreurChamp) {
+          <p class="erreur-champ">{{ erreurChamp }}</p>
+        }
 
         @if (peutGererGeographie()) {
           <a class="lien-geographie" routerLink="/administration/geographie">
@@ -151,12 +195,20 @@
 
         <label for="secteur">Secteur</label>
         <input id="secteur" type="text" formControlName="secteur" />
+        @if (modeEdition() && erreurChampEdition('secteur'); as erreurChamp) {
+          <p class="erreur-champ">{{ erreurChamp }}</p>
+        }
 
         <label for="adresse">Adresse</label>
         <input id="adresse" type="text" formControlName="adresse" />
+        @if (modeEdition() && erreurChampEdition('adresse'); as erreurChamp) {
+          <p class="erreur-champ">{{ erreurChamp }}</p>
+        }
 
-        <label>Position du commerce <span class="optionnel">(optionnel)</span></label>
-        <app-position-gps (enregistrer)="definirPosition($event)" />
+        @if (!modeEdition()) {
+          <label>Position du commerce <span class="optionnel">(optionnel)</span></label>
+          <app-position-gps (enregistrer)="definirPosition($event)" />
+        }
       </section>
 
       <section class="section">
@@ -166,10 +218,16 @@
           <div class="champ">
             <label for="telephone_pro">Téléphone professionnel</label>
             <input id="telephone_pro" type="tel" formControlName="telephone_pro" />
+            @if (modeEdition() && erreurChampEdition('telephone_pro'); as erreurChamp) {
+              <p class="erreur-champ">{{ erreurChamp }}</p>
+            }
           </div>
           <div class="champ">
             <label for="whatsapp">WhatsApp</label>
             <input id="whatsapp" type="tel" formControlName="whatsapp" />
+            @if (modeEdition() && erreurChampEdition('whatsapp'); as erreurChamp) {
+              <p class="erreur-champ">{{ erreurChamp }}</p>
+            }
           </div>
         </div>
 
@@ -177,6 +235,9 @@
         <input id="email_pro" type="email" formControlName="email_pro" />
         @if (formulaire.controls.email_pro.invalid && formulaire.controls.email_pro.touched) {
           <p class="erreur-champ">L'adresse email n'est pas valide.</p>
+        }
+        @if (modeEdition() && erreurChampEdition('email_pro'); as erreurChamp) {
+          <p class="erreur-champ">{{ erreurChamp }}</p>
         }
       </section>
 
@@ -213,10 +274,69 @@
             <p class="avertissement-categorie">{{ avertissementCategorieDecochee() }}</p>
           }
         }
+        @if (modeEdition() && erreurChampEdition('categories'); as erreurChamp) {
+          <p class="erreur-champ">{{ erreurChamp }}</p>
+        }
       </section>
 
+      @if (modeEdition()) {
+        <section class="section">
+          <h2>Logo et couverture <span class="optionnel">(optionnel)</span></h2>
+
+          <div class="bloc-image">
+            <span class="etiquette-image">Logo</span>
+            @if (logoApercu()) {
+              <img [src]="logoApercu()" alt="Aperçu du logo" class="apercu-image apercu-logo" />
+            } @else {
+              <div class="apercu-image apercu-vide apercu-logo">Aucun logo</div>
+            }
+            <input #entreeLogo type="file" accept="image/*" hidden (change)="selectionnerLogo($event)" />
+            <div class="actions-image">
+              <button type="button" class="bouton-secondaire" (click)="entreeLogo.click()">
+                {{ logoApercu() ? 'Remplacer' : 'Choisir un logo' }}
+              </button>
+              @if (logoApercu()) {
+                <button type="button" class="bouton-lien" (click)="retirerLogo()">Retirer</button>
+              }
+            </div>
+          </div>
+
+          <div class="bloc-image">
+            <span class="etiquette-image">Photo de couverture</span>
+            @if (couvertureApercu()) {
+              <img [src]="couvertureApercu()" alt="Aperçu de la couverture" class="apercu-image apercu-couverture" />
+            } @else {
+              <div class="apercu-image apercu-vide apercu-couverture">Aucune couverture</div>
+            }
+            <input #entreeCouverture type="file" accept="image/*" hidden (change)="selectionnerCouverture($event)" />
+            <div class="actions-image">
+              <button type="button" class="bouton-secondaire" (click)="entreeCouverture.click()">
+                {{ couvertureApercu() ? 'Remplacer' : 'Choisir une couverture' }}
+              </button>
+              @if (couvertureApercu()) {
+                <button type="button" class="bouton-lien" (click)="retirerCouverture()">Retirer</button>
+              }
+            </div>
+          </div>
+
+          @if (erreurImageEdition()) {
+            <p class="erreur-champ">{{ erreurImageEdition() }}</p>
+          }
+          @if (erreurChampEdition('logo'); as erreurChamp) {
+            <p class="erreur-champ">{{ erreurChamp }}</p>
+          }
+          @if (erreurChampEdition('photo_couverture'); as erreurChamp) {
+            <p class="erreur-champ">{{ erreurChamp }}</p>
+          }
+        </section>
+      }
+
       <button type="submit" class="bouton-principal" [disabled]="envoiEnCours()">
-        {{ envoiEnCours() ? 'Création en cours…' : 'Créer le partenaire' }}
+        {{
+          envoiEnCours()
+            ? (modeEdition() ? 'Enregistrement…' : 'Création en cours…')
+            : (modeEdition() ? 'Enregistrer les modifications' : 'Créer le partenaire')
+        }}
       </button>
     </form>
   }
