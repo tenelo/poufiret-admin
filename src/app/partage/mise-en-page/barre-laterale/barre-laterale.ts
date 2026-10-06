@@ -172,6 +172,13 @@ const ENTREES_ADMIN: EntreeMenuAdmin[] = [
   },
   {
     // Super-admin (toutes capacités à true côté backend) OU capacité gerer_parametres.
+    libelle: 'Catégories',
+    lien: '/administration/categories',
+    icone: '🗂️',
+    capacite: 'gerer_parametres',
+  },
+  {
+    // Super-admin (toutes capacités à true côté backend) OU capacité gerer_parametres.
     // En bas du menu : accueillera d'autres réglages transverses à l'avenir.
     libelle: 'Paramètres',
     lien: '/administration/parametres',

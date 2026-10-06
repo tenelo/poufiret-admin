@@ -1,0 +1,214 @@
+<section class="page-categories">
+  <div class="entete">
+    <h1>Catégories</h1>
+    <div class="actions-entete">
+      <label class="case-archivees">
+        <input type="checkbox" [checked]="afficherArchivees()" (change)="basculerAfficherArchivees()" />
+        Afficher les archivées
+      </label>
+      <button type="button" class="bouton-principal" (click)="ouvrirCreationRacine()">+ Nouvelle catégorie</button>
+    </div>
+  </div>
+
+  @if (message(); as m) {
+    <p [class]="m.erreur ? 'erreur-generale' : 'message-succes'">{{ m.texte }}</p>
+  }
+
+  @if (chargementEnCours()) {
+    <p class="indice">Chargement…</p>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else {
+    @if (!afficherArchivees()) {
+      <section class="bloc">
+        <h2>Aperçu — grille de l'application</h2>
+        <p class="aide">Les 8 premières catégories actives, dans leur ordre d'affichage.</p>
+        <div class="grille-apercu">
+          @for (categorie of apercuGrille(); track categorie.id) {
+            <div class="case-apercu">
+              @if (categorie.image) {
+                <img [src]="categorie.image" [alt]="categorie.nom" />
+              } @else {
+                <span class="icone-apercu">{{ categorie.icone || '📁' }}</span>
+              }
+              <span class="nom-apercu">{{ categorie.nom }}</span>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    @if (racines().length === 0) {
+      <div class="etat-vide">
+        <p>{{ afficherArchivees() ? 'Aucune catégorie archivée.' : 'Aucune catégorie.' }}</p>
+      </div>
+    } @else {
+      <div class="liste-categories" cdkDropList (cdkDropListDropped)="surDepotRacines($event)">
+        @for (groupe of groupes(); track groupe.categorie.id) {
+          <div class="carte-categorie" [cdkDragDisabled]="groupe.categorie.est_archivee" cdkDrag>
+            <div class="entete-categorie">
+              @if (groupe.enfants.length > 0) {
+                <button type="button" class="bouton-deplier" (click)="basculerDeplie(groupe.categorie.id)">
+                  {{ estDeplie(groupe.categorie.id) ? '▾' : '▸' }}
+                </button>
+              }
+              <ng-container *ngTemplateOutlet="ligneCategorie; context: { categorie: groupe.categorie }"></ng-container>
+            </div>
+
+            @if (!groupe.categorie.est_archivee) {
+              <button
+                type="button"
+                class="bouton-sous-categorie"
+                (click)="ouvrirCreationSousCategorie(groupe.categorie)"
+              >
+                + Sous-catégorie
+              </button>
+            }
+
+            @if (groupe.enfants.length > 0 && estDeplie(groupe.categorie.id)) {
+              <div
+                class="sous-categories"
+                cdkDropList
+                (cdkDropListDropped)="surDepotEnfants(groupe.categorie.id, $event)"
+              >
+                @for (enfant of groupe.enfants; track enfant.id) {
+                  <div class="carte-categorie carte-sous-categorie" [cdkDragDisabled]="enfant.est_archivee" cdkDrag>
+                    <div class="entete-categorie">
+                      <ng-container *ngTemplateOutlet="ligneCategorie; context: { categorie: enfant }"></ng-container>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+</section>
+
+<!-- Gabarit réutilisé pour une catégorie racine ou une sous-catégorie, active ou archivée
+     (les actions proposées dépendent de categorie.est_archivee, pas du filtre courant). -->
+<ng-template #ligneCategorie let-categorie="categorie">
+  @if (!categorie.est_archivee) {
+    <span class="poignee" cdkDragHandle title="Glisser pour réordonner">⠿</span>
+  }
+  @if (categorie.icone) {
+    <span class="icone-categorie">{{ categorie.icone }}</span>
+  }
+  <span class="nom-categorie">{{ categorie.nom }}</span>
+  <span class="meta-categorie">
+    {{ categorie.nb_partenaires }} partenaire{{ categorie.nb_partenaires > 1 ? 's' : '' }}
+    @if (categorie.parent_id === null) {
+      · {{ categorie.nb_enfants }} sous-catégorie{{ categorie.nb_enfants > 1 ? 's' : '' }}
+    }
+  </span>
+  @if (categorie.est_archivee) {
+    <span class="badge-archivee">Archivée</span>
+  }
+
+  @if (!categorie.est_archivee) {
+    <div class="actions-mobiles">
+      <button
+        type="button"
+        class="bouton-icone"
+        [disabled]="!peutMonter(categorie)"
+        (click)="monterEnPremiere(categorie)"
+        aria-label="Monter en 1re position"
+      >
+        ⤒
+      </button>
+      <button
+        type="button"
+        class="bouton-icone"
+        [disabled]="!peutMonter(categorie)"
+        (click)="monter(categorie)"
+        aria-label="Monter"
+      >
+        ↑
+      </button>
+      <button
+        type="button"
+        class="bouton-icone"
+        [disabled]="!peutDescendre(categorie)"
+        (click)="descendre(categorie)"
+        aria-label="Descendre"
+      >
+        ↓
+      </button>
+    </div>
+
+    <label class="interrupteur">
+      <input type="checkbox" [checked]="categorie.est_active" (change)="basculerActive(categorie)" />
+      Visible
+    </label>
+  }
+
+  <div class="actions-categorie">
+    <button type="button" class="bouton-action" (click)="ouvrirEdition(categorie)">Modifier</button>
+    @if (categorie.est_archivee) {
+      <button type="button" class="bouton-action" (click)="desarchiver(categorie)">Désarchiver</button>
+    } @else {
+      <button type="button" class="bouton-action" (click)="demanderArchivage(categorie)">Archiver</button>
+    }
+    <button type="button" class="bouton-action bouton-danger" (click)="demanderSuppression(categorie)">
+      Supprimer
+    </button>
+  </div>
+</ng-template>
+
+@if (dialogOuvert()) {
+  <app-dialog-categorie
+    [categorie]="categorieEnEdition()"
+    [parentInitial]="parentPreselectionne()"
+    [racines]="racines()"
+    [typesPartenaire]="typesPartenaire()"
+    [enregistrementEnCours]="enregistrementEnCours()"
+    [erreurs]="erreursDialog()"
+    (soumis)="enregistrer($event)"
+    (annule)="fermerDialog()"
+  />
+}
+
+@if (confirmation(); as attente) {
+  <div class="voile-confirmation" (click)="annulerConfirmation()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      @if (attente.type === 'supprimer') {
+        <p>Supprimer « {{ attente.categorie.nom }} » ? Cette action est irréversible.</p>
+      } @else {
+        <p>
+          Archiver « {{ attente.categorie.nom }} » ? La catégorie sera masquée partout ; ses
+          partenaires restent rattachés.
+        </p>
+      }
+
+      @if (conflitSuppression(); as conflit) {
+        <p class="erreur-generale">{{ conflit }}</p>
+      }
+      @if (erreurConfirmation(); as erreurAction) {
+        <p class="erreur-generale">{{ erreurAction }}</p>
+      }
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annulerConfirmation()">Annuler</button>
+        @if (conflitSuppression()) {
+          <button type="button" class="bouton-principal" [disabled]="actionEnCours()" (click)="archiverALaPlace()">
+            Archiver à la place
+          </button>
+        } @else {
+          <button
+            type="button"
+            [class]="attente.type === 'supprimer' ? 'bouton-danger' : 'bouton-principal'"
+            [disabled]="actionEnCours()"
+            (click)="confirmer()"
+          >
+            {{ attente.type === 'supprimer' ? 'Supprimer' : 'Archiver' }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

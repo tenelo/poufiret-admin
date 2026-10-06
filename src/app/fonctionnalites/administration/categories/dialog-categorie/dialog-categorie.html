@@ -1,0 +1,116 @@
+<div class="voile-modale" (click)="annule.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>{{ categorie() ? 'Modifier' : 'Ajouter' }} une catégorie</h2>
+
+    <form (submit)="$event.preventDefault(); soumettre()">
+      <label for="nom-categorie">Nom</label>
+      <input id="nom-categorie" type="text" [value]="nom()" (input)="nom.set($any($event.target).value)" />
+      @if (touche() && !nom().trim()) {
+        <p class="erreur-champ">Le nom est requis.</p>
+      }
+      @if (erreurs()?.nom; as messageNom) {
+        <p class="erreur-champ">{{ messageNom }}</p>
+      }
+
+      <label for="description-categorie">Description</label>
+      <textarea
+        id="description-categorie"
+        rows="2"
+        [value]="description()"
+        (input)="description.set($any($event.target).value)"
+      ></textarea>
+
+      <label for="icone-categorie">Icône (emoji ou texte court)</label>
+      <input
+        id="icone-categorie"
+        type="text"
+        maxlength="4"
+        placeholder="📁"
+        [value]="icone()"
+        (input)="icone.set($any($event.target).value)"
+      />
+
+      <label>Image</label>
+      <div class="bloc-image">
+        @if (apercuImage()) {
+          <img [src]="apercuImage()" alt="Aperçu de l'image" class="apercu-image" />
+        } @else {
+          <div class="apercu-image apercu-vide">Aucune image</div>
+        }
+        <div class="actions-image">
+          <input #entreeImage type="file" accept="image/*" hidden (change)="selectionnerImage($event)" />
+          <button type="button" class="bouton-secondaire" (click)="entreeImage.click()">
+            {{ apercuImage() ? 'Remplacer' : 'Choisir une image' }}
+          </button>
+          @if (apercuImage()) {
+            <button type="button" class="bouton-lien" (click)="retirerImage()">Retirer</button>
+          }
+        </div>
+      </div>
+      @if (erreurImage()) {
+        <p class="erreur-champ">{{ erreurImage() }}</p>
+      }
+
+      <label for="parent-categorie">Catégorie parente</label>
+      <select id="parent-categorie" [value]="parentId()" (change)="parentId.set($any($event.target).value)">
+        <option value="">Aucune (catégorie racine)</option>
+        @for (racine of racinesSelectionnables(); track racine.id) {
+          <option [value]="racine.id">{{ racine.nom }}</option>
+        }
+      </select>
+
+      <label class="case-visible">
+        <input type="checkbox" [checked]="estActive()" (change)="estActive.set($any($event.target).checked)" />
+        Visible
+      </label>
+
+      <label>Types de partenaire liés</label>
+      <p class="aide">Un partenaire de ce type sera automatiquement placé dans cette catégorie.</p>
+      <div class="liste-types-partenaire">
+        @for (type of typesPartenaire(); track type.valeur) {
+          <label class="case-type" [class.case-type-desactivee]="estTypeIndisponible(type)">
+            <input
+              type="checkbox"
+              [checked]="typesSelectionnes().has(type.valeur)"
+              [disabled]="estTypeIndisponible(type)"
+              (change)="basculerType(type.valeur)"
+            />
+            {{ type.libelle }}
+            @if (estTypeIndisponible(type)) {
+              <span class="indice-deja-lie">déjà lié à {{ type.categorie_nom }}</span>
+            }
+          </label>
+        }
+      </div>
+
+      <label>Mots-clés de recherche</label>
+      <div class="puces-mots-cles">
+        @for (motCle of motsCles(); track motCle) {
+          <span class="puce-mot-cle">
+            {{ motCle }}
+            <button type="button" aria-label="Supprimer" (click)="supprimerMotCle(motCle)">×</button>
+          </span>
+        }
+        <input
+          type="text"
+          class="champ-mot-cle"
+          placeholder="Ajouter un mot-clé…"
+          [value]="texteMotCle()"
+          (input)="changerTexteMotCle($any($event.target).value)"
+          (keydown)="surToucheMotCle($event)"
+        />
+      </div>
+
+      @if (erreurs()?.general; as messageGeneral) {
+        <p class="erreur-generale">{{ messageGeneral }}</p>
+      }
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annule.emit()">Annuler</button>
+        <button type="submit" class="bouton-principal" [disabled]="enregistrementEnCours()">
+          {{ enregistrementEnCours() ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

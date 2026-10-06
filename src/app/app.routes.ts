@@ -296,6 +296,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./fonctionnalites/administration/parametres/parametres').then((m) => m.Parametres),
       },
+      {
+        // Super-admin (le backend renvoie toutes les capacités à true) OU capacité gerer_parametres.
+        path: 'administration/categories',
+        canActivate: [roleGuard(['admin']), capaciteGuard],
+        data: { capacite: 'gerer_parametres' },
+        loadComponent: () =>
+          import('./fonctionnalites/administration/categories/categories-admin').then((m) => m.CategoriesAdmin),
+      },
       { path: '', pathMatch: 'full', redirectTo: 'tableau-de-bord' },
     ],
   },

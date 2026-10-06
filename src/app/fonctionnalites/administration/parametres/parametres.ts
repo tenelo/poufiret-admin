@@ -3,21 +3,20 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { OngletRechercheParametres } from './onglet-recherche-parametres/onglet-recherche-parametres';
-import { OngletCategoriesParametres } from './onglet-categories-parametres/onglet-categories-parametres';
 
-type OngletParametres = 'recherche' | 'categories';
+type OngletParametres = 'recherche';
 
-const ONGLETS_VALIDES: OngletParametres[] = ['recherche', 'categories'];
+const ONGLETS_VALIDES: OngletParametres[] = ['recherche'];
 
 /**
  * Écran admin "Paramètres" (capacité gerer_parametres) : page à onglets extensible —
- * Recherche (dictionnaire) et Catégories (ordre dans la grille) pour l'instant, d'autres
- * réglages transverses viendront s'y ajouter. L'onglet actif est synchronisé dans l'URL
- * (?onglet=) pour pouvoir le partager ou le recharger directement.
+ * seul l'onglet Recherche (dictionnaire) y reste, Catégories ayant son propre menu
+ * (voir fonctionnalites/administration/categories/). D'autres réglages transverses
+ * viendront s'y ajouter. L'onglet actif est synchronisé dans l'URL (?onglet=).
  */
 @Component({
   selector: 'app-parametres',
-  imports: [OngletRechercheParametres, OngletCategoriesParametres],
+  imports: [OngletRechercheParametres],
   templateUrl: './parametres.html',
   styleUrl: './parametres.scss',
 })
@@ -26,16 +25,24 @@ export class Parametres {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly onglets: { valeur: OngletParametres; libelle: string }[] = [
-    { valeur: 'recherche', libelle: 'Recherche' },
-    { valeur: 'categories', libelle: 'Catégories' },
-  ];
+  readonly onglets: { valeur: OngletParametres; libelle: string }[] = [{ valeur: 'recherche', libelle: 'Recherche' }];
 
-  readonly ongletActif = signal<OngletParametres>(this.ongletDepuisUrl());
+  readonly ongletActif = signal<OngletParametres>('recherche');
 
   constructor() {
+    // Ancien lien ?onglet=categories (onglet désormais déplacé vers son propre menu) :
+    // redirige directement, sans jamais afficher l'onglet Recherche par défaut.
+    if (this.route.snapshot.queryParamMap.get('onglet') === 'categories') {
+      void this.router.navigate(['/administration/categories']);
+      return;
+    }
+
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const valeur = params.get('onglet');
+      if (valeur === 'categories') {
+        void this.router.navigate(['/administration/categories']);
+        return;
+      }
       if (valeur && this.estOngletValide(valeur) && valeur !== this.ongletActif()) {
         this.ongletActif.set(valeur);
       }
@@ -49,11 +56,6 @@ export class Parametres {
       queryParams: { onglet },
       queryParamsHandling: 'merge',
     });
-  }
-
-  private ongletDepuisUrl(): OngletParametres {
-    const valeur = this.route.snapshot.queryParamMap.get('onglet');
-    return valeur && this.estOngletValide(valeur) ? valeur : 'recherche';
   }
 
   private estOngletValide(valeur: string): valeur is OngletParametres {
