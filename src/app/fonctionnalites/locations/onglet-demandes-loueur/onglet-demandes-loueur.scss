@@ -1,0 +1,221 @@
+.barre-statuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.statut {
+  padding: 0.4rem 0.8rem;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 999px;
+  color: #6b7280;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.statut-actif {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.etat {
+  margin: 0;
+  padding: 2rem 0;
+  color: #6b7280;
+  text-align: center;
+}
+
+.etat-erreur {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+
+  button {
+    padding: 0.35rem 0.8rem;
+    background: #ffffff;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #b91c1c;
+    cursor: pointer;
+  }
+}
+
+.total {
+  margin: 0 0 0.6rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.liste-demandes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.carte-demande {
+  padding: 0.9rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.entete-carte {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+
+  .numero {
+    font-weight: 700;
+    color: #1a1a1a;
+    font-size: 0.9rem;
+  }
+}
+
+.badge {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.ligne {
+  margin: 0.3rem 0 0;
+  font-size: 0.82rem;
+  color: #374151;
+}
+
+.message {
+  padding: 0.4rem 0.6rem;
+  background: #f9fafb;
+  border-radius: 6px;
+}
+
+.refus {
+  color: #b91c1c;
+}
+
+.meta {
+  font-size: 0.72rem;
+  color: #9ca3af;
+}
+
+a {
+  color: #4f46e5;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.bouton-repondre {
+  margin-top: 0.6rem;
+  padding: 0.4rem 0.9rem;
+  background: #ffffff;
+  border: 1px solid #4f46e5;
+  border-radius: 8px;
+  color: #4f46e5;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.panneau-action {
+  margin-top: 0.6rem;
+  padding: 0.7rem;
+  background: #f9fafb;
+  border-radius: 10px;
+
+  textarea {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.82rem;
+    resize: vertical;
+
+    &:focus {
+      outline: none;
+      border-color: #4f46e5;
+    }
+  }
+}
+
+.erreur-champ {
+  margin: 0.3rem 0 0;
+  font-size: 0.78rem;
+  color: #dc2626;
+}
+
+.actions-panneau {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+
+  button {
+    padding: 0.4rem 0.8rem;
+    background: #4f46e5;
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  color: #374151;
+  font-size: 0.9rem;
+
+  button {
+    padding: 0.45rem 0.9rem;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: #f4f5f7;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}

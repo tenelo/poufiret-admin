@@ -1,0 +1,87 @@
+<div class="onglet-logements">
+  <div class="entete-onglet">
+    <select class="filtre" [value]="filtreDisponibilite()" (change)="changerFiltreDisponibilite($any($event.target).value)">
+      <option value="">Toutes disponibilités</option>
+      @for (option of meta()?.disponibilites ?? []; track option.valeur) {
+        <option [value]="option.valeur">{{ option.libelle }}</option>
+      }
+    </select>
+    <button type="button" class="bouton-principal" (click)="ouvrirCreation()">+ Ajouter un logement</button>
+  </div>
+
+  @if (messageErreur()) {
+    <p class="erreur-generale">{{ messageErreur() }}</p>
+  }
+
+  @if (chargementEnCours()) {
+    <p class="etat">Chargement des logements…</p>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (logements().length === 0) {
+    <div class="etat-vide">
+      <p>Aucun logement pour ce filtre.</p>
+    </div>
+  } @else {
+    <div class="grille-logements">
+      @for (logement of logements(); track logement.id) {
+        <div class="carte-logement">
+          <button type="button" class="zone-cliquable" (click)="ouvrirEdition(logement)">
+            @if (imagePrincipale(logement); as image) {
+              <img [src]="image" [alt]="logement.nom" class="photo-logement" />
+            } @else {
+              <div class="photo-logement photo-vide">Aucune photo</div>
+            }
+            <div class="corps-carte">
+              <span class="nom-logement">{{ logement.nom }}</span>
+              <span class="type-logement">{{ logement.type_logement_libelle }}</span>
+              <span class="localisation-logement">
+                {{ logement.localite_nom || '—' }} - {{ logement.quartier_nom || '—' }}
+                @if (logement.secteur) {
+                  - {{ logement.secteur }}
+                }
+              </span>
+              <span class="loyer-logement">{{ logement.prix }} FCFA/mois</span>
+              <span class="caracteristiques-logement">
+                {{ logement.nb_chambres ?? '—' }} ch. · {{ logement.nb_salles_de_bain ?? '—' }} SdB
+              </span>
+            </div>
+          </button>
+
+          <div class="pied-carte">
+            <select
+              class="select-disponibilite"
+              [value]="logement.disponibilite"
+              [disabled]="disponibiliteEnCoursId() === logement.id"
+              (change)="changerDisponibiliteRapide(logement, $any($event.target).value)"
+            >
+              @for (option of meta()?.disponibilites ?? []; track option.valeur) {
+                <option [value]="option.valeur">{{ option.libelle }}</option>
+              }
+            </select>
+            <label class="interrupteur-actif">
+              <input
+                type="checkbox"
+                [checked]="logement.est_actif"
+                [disabled]="actifEnCoursId() === logement.id"
+                (change)="basculerActif(logement)"
+              />
+              Actif
+            </label>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+@if (dialogOuvert()) {
+  <app-dialog-logement
+    [prefixe]="prefixe()"
+    [logement]="logementEnEdition()"
+    [meta]="meta()"
+    (ferme)="fermerDialog()"
+  />
+}

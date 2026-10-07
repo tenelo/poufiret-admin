@@ -51,6 +51,14 @@ const ENTREES_PARTENAIRE_RESTAURATEUR: EntreeMenuPartenaire[] = [
   { libelle: 'Publicités', lien: '/publicites' },
 ];
 
+const ENTREES_PARTENAIRE_LOUEUR: EntreeMenuPartenaire[] = [
+  { libelle: 'Tableau de bord', lien: '/tableau-de-bord' },
+  { libelle: 'Mon profil', lien: '/mon-profil' },
+  { libelle: 'Mes logements', lien: '/mes-logements' },
+  { libelle: 'Mes demandes', lien: '/mes-demandes' },
+  { libelle: 'Publicités', lien: '/publicites' },
+];
+
 const ENTREES_ADMIN: EntreeMenuAdmin[] = [
   { libelle: 'Tableau de bord', lien: '/tableau-de-bord', icone: '📊', capacite: 'voir_stats' },
   {
@@ -144,6 +152,20 @@ const ENTREES_ADMIN: EntreeMenuAdmin[] = [
     capacite: 'gerer_restaurants',
   },
   {
+    // Super-admin (toutes capacités à true côté backend) OU capacité gerer_locations.
+    libelle: 'Locations',
+    lien: '/administration/locations',
+    icone: '🏠',
+    capacite: 'gerer_locations',
+  },
+  {
+    // Super-admin (toutes capacités à true côté backend) OU capacité gerer_reservations.
+    libelle: 'Demandes de location',
+    lien: '/administration/demandes-location',
+    icone: '📅',
+    capacite: 'gerer_reservations',
+  },
+  {
     // Pas de capacité : réservé au super-admin, voir le filtre ci-dessous.
     libelle: 'Modération de comptes',
     lien: '/administration/moderation',
@@ -194,9 +216,11 @@ export class BarreLaterale {
 
   readonly estAdmin = computed(() => this.authService.role() === 'admin');
 
-  readonly entreesPartenaire = computed<EntreeMenuPartenaire[]>(() =>
-    this.profilPartenaireContexte.estRestaurateur() ? ENTREES_PARTENAIRE_RESTAURATEUR : ENTREES_PARTENAIRE_STANDARD,
-  );
+  readonly entreesPartenaire = computed<EntreeMenuPartenaire[]>(() => {
+    if (this.profilPartenaireContexte.estRestaurateur()) return ENTREES_PARTENAIRE_RESTAURATEUR;
+    if (this.profilPartenaireContexte.estLoueur()) return ENTREES_PARTENAIRE_LOUEUR;
+    return ENTREES_PARTENAIRE_STANDARD;
+  });
 
   readonly entreesAdmin = computed<EntreeMenuAdmin[]>(() =>
     ENTREES_ADMIN.filter((entree) => {

@@ -1,0 +1,60 @@
+<section class="page-loueurs-liste">
+  <div class="entete">
+    <h1>Locations</h1>
+    <button type="button" class="bouton-secondaire" [disabled]="chargementEnCours()" (click)="charger()">
+      {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
+    </button>
+  </div>
+
+  <div class="barre-filtres">
+    <input
+      type="search"
+      class="champ-recherche"
+      placeholder="Rechercher un loueur ou un département…"
+      [value]="recherche()"
+      (input)="changerRecherche($any($event.target).value)"
+    />
+    @if (departements().length > 0) {
+      <select class="champ-departement" (change)="changerDepartement($any($event.target).value)">
+        <option value="" [selected]="departementFiltre() === ''">Tous les départements</option>
+        @for (departement of departements(); track departement) {
+          <option [value]="departement" [selected]="departement === departementFiltre()">{{ departement }}</option>
+        }
+      </select>
+    }
+  </div>
+
+  @if (chargementEnCours()) {
+    <p class="etat">Chargement des loueurs…</p>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (loueursFiltres().length === 0) {
+    <p class="etat">
+      {{ loueurs().length === 0 ? 'Aucun loueur.' : 'Aucun loueur ne correspond à ces critères.' }}
+    </p>
+  } @else {
+    <div class="grille-loueurs">
+      @for (loueur of loueursFiltres(); track loueur.id) {
+        <button type="button" class="carte-loueur" (click)="ouvrir(loueur)">
+          <div class="entete-carte">
+            <span class="nom">{{ loueur.nom }}</span>
+            @if (loueur.demandes_en_attente > 0) {
+              <span class="badge badge-alerte">{{ loueur.demandes_en_attente }} à traiter</span>
+            }
+          </div>
+          @if (loueur.departement_nom) {
+            <p class="departement">{{ loueur.departement_nom }}</p>
+          }
+          <div class="indicateurs">
+            <span class="indicateur indicateur-disponible">{{ loueur.nb_disponibles }} disponible(s)</span>
+            <span class="indicateur indicateur-reserve">{{ loueur.nb_reserves }} réservé(s)</span>
+            <span class="indicateur indicateur-loue">{{ loueur.nb_loues }} loué(s)</span>
+          </div>
+        </button>
+      }
+    </div>
+  }
+</section>

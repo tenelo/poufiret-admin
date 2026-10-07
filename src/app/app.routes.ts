@@ -105,6 +105,23 @@ export const routes: Routes = [
             (m) => m.EspaceRestaurant,
           ),
       },
+      // Espace loueur (partenaire de type loueur_maison) : même principe que l'espace restaurant,
+      // un seul composant hôte à onglets (voir fonctionnalites/locations/espace-loueur), 2 entrées
+      // de menu pointant vers son onglet de départ.
+      {
+        path: 'mes-logements',
+        canActivate: [roleGuard(['partenaire'])],
+        data: { ongletInitial: 'logements' },
+        loadComponent: () =>
+          import('./fonctionnalites/locations/espace-loueur/espace-loueur').then((m) => m.EspaceLoueur),
+      },
+      {
+        path: 'mes-demandes',
+        canActivate: [roleGuard(['partenaire'])],
+        data: { ongletInitial: 'demandes' },
+        loadComponent: () =>
+          import('./fonctionnalites/locations/espace-loueur/espace-loueur').then((m) => m.EspaceLoueur),
+      },
       {
         path: 'acces-refuse',
         loadComponent: () =>
@@ -218,6 +235,30 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./fonctionnalites/restaurants/espace-restaurant/espace-restaurant').then(
             (m) => m.EspaceRestaurant,
+          ),
+      },
+      {
+        path: 'administration/locations',
+        canActivate: [roleGuard(['admin']), capaciteGuard],
+        data: { capacite: 'gerer_locations' },
+        loadComponent: () =>
+          import('./fonctionnalites/administration/loueurs-liste/loueurs-liste').then((m) => m.LoueursListe),
+      },
+      {
+        // Même composant hôte que côté loueur, préfixe admin/<id> (voir EspaceLoueur.ngOnInit).
+        path: 'administration/locations/:id',
+        canActivate: [roleGuard(['admin']), capaciteGuard],
+        data: { capacite: 'gerer_locations' },
+        loadComponent: () =>
+          import('./fonctionnalites/locations/espace-loueur/espace-loueur').then((m) => m.EspaceLoueur),
+      },
+      {
+        path: 'administration/demandes-location',
+        canActivate: [roleGuard(['admin']), capaciteGuard],
+        data: { capacite: 'gerer_reservations' },
+        loadComponent: () =>
+          import('./fonctionnalites/administration/demandes-location/demandes-location-admin').then(
+            (m) => m.DemandesLocationAdmin,
           ),
       },
       {

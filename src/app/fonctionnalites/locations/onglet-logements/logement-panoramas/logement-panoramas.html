@@ -1,0 +1,66 @@
+@if (chargementEnCours()) {
+  <p class="etat">Chargement de la visite immersive…</p>
+} @else if (erreurChargement()) {
+  <div class="etat-erreur">
+    <p>{{ erreurChargement() }}</p>
+    <button type="button" (click)="charger()">Réessayer</button>
+  </div>
+} @else {
+  <p class="aide">
+    Photo 360° : photo prise en mode panorama 360 ou avec une caméra 360. Panoramique : photo
+    large que le client fait glisser du doigt.
+  </p>
+  @if (messageErreur()) {
+    <p class="erreur-champ">{{ messageErreur() }}</p>
+  }
+
+  <div class="liste-panoramas" cdkDropList (cdkDropListDropped)="surDepot($event)">
+    @for (panorama of panoramasOrdonnes(); track panorama.id) {
+      <div class="vignette" cdkDrag>
+        <span class="poignee" cdkDragHandle title="Glisser pour réordonner">⠿</span>
+        <img [src]="panorama.image" [alt]="panorama.titre" />
+        <span class="titre-panorama">{{ panorama.titre }}</span>
+        <span class="type-panorama">{{ libelleTypeVue(panorama.type_vue) }}</span>
+        <div class="actions-vignette">
+          <button type="button" class="danger" [disabled]="suppressionEnCoursId() === panorama.id" (click)="supprimerPanorama(panorama)">
+            Supprimer
+          </button>
+        </div>
+      </div>
+    } @empty {
+      <p class="vide">Aucun panorama.</p>
+    }
+  </div>
+
+  @if (apercuSelection(); as apercu) {
+    <div class="apercu-ajout">
+      <img [src]="apercu" alt="Aperçu" />
+      <label>
+        Titre
+        <input
+          type="text"
+          placeholder="Ex. Salon, Chambre 1…"
+          [value]="titreSelection()"
+          (input)="changerTitreSelection($any($event.target).value)"
+        />
+      </label>
+      <label>
+        Type de vue
+        <select [value]="typeVueSelection()" (change)="changerTypeVueSelection($any($event.target).value)">
+          @for (option of optionsTypeVue; track option.valeur) {
+            <option [value]="option.valeur">{{ option.libelle }}</option>
+          }
+        </select>
+      </label>
+      <div class="actions-vignette">
+        <button type="button" [disabled]="envoiEnCours()" (click)="ajouterPanorama()">
+          {{ envoiEnCours() ? 'Envoi…' : 'Ajouter' }}
+        </button>
+        <button type="button" (click)="annulerSelection()">Annuler</button>
+      </div>
+    </div>
+  } @else {
+    <input #entreeFichier type="file" accept="image/*" hidden (change)="selectionnerImage($event)" />
+    <button type="button" class="bouton-secondaire" (click)="entreeFichier.click()">Ajouter un panorama</button>
+  }
+}

@@ -1,0 +1,212 @@
+.voile-modale {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background: rgba(17, 24, 39, 0.5);
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.modale {
+  width: 100%;
+  max-width: 640px;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 12px;
+
+  h2 {
+    margin: 0 0 0.3rem;
+    font-size: 1.1rem;
+    color: #1a1a1a;
+  }
+}
+
+.tracabilite {
+  margin: 0 0 0.75rem;
+  font-size: 0.72rem;
+  color: #9ca3af;
+}
+
+.onglets-dialog {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+  padding: 0.25rem;
+  background: #f3f4f6;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.onglet {
+  padding: 0.4rem 0.8rem;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #6b7280;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.onglet-actif {
+  background: #ffffff;
+  color: #4f46e5;
+}
+
+.aide {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.indice {
+  margin: 0.3rem 0;
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  margin: 0.6rem 0 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+input[type='text'],
+input[type='number'],
+input[type='date'],
+select,
+textarea {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.85rem;
+
+  &:focus {
+    outline: none;
+    border-color: #4f46e5;
+  }
+
+  &:disabled {
+    background: #f3f4f6;
+    color: #9ca3af;
+  }
+}
+
+.grille-champs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 0.75rem;
+}
+
+.ligne-case {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.liste-equipements {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+}
+
+.case-equipement {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.erreur-champ {
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  color: #dc2626;
+}
+
+.erreur-generale {
+  margin: 0.6rem 0 0;
+  padding: 0.55rem 0.7rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.82rem;
+}
+
+.actions-modale {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.bouton-secondaire,
+.bouton-principal {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.bouton-secondaire {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #374151;
+}
+
+.bouton-principal {
+  background: #4f46e5;
+  border: none;
+  color: #ffffff;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .voile-modale {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .modale {
+    max-width: none;
+    min-height: 100%;
+    border-radius: 0;
+  }
+
+  .grille-champs,
+  .liste-equipements {
+    grid-template-columns: 1fr;
+  }
+}

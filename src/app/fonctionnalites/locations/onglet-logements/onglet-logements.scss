@@ -1,0 +1,172 @@
+.onglet-logements {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.entete-onglet {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.filtre {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  background: #ffffff;
+}
+
+.bouton-principal {
+  padding: 0.55rem 1.1rem;
+  background: #4f46e5;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: #4338ca;
+  }
+}
+
+.erreur-generale {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.etat,
+.etat-vide {
+  padding: 2rem 0;
+  text-align: center;
+  color: #6b7280;
+}
+
+.etat-erreur {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+}
+
+.grille-logements {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.carte-logement {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.zone-cliquable {
+  display: flex;
+  flex-direction: column;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.photo-logement {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+}
+
+.photo-vide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+.corps-carte {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.85rem;
+}
+
+.nom-logement {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 0.95rem;
+}
+
+.type-logement {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.localisation-logement {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.loyer-logement {
+  margin-top: 0.3rem;
+  font-weight: 600;
+  color: #4f46e5;
+  font-size: 0.9rem;
+}
+
+.caracteristiques-logement {
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+.pied-carte {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.select-disponibilite {
+  flex: 1;
+  min-width: 0;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+
+.interrupteur-actif {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: #374151;
+  white-space: nowrap;
+
+  input {
+    width: auto;
+  }
+}

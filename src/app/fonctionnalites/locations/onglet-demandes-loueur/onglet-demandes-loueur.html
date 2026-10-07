@@ -1,0 +1,105 @@
+@if (estAdmin()) {
+  <app-demandes-location-admin [partenaireFixe]="partenaireFixe()" />
+} @else {
+  <div class="onglet-demandes-loueur">
+    @if (statutsDisponibles().length > 0) {
+      <div class="barre-statuts">
+        <button type="button" class="statut" [class.statut-actif]="statutChoisi() === ''" (click)="changerStatut('')">
+          Toutes
+        </button>
+        @for (statut of statutsDisponibles(); track statut.valeur) {
+          <button
+            type="button"
+            class="statut"
+            [class.statut-actif]="statutChoisi() === statut.valeur"
+            (click)="changerStatut(statut.valeur)"
+          >
+            {{ statut.libelle }}
+          </button>
+        }
+      </div>
+    }
+
+    @if (chargementEnCours()) {
+      <p class="etat">Chargement de vos demandes…</p>
+    } @else if (erreurChargement()) {
+      <div class="etat-erreur">
+        <p>{{ erreurChargement() }}</p>
+        <button type="button" (click)="charger()">Réessayer</button>
+      </div>
+    } @else if (demandes().length === 0) {
+      <p class="etat">Aucune demande pour le moment.</p>
+    } @else {
+      <p class="total">{{ total() }} demande{{ total() > 1 ? 's' : '' }}</p>
+
+      <div class="liste-demandes">
+        @for (demande of demandes(); track demande.id) {
+          <div class="carte-demande">
+            <button type="button" class="entete-carte" (click)="basculerDemande(demande.id)">
+              <span class="numero">{{ demande.numero }}</span>
+              <span class="badge">{{ demande.statut_libelle }}</span>
+            </button>
+            <p class="ligne"><strong>{{ demande.objet_nom }}</strong> · {{ demande.nature_libelle }}</p>
+            <p class="ligne">
+              {{ demande.client_nom }}
+              @if (lienTel(demande.telephone_contact); as tel) {
+                · <a [href]="tel">{{ demande.telephone_contact }}</a>
+              }
+              @if (lienWhatsApp(demande.telephone_contact); as wa) {
+                · <a [href]="wa" target="_blank" rel="noopener">WhatsApp</a>
+              }
+            </p>
+            @if (demande.date_souhaitee) {
+              <p class="ligne">Date souhaitée : {{ demande.date_souhaitee }}</p>
+            }
+            @if (demande.date_debut) {
+              <p class="ligne">Séjour : du {{ demande.date_debut }}@if (demande.date_fin) { au {{ demande.date_fin }} }</p>
+            }
+            @if (demande.message) {
+              <p class="ligne message">{{ demande.message }}</p>
+            }
+            @if (demande.raison_refus) {
+              <p class="ligne refus">Motif de refus : {{ demande.raison_refus }}</p>
+            }
+            <p class="ligne meta">{{ formaterDateHeure(demande.created_at) }}</p>
+
+            @if (!demande.transitions_possibles || demande.transitions_possibles.length === 0) {
+              <p class="ligne meta">Aucune action disponible pour cette demande.</p>
+            } @else if (demandeOuverteId() === demande.id) {
+              <div class="panneau-action">
+                <textarea
+                  rows="2"
+                  placeholder="Commentaire (obligatoire selon l'action)…"
+                  [value]="commentaire()"
+                  (input)="commentaire.set($any($event.target).value)"
+                ></textarea>
+                @if (erreurAction()) {
+                  <p class="erreur-champ">{{ erreurAction() }}</p>
+                }
+                <div class="actions-panneau">
+                  @for (transition of demande.transitions_possibles; track transition.action) {
+                    <button type="button" [disabled]="actionEnCours()" (click)="agir(demande, transition)">
+                      {{ transition.libelle }}
+                    </button>
+                  }
+                </div>
+              </div>
+            } @else {
+              <button type="button" class="bouton-repondre" (click)="basculerDemande(demande.id)">Répondre</button>
+            }
+          </div>
+        }
+      </div>
+
+      @if (nombrePages() > 1) {
+        <div class="pagination">
+          <button type="button" [disabled]="page() === 1" (click)="changerPage(page() - 1)">← Précédent</button>
+          <span>Page {{ page() }} / {{ nombrePages() }}</span>
+          <button type="button" [disabled]="page() >= nombrePages()" (click)="changerPage(page() + 1)">
+            Suivant →
+          </button>
+        </div>
+      }
+    }
+  </div>
+}

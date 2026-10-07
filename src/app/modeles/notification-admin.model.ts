@@ -6,11 +6,13 @@
 // pub_soumise : campagne soumise, en attente de paiement.
 // pub_a_valider : paiement confirmé, en attente de validation.
 // commande_nouvelle : nouvelle commande ; commande_annulee_client : commande annulée par le client.
+// reservation_nouvelle : nouvelle demande de location (data.demande_id).
 export type TypeNotificationAdmin =
   | 'pub_soumise'
   | 'pub_a_valider'
   | 'commande_nouvelle'
-  | 'commande_annulee_client';
+  | 'commande_annulee_client'
+  | 'reservation_nouvelle';
 
 export interface NotificationAdmin {
   id: number;
@@ -25,6 +27,8 @@ export interface NotificationAdmin {
   // Notifications de commande : id de la commande et son groupe (a_traiter, en_cours...).
   commande_id?: number | null;
   groupe?: string | null;
+  // reservation_nouvelle : id de la demande de location concernée.
+  demande_id?: number | null;
 }
 
 /** GET admin/?page_size=10 (option ?non_lues=1). */

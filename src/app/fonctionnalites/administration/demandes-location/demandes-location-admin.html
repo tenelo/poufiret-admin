@@ -1,0 +1,138 @@
+<section class="page-demandes-location" [class.integre]="!!partenaireFixe()">
+  @if (!partenaireFixe()) {
+    <div class="entete">
+      <h1>Demandes de location</h1>
+      <div class="actions-entete">
+        <button type="button" class="bouton-secondaire" [disabled]="chargementListe()" (click)="rafraichir()">
+          ↻ Rafraîchir
+        </button>
+        <button type="button" class="bouton-principal" [disabled]="exportEnCours()" (click)="exporter()">
+          {{ exportEnCours() ? 'Export en cours…' : '⭳ Exporter CSV' }}
+        </button>
+      </div>
+    </div>
+  } @else {
+    <div class="actions-entete actions-entete-integre">
+      <button type="button" class="bouton-secondaire" [disabled]="chargementListe()" (click)="rafraichir()">
+        ↻ Rafraîchir
+      </button>
+      <button type="button" class="bouton-principal" [disabled]="exportEnCours()" (click)="exporter()">
+        {{ exportEnCours() ? 'Export en cours…' : '⭳ Exporter CSV' }}
+      </button>
+    </div>
+  }
+
+  @if (erreurExport()) {
+    <p class="erreur-generale">{{ erreurExport() }}</p>
+  }
+
+  @if (!pret()) {
+    <p class="etat">Chargement du centre des demandes…</p>
+  } @else {
+    <nav class="barre-onglets" aria-label="Sections">
+      @for (item of onglets; track item.valeur) {
+        <button
+          type="button"
+          class="onglet"
+          [class.onglet-actif]="onglet() === item.valeur"
+          (click)="changerOnglet(item.valeur)"
+        >
+          {{ item.libelle }}
+          @if (compteur(item.valeur) !== null) {
+            <span class="compteur" [class.compteur-a-traiter]="item.valeur === 'a_traiter' && compteur(item.valeur)! > 0">
+              {{ compteur(item.valeur) }}
+            </span>
+          }
+        </button>
+      }
+    </nav>
+
+    <app-filtres-demandes-location
+      [filtres]="filtres()"
+      [natures]="meta()?.natures ?? []"
+      [partenaireVerrouille]="!!partenaireFixe()"
+      (filtresChange)="surFiltres($event)"
+    />
+
+    @if (erreurListe()) {
+      <div class="etat-erreur">
+        <p>{{ erreurListe() }}</p>
+        <button type="button" (click)="chargerListe()">Réessayer</button>
+      </div>
+    } @else if (chargementListe() && demandes().length === 0) {
+      <p class="etat">Chargement des demandes…</p>
+    } @else if (demandes().length === 0) {
+      <p class="etat">Aucune demande ne correspond à ces critères.</p>
+    } @else {
+      <p class="total">{{ total() }} demande{{ total() > 1 ? 's' : '' }}</p>
+
+      <!-- Grand écran : tableau -->
+      <div class="conteneur-tableau">
+        <table class="tableau">
+          <thead>
+            <tr>
+              <th>Numéro</th>
+              <th>Date</th>
+              <th>Nature</th>
+              <th>Logement</th>
+              @if (!partenaireFixe()) {
+                <th>Loueur</th>
+              }
+              <th>Client</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (demande of demandes(); track demande.id) {
+              <tr [class.ligne-ouverte]="demande.id === demandeOuverteId()" (click)="ouvrirDetail(demande.id)">
+                <td class="fort">{{ demande.numero }}</td>
+                <td>{{ formaterDateHeure(demande.created_at) }}</td>
+                <td>{{ demande.nature_libelle }}</td>
+                <td>{{ demande.objet_nom }}</td>
+                @if (!partenaireFixe()) {
+                  <td>{{ demande.partenaire_nom }}</td>
+                }
+                <td>{{ demande.client_nom }}</td>
+                <td><span class="badge badge-{{ onglet() === 'toutes' ? '' : onglet() }}">{{ demande.statut_libelle }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile : cartes -->
+      <div class="cartes">
+        @for (demande of demandes(); track demande.id) {
+          <button type="button" class="carte" [class.ligne-ouverte]="demande.id === demandeOuverteId()" (click)="ouvrirDetail(demande.id)">
+            <span class="carte-entete">
+              <span class="fort">{{ demande.numero }}</span>
+              <span class="badge">{{ demande.statut_libelle }}</span>
+            </span>
+            <span class="carte-ligne">{{ demande.objet_nom }}@if (!partenaireFixe()) { · {{ demande.partenaire_nom }} }</span>
+            <span class="carte-ligne">{{ demande.nature_libelle }} · {{ demande.client_nom }}</span>
+            <span class="carte-ligne">{{ formaterDateHeure(demande.created_at) }}</span>
+          </button>
+        }
+      </div>
+
+      @if (nombrePages() > 1) {
+        <div class="pagination">
+          <button type="button" [disabled]="page() === 1" (click)="changerPage(page() - 1)">← Précédent</button>
+          <span>Page {{ page() }} / {{ nombrePages() }}</span>
+          <button type="button" [disabled]="page() >= nombrePages()" (click)="changerPage(page() + 1)">
+            Suivant →
+          </button>
+        </div>
+      }
+    }
+  }
+</section>
+
+@if (demandeOuverteId(); as id) {
+  <app-detail-demande-location
+    [demandeId]="id"
+    [meta]="meta()"
+    (ferme)="fermerDetail()"
+    (modifiee)="surDetailModifie()"
+  />
+}

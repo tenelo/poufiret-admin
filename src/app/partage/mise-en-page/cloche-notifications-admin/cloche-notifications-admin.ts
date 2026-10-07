@@ -30,7 +30,8 @@ const NB_NOTIFICATIONS_AFFICHEES = 10;
 
 /**
  * Cloche de notifications de l'en-tête admin / super-admin : campagnes de publicité soumises ou à
- * valider, commandes nouvelles ou annulées par le client. Compteur interrogé toutes les 30 s (en pause quand l'onglet du navigateur est masqué),
+ * valider, commandes nouvelles ou annulées par le client, nouvelles demandes de location. Compteur
+ * interrogé toutes les 30 s (en pause quand l'onglet du navigateur est masqué),
  * son et animation quand il augmente, panneau des 10 dernières notifications. Même moteur de
  * détection (DetecteurCompteur) et même son que la cloche partenaire.
  */
@@ -156,6 +157,12 @@ export class ClocheNotificationsAdmin implements OnInit {
     if (notification.type === 'commande_nouvelle' || notification.type === 'commande_annulee_client') {
       this.router.navigate(['/administration/commandes'], {
         queryParams: { commande: notification.commande_id ?? undefined },
+      });
+      return;
+    }
+    if (notification.type === 'reservation_nouvelle') {
+      this.router.navigate(['/administration/demandes-location'], {
+        queryParams: { demande: notification.demande_id ?? undefined },
       });
       return;
     }

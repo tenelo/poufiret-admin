@@ -1,0 +1,179 @@
+.page-loueurs-liste {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1a1a1a;
+  }
+}
+
+.bouton-secondaire {
+  padding: 0.5rem 1rem;
+  background: #ffffff;
+  border: 1px solid #4f46e5;
+  border-radius: 8px;
+  color: #4f46e5;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.barre-filtres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.champ-recherche,
+.champ-departement {
+  padding: 0.55rem 0.8rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: #4f46e5;
+  }
+}
+
+.champ-recherche {
+  flex: 1 1 240px;
+  max-width: 320px;
+}
+
+.champ-departement {
+  flex: 0 1 200px;
+}
+
+.etat {
+  margin: 0;
+  padding: 2rem 0;
+  color: #6b7280;
+  text-align: center;
+}
+
+.etat-erreur {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+
+  button {
+    padding: 0.35rem 0.8rem;
+    background: #ffffff;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #b91c1c;
+    cursor: pointer;
+  }
+}
+
+.grille-loueurs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.carte-loueur {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #c7d2fe;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+}
+
+.entete-carte {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+
+  .nom {
+    font-weight: 700;
+    color: #1a1a1a;
+    font-size: 0.95rem;
+  }
+}
+
+.badge {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.badge-alerte {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.departement {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.indicateurs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+}
+
+.indicateur {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #374151;
+  font-weight: 600;
+}
+
+.indicateur-disponible {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.indicateur-reserve {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.indicateur-loue {
+  background: #f3f4f6;
+  color: #374151;
+}

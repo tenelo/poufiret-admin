@@ -43,8 +43,8 @@ export interface CapaciteDescriptor {
   nom: NomCapacite;
   libelle: string;
   // true pour `gerer_admins`, `gerer_geographie`, `gerer_formules_pub`, `gerer_commandes`,
-  // `gerer_restaurants`, `modifier_identifiant_partenaire` et `gerer_parametres` : non
-  // modifiable par un admin non-superuser.
+  // `gerer_restaurants`, `modifier_identifiant_partenaire`, `gerer_parametres`, `gerer_locations`
+  // et `gerer_reservations` : non modifiable par un admin non-superuser.
   privilegiee?: boolean;
 }
 
@@ -128,6 +128,14 @@ export const GROUPES_CAPACITES: GroupeCapacites[] = [
     capacites: [
       // Privilégiée : seul un super-admin peut la modifier (case verrouillée pour les autres).
       { nom: 'gerer_restaurants', libelle: 'Gérer les restaurants', privilegiee: true },
+    ],
+  },
+  {
+    titre: 'Locations',
+    capacites: [
+      // Privilégiées : seul un super-admin peut les modifier (case verrouillée pour les autres).
+      { nom: 'gerer_locations', libelle: 'Gérer les locations', privilegiee: true },
+      { nom: 'gerer_reservations', libelle: 'Gérer les demandes de location', privilegiee: true },
     ],
   },
   {

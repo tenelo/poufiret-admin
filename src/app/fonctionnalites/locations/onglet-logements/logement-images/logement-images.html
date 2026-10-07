@@ -1,0 +1,56 @@
+@if (chargementEnCours()) {
+  <p class="etat">Chargement des photos…</p>
+} @else if (erreurChargement()) {
+  <div class="etat-erreur">
+    <p>{{ erreurChargement() }}</p>
+    <button type="button" (click)="charger()">Réessayer</button>
+  </div>
+} @else {
+  <p class="aide">4 à 5 photos conseillées.</p>
+  @if (messageErreur()) {
+    <p class="erreur-champ">{{ messageErreur() }}</p>
+  }
+
+  <div class="liste-images" cdkDropList (cdkDropListDropped)="surDepot($event)">
+    @for (image of imagesOrdonnees(); track image.id) {
+      <div class="vignette" cdkDrag>
+        <span class="poignee" cdkDragHandle title="Glisser pour réordonner">⠿</span>
+        <img [src]="image.image" [alt]="image.legende ?? ''" />
+        @if (image.est_principale) {
+          <span class="badge-principale">Principale</span>
+        }
+        <div class="actions-vignette">
+          @if (!image.est_principale) {
+            <button type="button" [disabled]="changementPrincipaleEnCoursId() === image.id" (click)="definirPrincipale(image)">
+              Définir principale
+            </button>
+          }
+          <button type="button" class="danger" [disabled]="suppressionEnCoursId() === image.id" (click)="supprimerImage(image)">
+            Supprimer
+          </button>
+        </div>
+      </div>
+    } @empty {
+      <p class="vide">Aucune photo.</p>
+    }
+  </div>
+
+  @if (apercuSelection(); as apercu) {
+    <div class="apercu-ajout">
+      <img [src]="apercu" alt="Aperçu" />
+      <label class="ligne-case">
+        <input type="checkbox" [checked]="estPrincipaleSelection()" (change)="estPrincipaleSelection.set($any($event.target).checked)" />
+        Définir comme photo principale
+      </label>
+      <div class="actions-vignette">
+        <button type="button" [disabled]="envoiEnCours()" (click)="ajouterImage()">
+          {{ envoiEnCours() ? 'Envoi…' : 'Ajouter' }}
+        </button>
+        <button type="button" (click)="annulerSelection()">Annuler</button>
+      </div>
+    </div>
+  } @else {
+    <input #entreeFichier type="file" accept="image/*" hidden (change)="selectionnerImage($event)" />
+    <button type="button" class="bouton-secondaire" (click)="entreeFichier.click()">Choisir une photo</button>
+  }
+}

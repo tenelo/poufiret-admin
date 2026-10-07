@@ -1,0 +1,49 @@
+<section class="page-espace-loueur">
+  @if (estAdmin()) {
+    <div class="barre-retour">
+      <a routerLink="/administration/locations" class="lien-retour">← Locations</a>
+      <nav class="fil-ariane" aria-label="Fil d'Ariane">
+        <a routerLink="/administration/locations">Locations</a>
+        <span class="separateur">›</span>
+        <span>{{ nomLoueur() ?? 'Loueur' }}</span>
+        <span class="separateur">›</span>
+        <span>{{ libelleOngletActif() }}</span>
+      </nav>
+    </div>
+
+    <div class="bandeau-admin">
+      Vous gérez <strong>{{ nomLoueur() ?? 'ce loueur' }}</strong> en tant qu'administrateur.
+    </div>
+  }
+
+  <h1>{{ nomLoueur() ?? (estAdmin() ? 'Loueur' : 'Mon espace loueur') }}</h1>
+
+  <nav class="barre-onglets" aria-label="Sections">
+    @for (onglet of onglets; track onglet.valeur) {
+      <button
+        type="button"
+        class="onglet"
+        [class.onglet-actif]="ongletActif() === onglet.valeur"
+        (click)="changerOnglet(onglet.valeur)"
+      >
+        {{ onglet.libelle }}
+      </button>
+    }
+  </nav>
+
+  <div class="contenu-onglet">
+    @switch (ongletActif()) {
+      @case ('logements') {
+        <app-onglet-logements [prefixe]="prefixe()" />
+      }
+      @case ('demandes') {
+        <app-onglet-demandes-loueur
+          [prefixe]="prefixe()"
+          [estAdmin]="estAdmin()"
+          [partenaireId]="partenaireId()"
+          [nomLoueur]="nomLoueur()"
+        />
+      }
+    }
+  </div>
+</section>

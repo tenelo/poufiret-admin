@@ -1,0 +1,236 @@
+<div class="voile-modale" (click)="ferme.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>{{ logementCourant() ? 'Modifier « ' + logementCourant()!.nom + ' »' : 'Nouveau logement' }}</h2>
+
+    @if (logementCourant()?.modifie_le) {
+      <p class="tracabilite">
+        Dernière modification {{ logementCourant()!.modifie_par_role === 'admin' ? "par l'administration" : 'par le loueur' }}
+        @if (logementCourant()!.modifie_par_nom) { ({{ logementCourant()!.modifie_par_nom }}) }
+      </p>
+    }
+
+    <nav class="onglets-dialog">
+      @for (onglet of [
+        { valeur: 'infos', libelle: 'Infos' },
+        { valeur: 'caracteristiques', libelle: 'Caractéristiques' },
+        { valeur: 'conditions', libelle: 'Conditions' },
+        { valeur: 'equipements', libelle: 'Équipements' },
+        { valeur: 'disponibilite', libelle: 'Disponibilité' },
+        { valeur: 'localisation', libelle: 'Localisation' },
+        { valeur: 'photos', libelle: 'Photos' },
+        { valeur: 'visite', libelle: 'Visite immersive' }
+      ]; track onglet.valeur) {
+        <button
+          type="button"
+          class="onglet"
+          [disabled]="(onglet.valeur === 'photos' || onglet.valeur === 'visite') && !logementCourant()"
+          [class.onglet-actif]="ongletActif() === onglet.valeur"
+          (click)="changerOnglet($any(onglet.valeur))"
+        >
+          {{ onglet.libelle }}
+        </button>
+      }
+    </nav>
+    @if (!logementCourant()) {
+      <p class="aide">Enregistrez le logement pour gérer ses photos et sa visite immersive.</p>
+    }
+
+    @if (messageErreur()) {
+      <p class="erreur-generale">{{ messageErreur() }}</p>
+    }
+
+    <form (submit)="$event.preventDefault(); soumettre()">
+      @if (ongletActif() === 'infos') {
+        <label for="dl-nom">Nom (titre de l'annonce)</label>
+        <input id="dl-nom" type="text" [value]="nom()" (input)="nom.set($any($event.target).value)" />
+        @if (erreursChamps()['nom']) {
+          <p class="erreur-champ">{{ erreursChamps()['nom'] }}</p>
+        }
+
+        <label for="dl-type">Type de logement</label>
+        <select id="dl-type" [value]="typeLogement()" (change)="typeLogement.set($any($event.target).value)">
+          <option value="">— Choisir —</option>
+          @for (option of metaInterne()?.types_logement ?? []; track option.valeur) {
+            <option [value]="option.valeur">{{ option.libelle }}</option>
+          }
+        </select>
+
+        <label for="dl-description">Description</label>
+        <textarea id="dl-description" rows="3" [value]="description()" (input)="description.set($any($event.target).value)"></textarea>
+
+        <label class="ligne-case">
+          <input type="checkbox" [checked]="estActif()" (change)="estActif.set($any($event.target).checked)" />
+          Actif (visible dans l'application)
+        </label>
+      }
+
+      @if (ongletActif() === 'caracteristiques') {
+        <div class="grille-champs">
+          <div>
+            <label for="dl-chambres">Chambres</label>
+            <input id="dl-chambres" type="number" min="0" [value]="nbChambres()" (input)="nbChambres.set($any($event.target).value)" />
+          </div>
+          <div>
+            <label for="dl-salons">Salons</label>
+            <input id="dl-salons" type="number" min="0" [value]="nbSalons()" (input)="nbSalons.set($any($event.target).value)" />
+          </div>
+          <div>
+            <label for="dl-sdb">Salles de bain</label>
+            <input id="dl-sdb" type="number" min="0" [value]="nbSallesDeBain()" (input)="nbSallesDeBain.set($any($event.target).value)" />
+          </div>
+          <div>
+            <label for="dl-surface">Surface (m²)</label>
+            <input id="dl-surface" type="number" min="0" [value]="surfaceM2()" (input)="surfaceM2.set($any($event.target).value)" />
+          </div>
+        </div>
+
+        <label class="ligne-case">
+          <input type="checkbox" [checked]="meuble()" (change)="meuble.set($any($event.target).checked)" />
+          Meublé
+        </label>
+      }
+
+      @if (ongletActif() === 'conditions') {
+        <label for="dl-prix">Loyer mensuel (FCFA)</label>
+        <input id="dl-prix" type="number" min="0" [value]="prix()" (input)="prix.set($any($event.target).value)" />
+        @if (erreursChamps()['prix']) {
+          <p class="erreur-champ">{{ erreursChamps()['prix'] }}</p>
+        }
+
+        <div class="grille-champs">
+          <div>
+            <label for="dl-caution">Caution (mois)</label>
+            <input id="dl-caution" type="number" min="0" [value]="cautionMois()" (input)="cautionMois.set($any($event.target).value)" />
+          </div>
+          <div>
+            <label for="dl-avance">Avance (mois)</label>
+            <input id="dl-avance" type="number" min="0" [value]="avanceMois()" (input)="avanceMois.set($any($event.target).value)" />
+          </div>
+        </div>
+
+        <label for="dl-frais-agence">Frais d'agence (FCFA)</label>
+        <input id="dl-frais-agence" type="number" min="0" [value]="fraisAgence()" (input)="fraisAgence.set($any($event.target).value)" />
+
+        <label class="ligne-case">
+          <input type="checkbox" [checked]="compteurEauIndividuel()" (change)="compteurEauIndividuel.set($any($event.target).checked)" />
+          Compteur d'eau individuel
+        </label>
+        <label class="ligne-case">
+          <input type="checkbox" [checked]="compteurElectriciteIndividuel()" (change)="compteurElectriciteIndividuel.set($any($event.target).checked)" />
+          Compteur d'électricité individuel
+        </label>
+      }
+
+      @if (ongletActif() === 'equipements') {
+        @if ((metaInterne()?.equipements ?? []).length === 0) {
+          <p class="indice">Aucun équipement disponible.</p>
+        } @else {
+          <div class="liste-equipements">
+            @for (equipement of metaInterne()!.equipements; track equipement.valeur) {
+              <label class="case-equipement">
+                <input
+                  type="checkbox"
+                  [checked]="equipementsSelectionnes().has(equipement.valeur)"
+                  (change)="basculerEquipement(equipement.valeur)"
+                />
+                {{ equipement.libelle }}
+              </label>
+            }
+          </div>
+        }
+      }
+
+      @if (ongletActif() === 'disponibilite') {
+        <label for="dl-disponibilite">Disponibilité</label>
+        <select id="dl-disponibilite" [value]="disponibilite()" (change)="disponibilite.set($any($event.target).value)">
+          <option value="">— Choisir —</option>
+          @for (option of metaInterne()?.disponibilites ?? []; track option.valeur) {
+            <option [value]="option.valeur">{{ option.libelle }}</option>
+          }
+        </select>
+
+        <label for="dl-disponible-le">Disponible à partir du</label>
+        <input
+          id="dl-disponible-le"
+          type="date"
+          [value]="disponibleAPartirDu()"
+          (input)="disponibleAPartirDu.set($any($event.target).value)"
+        />
+      }
+
+      @if (ongletActif() === 'localisation') {
+        <label for="dl-departement">Département</label>
+        <select id="dl-departement" [value]="departementChoisi()" (change)="changerDepartementChoisi($any($event.target).value)">
+          <option value="">— Choisir —</option>
+          @for (departement of departements(); track departement.id) {
+            <option [value]="departement.id">{{ departement.nom }} ({{ departement.region }})</option>
+          }
+        </select>
+
+        <label for="dl-localite">Localité</label>
+        @if (chargementLocalites()) {
+          <p class="indice">Chargement des localités…</p>
+        } @else if (erreurLocalites()) {
+          <p class="erreur-champ">{{ erreurLocalites() }}</p>
+        } @else {
+          <select id="dl-localite" [value]="localiteId()" [disabled]="!departementChoisi()" (change)="changerLocaliteChoisie($any($event.target).value)">
+            <option value="">— Non renseigné —</option>
+            @for (localite of localites(); track localite.id) {
+              <option [value]="localite.id">{{ localite.nom }}</option>
+            }
+          </select>
+        }
+
+        <label for="dl-quartier">Quartier</label>
+        @if (chargementQuartiers()) {
+          <p class="indice">Chargement des quartiers…</p>
+        } @else if (erreurQuartiers()) {
+          <p class="erreur-champ">{{ erreurQuartiers() }}</p>
+        } @else {
+          <select id="dl-quartier" [value]="quartierId()" [disabled]="!localiteId()" (change)="quartierId.set($any($event.target).value)">
+            <option value="">— Non renseigné —</option>
+            @for (quartier of quartiers(); track quartier.id) {
+              <option [value]="quartier.id">{{ quartier.nom }}</option>
+            }
+          </select>
+        }
+
+        <label for="dl-secteur">Secteur</label>
+        <input id="dl-secteur" type="text" [value]="secteur()" (input)="secteur.set($any($event.target).value)" />
+
+        <label for="dl-reperes">Repères / indications d'accès</label>
+        <textarea id="dl-reperes" rows="2" [value]="adresseReperes()" (input)="adresseReperes.set($any($event.target).value)"></textarea>
+
+        <label>Position GPS</label>
+        <app-position-gps
+          [latitude]="logementCourant()?.latitude ?? null"
+          [longitude]="logementCourant()?.longitude ?? null"
+          (enregistrer)="definirPosition($event)"
+        />
+      }
+
+      @if (ongletActif() === 'infos' || ongletActif() === 'caracteristiques' || ongletActif() === 'conditions' || ongletActif() === 'equipements' || ongletActif() === 'disponibilite' || ongletActif() === 'localisation') {
+        <div class="actions-modale">
+          <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Fermer</button>
+          <button type="submit" class="bouton-principal" [disabled]="enregistrementEnCours()">
+            {{ enregistrementEnCours() ? 'Enregistrement…' : (logementCourant() ? 'Enregistrer' : 'Créer le logement') }}
+          </button>
+        </div>
+      }
+    </form>
+
+    @if (ongletActif() === 'photos' && logementCourant()) {
+      <app-logement-images [prefixe]="prefixe()" [logementId]="logementCourant()!.id" />
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Fermer</button>
+      </div>
+    }
+
+    @if (ongletActif() === 'visite' && logementCourant()) {
+      <app-logement-panoramas [prefixe]="prefixe()" [logementId]="logementCourant()!.id" />
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Fermer</button>
+      </div>
+    }
+  </div>
+</div>

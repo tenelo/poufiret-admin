@@ -1,0 +1,45 @@
+<div class="filtres">
+  <div class="champ champ-large">
+    <label for="fdl-recherche">Recherche</label>
+    <input
+      id="fdl-recherche"
+      type="search"
+      placeholder="Numéro, logement, client…"
+      [value]="filtres().recherche"
+      (input)="saisirRecherche($any($event.target).value)"
+    />
+  </div>
+
+  @if (natures().length > 0) {
+    <div class="champ">
+      <label for="fdl-nature">Nature</label>
+      <select id="fdl-nature" (change)="changerNature($any($event.target).value)">
+        <option value="" [selected]="filtres().nature === ''">Toutes</option>
+        @for (nature of natures(); track nature.valeur) {
+          <option [value]="nature.valeur" [selected]="nature.valeur === filtres().nature">{{ nature.libelle }}</option>
+        }
+      </select>
+    </div>
+  }
+
+  @if (!partenaireVerrouille() && loueurs().length > 0) {
+    <div class="champ">
+      <label for="fdl-loueur">Loueur</label>
+      <select id="fdl-loueur" (change)="changerLoueur($any($event.target).value)">
+        <option value="" [selected]="filtres().partenaire === null">Tous</option>
+        @for (loueur of loueurs(); track loueur.id) {
+          <option [value]="loueur.id" [selected]="loueur.id === filtres().partenaire?.id">{{ loueur.nom }}</option>
+        }
+      </select>
+    </div>
+  }
+
+  <div class="champ champ-date">
+    <label for="fdl-du">Du</label>
+    <input id="fdl-du" type="date" [value]="filtres().du" (change)="changerDu($any($event.target).value)" />
+  </div>
+  <div class="champ champ-date">
+    <label for="fdl-au">Au</label>
+    <input id="fdl-au" type="date" [value]="filtres().au" (change)="changerAu($any($event.target).value)" />
+  </div>
+</div>
