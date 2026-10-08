@@ -47,7 +47,11 @@
         <button type="button" class="carte-loueur" (click)="ouvrir(loueur)">
           <div class="entete-carte">
             <span class="nom">{{ loueur.nom }}</span>
-            <span class="badge badge-type" [class.badge-vehicules]="loueur.type_partenaire === 'loueur_voiture'">
+            <span
+              class="badge badge-type"
+              [class.badge-vehicules]="loueur.type_partenaire === 'loueur_voiture'"
+              [class.badge-hotels]="loueur.type_partenaire === 'hotelier'"
+            >
               {{ libelleType(loueur.type_partenaire) }}
             </span>
             @if (loueur.demandes_en_attente > 0) {

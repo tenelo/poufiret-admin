@@ -8,7 +8,7 @@ import { DetailDemandeLocation } from './detail-demande-location/detail-demande-
 import { FiltresDemandesLocation } from './filtres-demandes-location/filtres-demandes-location';
 import { extraireMessageErreur } from '../tableau-de-bord-admin/extraire-message-erreur';
 import { formaterDateHeure } from '../commandes-admin/formater-commande';
-import { formaterFrancs, libelleTypeBien } from '../../locations/formater-location';
+import { formaterFrancs, libelleTypeBien, nombreNuits, occupationHebergement } from '../../locations/formater-location';
 import {
   CompteursGroupeDemandes,
   DemandeLocation,
@@ -48,6 +48,8 @@ export class DemandesLocationAdmin implements OnInit {
   readonly formaterDateHeure = formaterDateHeure;
   readonly formaterFrancs = formaterFrancs;
   readonly libelleTypeBien = libelleTypeBien;
+  readonly nombreNuits = nombreNuits;
+  readonly occupationHebergement = occupationHebergement;
 
   readonly meta = signal<MetaDemandes | null>(null);
   readonly onglet = signal<OngletDemandes>('a_traiter');

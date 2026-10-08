@@ -5,7 +5,7 @@ import { DemandesLocationAdmin } from '../../administration/demandes-location/de
 import { PrefixeLocation } from '../location.service';
 import { extraireMessageErreur } from '../../administration/tableau-de-bord-admin/extraire-message-erreur';
 import { formaterDateHeure, lienTel, lienWhatsApp } from '../../administration/commandes-admin/formater-commande';
-import { formaterFrancs, libelleTypeBien } from '../formater-location';
+import { formaterFrancs, libelleTypeBien, nombreNuits, occupationHebergement } from '../formater-location';
 import { DemandeLocation, TransitionPossibleDemande } from '../../../modeles/reservation.model';
 
 const TAILLE_PAGE = 20;
@@ -36,6 +36,8 @@ export class OngletDemandesLoueur implements OnInit {
   readonly formaterDateHeure = formaterDateHeure;
   readonly formaterFrancs = formaterFrancs;
   readonly libelleTypeBien = libelleTypeBien;
+  readonly nombreNuits = nombreNuits;
+  readonly occupationHebergement = occupationHebergement;
   readonly lienTel = lienTel;
   readonly lienWhatsApp = lienWhatsApp;
 

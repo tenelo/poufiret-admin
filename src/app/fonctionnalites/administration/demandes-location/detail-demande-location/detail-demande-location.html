@@ -49,10 +49,27 @@
         @if (d.date_souhaitee) {
           <p class="bloc-texte"><strong>Date souhaitée :</strong> {{ d.date_souhaitee }}</p>
         }
-        @if (d.date_debut) {
+        @if (d.objet_type === 'hebergement' && d.date_debut) {
+          <p class="bloc-texte"><strong>Arrivée :</strong> {{ d.date_debut }}</p>
+          @if (d.date_fin) {
+            <p class="bloc-texte"><strong>Départ :</strong> {{ d.date_fin }}</p>
+          }
+          @if (nombreNuits(d.date_debut, d.date_fin); as nuits) {
+            <p class="bloc-texte"><strong>Nombre de nuits :</strong> {{ nuits }}</p>
+          }
+        } @else if (d.date_debut) {
           <p class="bloc-texte">
             <strong>{{ d.objet_type === 'vehicule' ? 'Location' : 'Séjour' }} :</strong> du {{ d.date_debut }}@if (d.date_fin) { au {{ d.date_fin }} }
           </p>
+        }
+        @if (d.nb_adultes != null) {
+          <p class="bloc-texte"><strong>Adultes :</strong> {{ d.nb_adultes }}</p>
+        }
+        @if (d.nb_enfants != null) {
+          <p class="bloc-texte"><strong>Enfants :</strong> {{ d.nb_enfants }}</p>
+        }
+        @if (d.nb_unites != null) {
+          <p class="bloc-texte"><strong>Unités :</strong> {{ d.nb_unites }}</p>
         }
         @if (d.avec_chauffeur != null) {
           <p class="bloc-texte"><strong>Avec chauffeur :</strong> {{ d.avec_chauffeur ? 'Oui' : 'Non' }}</p>

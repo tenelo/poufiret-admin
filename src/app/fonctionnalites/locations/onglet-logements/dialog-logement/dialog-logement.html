@@ -122,22 +122,11 @@
       }
 
       @if (ongletActif() === 'equipements') {
-        @if ((metaInterne()?.equipements ?? []).length === 0) {
-          <p class="indice">Aucun équipement disponible.</p>
-        } @else {
-          <div class="liste-equipements">
-            @for (equipement of metaInterne()!.equipements; track equipement.valeur) {
-              <label class="case-equipement">
-                <input
-                  type="checkbox"
-                  [checked]="equipementsSelectionnes().has(equipement.valeur)"
-                  (change)="basculerEquipement(equipement.valeur)"
-                />
-                {{ equipement.libelle }}
-              </label>
-            }
-          </div>
-        }
+        <app-puces-options
+          [options]="metaInterne()?.equipements ?? []"
+          [selection]="equipementsSelectionnes()"
+          (basculer)="basculerEquipement($event)"
+        />
       }
 
       @if (ongletActif() === 'disponibilite') {

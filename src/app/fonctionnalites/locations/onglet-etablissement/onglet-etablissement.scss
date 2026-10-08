@@ -1,0 +1,33 @@
+// Complète dialog-logement.scss (champs, puces, boutons) pour la fiche établissement.
+
+.onglet-etablissement {
+  max-width: 720px;
+  padding: 1.25rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.rappel-photos {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  background: #eef2ff;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: #3730a3;
+
+  a {
+    color: #4338ca;
+    font-weight: 600;
+  }
+}
+
+.message-succes {
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #15803d;
+  font-size: 0.85rem;
+}

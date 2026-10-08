@@ -9,10 +9,11 @@ import { LoueurAdminListe } from '../../../modeles/logement.model';
 const OPTIONS_TYPE_LOUEUR: { valeur: string; libelle: string }[] = [
   { valeur: 'loueur_maison', libelle: 'Maisons' },
   { valeur: 'loueur_voiture', libelle: 'Véhicules' },
+  { valeur: 'hotelier', libelle: 'Hôtels' },
 ];
 
 /**
- * Liste admin des loueurs (capacité gerer_locations), maisons et véhicules (badge + filtre par
+ * Liste admin des loueurs (capacité gerer_locations), maisons, véhicules et hôtels (badge + filtre par
  * type) : indicateurs biens disponibles / réservés / loués et demandes en attente (alerte si > 0). Recherche entièrement côté client (GET
  * /locations/admin/ renvoie la liste complète). Clic sur un loueur : l'espace loueur en tant
  * qu'admin (préfixe admin/<id>), même pattern que RestaurantsListe.

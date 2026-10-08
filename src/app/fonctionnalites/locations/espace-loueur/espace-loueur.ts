@@ -5,6 +5,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProfilPartenaireContexteService } from '../../../noyau/partenaire/profil-partenaire-contexte.service';
 import { OngletLogements } from '../onglet-logements/onglet-logements';
 import { OngletVehicules } from '../onglet-vehicules/onglet-vehicules';
+import { OngletEtablissement } from '../onglet-etablissement/onglet-etablissement';
+import { OngletHebergements } from '../onglet-hebergements/onglet-hebergements';
 import { OngletDemandesLoueur } from '../onglet-demandes-loueur/onglet-demandes-loueur';
 import {
   LocationService,
@@ -13,20 +15,33 @@ import {
   prefixeAdminLocation,
 } from '../location.service';
 
-export type OngletLoueur = 'logements' | 'vehicules' | 'demandes';
+export type OngletLoueur = 'etablissement' | 'logements' | 'vehicules' | 'hebergements' | 'demandes';
 
-/** Le premier onglet dépend du type de partenaire : Logements (loueur_maison) ou Véhicules (loueur_voiture). */
+const TOUS_ONGLETS: OngletLoueur[] = ['etablissement', 'logements', 'vehicules', 'hebergements', 'demandes'];
+
+/**
+ * Onglets selon le type de partenaire : Logements (loueur_maison, et par défaut), Véhicules
+ * (loueur_voiture), Établissement + Hébergements (hotelier) ; Demandes pour tous.
+ */
 function ongletsPour(typePartenaire: string | null): { valeur: OngletLoueur; libelle: string }[] {
-  const biens: { valeur: OngletLoueur; libelle: string } =
-    typePartenaire === 'loueur_voiture'
-      ? { valeur: 'vehicules', libelle: 'Véhicules' }
-      : { valeur: 'logements', libelle: 'Logements' };
-  return [biens, { valeur: 'demandes', libelle: 'Demandes' }];
+  const demandes = { valeur: 'demandes' as OngletLoueur, libelle: 'Demandes' };
+  switch (typePartenaire) {
+    case 'loueur_voiture':
+      return [{ valeur: 'vehicules', libelle: 'Véhicules' }, demandes];
+    case 'hotelier':
+      return [
+        { valeur: 'etablissement', libelle: 'Établissement' },
+        { valeur: 'hebergements', libelle: 'Hébergements' },
+        demandes,
+      ];
+    default:
+      return [{ valeur: 'logements', libelle: 'Logements' }, demandes];
+  }
 }
 
 /**
- * Hôte à onglets de l'espace loueur (onglet Logements pour un loueur_maison, Véhicules pour un
- * loueur_voiture), utilisé à l'identique par le loueur pour ses biens
+ * Hôte à onglets de l'espace loueur (onglets selon le type de partenaire, voir ongletsPour),
+ * utilisé à l'identique par le loueur pour ses biens
  * (préfixe "mon-espace") et par l'admin pour n'importe quel loueur (préfixe "admin/<partenaire_id>",
  * route /administration/locations/:id) — un seul jeu de composants, paramétré par le préfixe (voir
  * LocationService). Reprend exactement le pattern de EspaceRestaurant (bandeau admin, fil d'ariane,
@@ -34,7 +49,14 @@ function ongletsPour(typePartenaire: string | null): { valeur: OngletLoueur; lib
  */
 @Component({
   selector: 'app-espace-loueur',
-  imports: [RouterLink, OngletLogements, OngletVehicules, OngletDemandesLoueur],
+  imports: [
+    RouterLink,
+    OngletLogements,
+    OngletVehicules,
+    OngletEtablissement,
+    OngletHebergements,
+    OngletDemandesLoueur,
+  ],
   templateUrl: './espace-loueur.html',
   styleUrl: './espace-loueur.scss',
 })
@@ -45,7 +67,7 @@ export class EspaceLoueur implements OnInit {
   private readonly profilPartenaireContexte = inject(ProfilPartenaireContexteService);
   private readonly locationService = inject(LocationService);
 
-  /** loueur_maison | loueur_voiture ; null tant qu'il n'est pas connu (aucun onglet de biens affiché). */
+  /** loueur_maison | loueur_voiture | hotelier ; null tant qu'il n'est pas connu (aucun onglet de biens affiché). */
   readonly typePartenaire = signal<string | null>(null);
   readonly onglets = computed(() => ongletsPour(this.typePartenaire()));
 
@@ -80,7 +102,7 @@ export class EspaceLoueur implements OnInit {
             const loueur = loueurs.find((l) => l.id === id);
             this.typePartenaire.set(loueur?.type_partenaire ?? 'loueur_maison');
             if (loueur && !this.nomLoueur()) this.nomLoueur.set(loueur.nom);
-            this.ajusterOngletBiens();
+            this.ajusterOnglet();
           },
           error: () => this.typePartenaire.set('loueur_maison'),
         });
@@ -94,7 +116,7 @@ export class EspaceLoueur implements OnInit {
           this.partenaireId.set(profil.id);
           this.nomLoueur.set(profil.nom_commerce);
           this.typePartenaire.set(profil.type_partenaire);
-          this.ajusterOngletBiens();
+          this.ajusterOnglet();
         },
         error: () => this.chargementNomEnCours.set(false),
       });
@@ -102,8 +124,9 @@ export class EspaceLoueur implements OnInit {
 
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const onglet = params.get('onglet') as OngletLoueur | null;
-      if (onglet && (['logements', 'vehicules', 'demandes'] as OngletLoueur[]).includes(onglet)) {
-        this.ongletActif.set(onglet === 'demandes' ? onglet : (this.ongletBiensAttendu() ?? onglet));
+      if (onglet && TOUS_ONGLETS.includes(onglet)) {
+        this.ongletActif.set(onglet);
+        this.ajusterOnglet();
       }
     });
 
@@ -111,23 +134,17 @@ export class EspaceLoueur implements OnInit {
       const ongletInitial = (this.route.snapshot.data['ongletInitial'] as OngletLoueur) ?? 'logements';
       this.changerOnglet(ongletInitial);
     }
-    this.ajusterOngletBiens();
+    this.ajusterOnglet();
   }
 
   /**
-   * Aligne l'onglet des biens sur le type du partenaire une fois celui-ci connu (ex. ?onglet=logements
-   * pour un loueur de voitures → vehicules), sans toucher à l'onglet Demandes.
+   * Une fois le type du partenaire connu, ramène sur le premier onglet un onglet qui ne le concerne
+   * pas (ex. ?onglet=logements pour un loueur de voitures → vehicules).
    */
-  private ajusterOngletBiens(): void {
-    const attendu = this.ongletBiensAttendu();
-    if (!attendu || this.ongletActif() === 'demandes') return;
-    if (this.ongletActif() !== attendu) this.changerOnglet(attendu);
-  }
-
-  private ongletBiensAttendu(): OngletLoueur | null {
-    const type = this.typePartenaire();
-    if (!type) return null;
-    return type === 'loueur_voiture' ? 'vehicules' : 'logements';
+  private ajusterOnglet(): void {
+    if (!this.typePartenaire()) return;
+    const onglets = this.onglets();
+    if (!onglets.some((o) => o.valeur === this.ongletActif())) this.changerOnglet(onglets[0].valeur);
   }
 
   changerOnglet(onglet: OngletLoueur): void {

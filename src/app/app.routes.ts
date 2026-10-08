@@ -116,6 +116,21 @@ export const routes: Routes = [
           import('./fonctionnalites/locations/espace-loueur/espace-loueur').then((m) => m.EspaceLoueur),
       },
       {
+        // Hôtelier (hotelier) : même hôte, onglets Établissement et Hébergements.
+        path: 'mon-etablissement',
+        canActivate: [roleGuard(['partenaire'])],
+        data: { ongletInitial: 'etablissement' },
+        loadComponent: () =>
+          import('./fonctionnalites/locations/espace-loueur/espace-loueur').then((m) => m.EspaceLoueur),
+      },
+      {
+        path: 'mes-hebergements',
+        canActivate: [roleGuard(['partenaire'])],
+        data: { ongletInitial: 'hebergements' },
+        loadComponent: () =>
+          import('./fonctionnalites/locations/espace-loueur/espace-loueur').then((m) => m.EspaceLoueur),
+      },
+      {
         // Loueur de voitures (loueur_voiture) : même hôte, onglet Véhicules.
         path: 'mes-vehicules',
         canActivate: [roleGuard(['partenaire'])],

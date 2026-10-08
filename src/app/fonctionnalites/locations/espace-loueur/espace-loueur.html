@@ -43,6 +43,16 @@
           <app-onglet-vehicules [prefixe]="prefixe()" />
         }
       }
+      @case ('etablissement') {
+        @if (typePartenaire()) {
+          <app-onglet-etablissement [prefixe]="prefixe()" [estAdmin]="estAdmin()" />
+        }
+      }
+      @case ('hebergements') {
+        @if (typePartenaire()) {
+          <app-onglet-hebergements [prefixe]="prefixe()" />
+        }
+      }
       @case ('demandes') {
         <app-onglet-demandes-loueur
           [prefixe]="prefixe()"

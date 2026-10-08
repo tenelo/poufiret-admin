@@ -54,10 +54,20 @@
             @if (demande.date_souhaitee) {
               <p class="ligne">Date souhaitée : {{ demande.date_souhaitee }}</p>
             }
-            @if (demande.date_debut) {
+            @if (demande.objet_type === 'hebergement' && demande.date_debut) {
+              <p class="ligne">
+                Arrivée : {{ demande.date_debut }}@if (demande.date_fin) { · Départ : {{ demande.date_fin }} }
+                @if (nombreNuits(demande.date_debut, demande.date_fin); as nuits) {
+                  · {{ nuits }} nuit{{ nuits > 1 ? 's' : '' }}
+                }
+              </p>
+            } @else if (demande.date_debut) {
               <p class="ligne">
                 {{ demande.objet_type === 'vehicule' ? 'Location' : 'Séjour' }} : du {{ demande.date_debut }}@if (demande.date_fin) { au {{ demande.date_fin }} }
               </p>
+            }
+            @if (occupationHebergement(demande); as occupation) {
+              <p class="ligne">{{ occupation }}</p>
             }
             @if (demande.avec_chauffeur != null) {
               <p class="ligne">Avec chauffeur : {{ demande.avec_chauffeur ? 'oui' : 'non' }}</p>

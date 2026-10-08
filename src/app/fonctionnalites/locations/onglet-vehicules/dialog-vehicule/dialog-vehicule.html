@@ -1,11 +1,11 @@
 <div class="voile-modale" (click)="ferme.emit()">
   <div class="modale" (click)="$event.stopPropagation()">
-    <h2>{{ vehiculeCourant() ? 'Modifier « ' + vehiculeCourant()!.nom + ' »' : 'Nouveau véhicule' }}</h2>
+    <h2>{{ bienCourant() ? 'Modifier « ' + bienCourant()!.nom + ' »' : 'Nouveau véhicule' }}</h2>
 
-    @if (vehiculeCourant()?.modifie_le) {
+    @if (bienCourant()?.modifie_le) {
       <p class="tracabilite">
-        Dernière modification {{ vehiculeCourant()!.modifie_par_role === 'admin' ? "par l'administration" : 'par le loueur' }}
-        @if (vehiculeCourant()!.modifie_par_nom) { ({{ vehiculeCourant()!.modifie_par_nom }}) }
+        Dernière modification {{ bienCourant()!.modifie_par_role === 'admin' ? "par l'administration" : 'par le loueur' }}
+        @if (bienCourant()!.modifie_par_nom) { ({{ bienCourant()!.modifie_par_nom }}) }
       </p>
     }
 
@@ -14,7 +14,7 @@
         <button
           type="button"
           class="onglet"
-          [disabled]="(onglet.valeur === 'photos' || onglet.valeur === 'visite') && !vehiculeCourant()"
+          [disabled]="(onglet.valeur === 'photos' || onglet.valeur === 'visite') && !bienCourant()"
           [class.onglet-actif]="ongletActif() === onglet.valeur"
           (click)="changerOnglet(onglet.valeur)"
         >
@@ -22,7 +22,7 @@
         </button>
       }
     </nav>
-    @if (!vehiculeCourant()) {
+    @if (!bienCourant()) {
       <p class="aide">Enregistrez le véhicule pour gérer ses photos et sa vue intérieure 360°.</p>
     }
 
@@ -30,7 +30,7 @@
       <p class="erreur-generale">{{ messageErreur() }}</p>
     }
 
-    <form (submit)="$event.preventDefault(); soumettre()">
+    <form (submit)="$event.preventDefault(); soumettre('Le prix par jour')">
       @if (ongletActif() === 'infos') {
         <label for="dv-nom">Titre de l'annonce</label>
         <input id="dv-nom" type="text" [value]="nom()" (input)="nom.set($any($event.target).value)" />
@@ -176,22 +176,11 @@
       }
 
       @if (ongletActif() === 'equipements') {
-        @if ((metaInterne()?.equipements_vehicule ?? []).length === 0) {
-          <p class="indice">Aucun équipement disponible.</p>
-        } @else {
-          <div class="liste-equipements">
-            @for (equipement of metaInterne()!.equipements_vehicule!; track equipement.valeur) {
-              <label class="case-equipement">
-                <input
-                  type="checkbox"
-                  [checked]="equipementsSelectionnes().has(equipement.valeur)"
-                  (change)="basculerEquipement(equipement.valeur)"
-                />
-                {{ equipement.libelle }}
-              </label>
-            }
-          </div>
-        }
+        <app-puces-options
+          [options]="metaInterne()?.equipements_vehicule ?? []"
+          [selection]="equipementsSelectionnes()"
+          (basculer)="basculerEquipement($event)"
+        />
       }
 
       @if (ongletActif() === 'disponibilite') {
@@ -202,16 +191,7 @@
           }
         </select>
 
-        <label>Réservations confirmées à venir</label>
-        @if (reservationsAVenir().length === 0) {
-          <p class="indice">Aucune réservation confirmée à venir.</p>
-        } @else {
-          <ul class="liste-reservations">
-            @for (reservation of reservationsAVenir(); track reservation.demande_id) {
-              <li>Du {{ reservation.date_debut }} au {{ reservation.date_fin }}</li>
-            }
-          </ul>
-        }
+        <app-reservations-confirmees [reservations]="bienCourant()?.reservations_confirmees ?? []" />
       }
 
       @if (ongletActif() === 'localisation') {
@@ -223,63 +203,49 @@
           [(quartierId)]="quartierId"
           [(secteur)]="secteur"
           [(adresseReperes)]="adresseReperes"
-          [latitude]="vehiculeCourant()?.latitude ?? null"
-          [longitude]="vehiculeCourant()?.longitude ?? null"
+          [latitude]="bienCourant()?.latitude ?? null"
+          [longitude]="bienCourant()?.longitude ?? null"
           (position)="definirPosition($event)"
         />
       }
 
       @if (ongletActif() !== 'photos' && ongletActif() !== 'visite') {
         <div class="actions-modale">
-          @if (vehiculeCourant()) {
+          @if (bienCourant()) {
             <button type="button" class="bouton-danger" (click)="demanderSuppression()">Supprimer</button>
           }
           <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Fermer</button>
           <button type="submit" class="bouton-principal" [disabled]="enregistrementEnCours()">
-            {{ enregistrementEnCours() ? 'Enregistrement…' : (vehiculeCourant() ? 'Enregistrer' : 'Créer le véhicule') }}
+            {{ enregistrementEnCours() ? 'Enregistrement…' : (bienCourant() ? 'Enregistrer' : 'Créer le véhicule') }}
           </button>
         </div>
       }
     </form>
 
-    @if (ongletActif() === 'photos' && vehiculeCourant()) {
-      <app-logement-images [prefixe]="prefixe()" [logementId]="vehiculeCourant()!.id" ressource="vehicules" />
+    @if (ongletActif() === 'photos' && bienCourant()) {
+      <app-logement-images [prefixe]="prefixe()" [logementId]="bienCourant()!.id" ressource="vehicules" />
       <div class="actions-modale">
         <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Fermer</button>
       </div>
     }
 
-    @if (ongletActif() === 'visite' && vehiculeCourant()) {
+    @if (ongletActif() === 'visite' && bienCourant()) {
       <p class="aide">Optionnel : photos 360° ou panoramiques de l'habitacle.</p>
-      <app-logement-panoramas [prefixe]="prefixe()" [logementId]="vehiculeCourant()!.id" ressource="vehicules" />
+      <app-logement-panoramas [prefixe]="prefixe()" [logementId]="bienCourant()!.id" ressource="vehicules" />
       <div class="actions-modale">
         <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Fermer</button>
       </div>
     }
 
     @if (confirmationSuppression()) {
-      <div class="boite-suppression">
-        @if (proposerDesactivation()) {
-          <p>
-            Ce véhicule a des demandes et ne peut pas être supprimé. Vous pouvez le désactiver : il ne sera plus
-            visible dans l'application.
-          </p>
-          <div class="actions-modale">
-            <button type="button" class="bouton-secondaire" (click)="annulerSuppression()">Annuler</button>
-            <button type="button" class="bouton-principal" [disabled]="suppressionEnCours()" (click)="desactiver()">
-              {{ suppressionEnCours() ? 'Désactivation…' : 'Désactiver' }}
-            </button>
-          </div>
-        } @else {
-          <p>Supprimer définitivement « {{ vehiculeCourant()?.nom }} » ?</p>
-          <div class="actions-modale">
-            <button type="button" class="bouton-secondaire" (click)="annulerSuppression()">Annuler</button>
-            <button type="button" class="bouton-danger" [disabled]="suppressionEnCours()" (click)="supprimer()">
-              {{ suppressionEnCours() ? 'Suppression…' : 'Supprimer' }}
-            </button>
-          </div>
-        }
-      </div>
+      <app-suppression-bien
+        [nom]="bienCourant()?.nom ?? ''"
+        [enCours]="suppressionEnCours()"
+        [proposerDesactivation]="proposerDesactivation()"
+        (annuler)="annulerSuppression()"
+        (supprimer)="supprimer()"
+        (desactiver)="desactiver()"
+      />
     }
   </div>
 </div>

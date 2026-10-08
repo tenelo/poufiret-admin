@@ -96,10 +96,16 @@
                   @if (demande.avec_chauffeur) {
                     <span class="mention">Avec chauffeur</span>
                   }
+                  @if (occupationHebergement(demande); as occupation) {
+                    <span class="mention">{{ occupation }}</span>
+                  }
                 </td>
                 <td>
                   @if (demande.date_debut) {
                     {{ demande.date_debut }}@if (demande.date_fin) { → {{ demande.date_fin }} }
+                    @if (demande.objet_type === 'hebergement' && nombreNuits(demande.date_debut, demande.date_fin) !== null) {
+                      ({{ nombreNuits(demande.date_debut, demande.date_fin) }} nuit{{ nombreNuits(demande.date_debut, demande.date_fin)! > 1 ? 's' : '' }})
+                    }
                   } @else {
                     {{ demande.date_souhaitee ?? '—' }}
                   }
@@ -131,6 +137,9 @@
               <span class="carte-ligne">
                 Du {{ demande.date_debut }}@if (demande.date_fin) { au {{ demande.date_fin }} }@if (demande.avec_chauffeur) { · avec chauffeur }
               </span>
+            }
+            @if (occupationHebergement(demande); as occupation) {
+              <span class="carte-ligne">{{ occupation }}</span>
             }
             @if (demande.montant_estime != null) {
               <span class="carte-ligne">Montant estimé : {{ formaterFrancs(demande.montant_estime) }}</span>

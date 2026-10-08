@@ -1,28 +1,12 @@
 /**
  * Reflète /api/v1/locations/mon-espace/vehicules/... (loueur de voiture) et
  * /api/v1/locations/admin/<partenaire_id>/vehicules/... (admin, même interface — voir
- * LocationService). Images et panoramas : mêmes formes que pour les logements.
+ * LocationService). Champs communs aux biens : voir BienLocation.
  */
 
-import { ImageLogement, PanoramaLogement } from './logement.model';
+import { BienLocation, DisponibiliteBien } from './bien-location.model';
 
-/** disponible | indisponible (contrat V1). */
-export type DisponibiliteVehicule = string;
-
-export interface ReservationConfirmeeVehicule {
-  demande_id: number;
-  date_debut: string;
-  date_fin: string;
-}
-
-export interface Vehicule {
-  id: number;
-  nom: string;
-  slug?: string;
-  /** Prix par jour sans chauffeur. */
-  prix: number;
-  description: string;
-  est_actif: boolean;
+export interface Vehicule extends BienLocation {
   categorie_vehicule: string;
   categorie_vehicule_libelle?: string;
   marque: string;
@@ -46,8 +30,6 @@ export interface Vehicule {
   carburant_inclus: boolean;
   duree_min_jours: number | null;
   zone_circulation: string;
-  disponibilite: DisponibiliteVehicule;
-  disponibilite_libelle?: string;
   departement_id: number | null;
   departement_nom: string | null;
   localite_id: number | null;
@@ -58,13 +40,6 @@ export interface Vehicule {
   adresse_reperes: string;
   latitude: number | null;
   longitude: number | null;
-  images: ImageLogement[];
-  panoramas: PanoramaLogement[];
-  reservations_confirmees: ReservationConfirmeeVehicule[];
-  modifie_par_role: 'admin' | 'loueur' | null;
-  modifie_par_nom: string | null;
-  modifie_le: string | null;
-  cree_le: string;
 }
 
 // Corps de POST/PATCH P/vehicules/ : seuls nom et prix sont requis à la création.
@@ -92,7 +67,7 @@ export interface RequeteVehicule {
   carburant_inclus?: boolean;
   duree_min_jours?: number | null;
   zone_circulation?: string;
-  disponibilite?: DisponibiliteVehicule;
+  disponibilite?: DisponibiliteBien;
   localite_id?: number | null;
   quartier_id?: number | null;
   secteur?: string;
@@ -100,17 +75,3 @@ export interface RequeteVehicule {
   latitude?: number | null;
   longitude?: number | null;
 }
-
-export interface RequeteDisponibiliteVehicule {
-  disponibilite: DisponibiliteVehicule;
-}
-
-export interface ReponseVehicules {
-  resultats: Vehicule[];
-}
-
-/** Valeurs de disponibilité d'un véhicule, fixées par le contrat V1. */
-export const OPTIONS_DISPONIBILITE_VEHICULE: { valeur: DisponibiliteVehicule; libelle: string }[] = [
-  { valeur: 'disponible', libelle: 'Disponible' },
-  { valeur: 'indisponible', libelle: 'Indisponible' },
-];

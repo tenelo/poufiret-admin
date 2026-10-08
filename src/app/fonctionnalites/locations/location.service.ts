@@ -16,12 +16,8 @@ import {
   RequeteLogement,
   TypeVuePanorama,
 } from '../../modeles/logement.model';
-import {
-  ReponseVehicules,
-  RequeteDisponibiliteVehicule,
-  RequeteVehicule,
-  Vehicule,
-} from '../../modeles/vehicule.model';
+import { BienLocation, RequeteDisponibiliteBien } from '../../modeles/bien-location.model';
+import { Etablissement, RequeteEtablissement } from '../../modeles/hebergement.model';
 
 /** Préfixe "mon-espace" (loueur) ou "admin/<partenaire_id>" (admin, n'importe quel loueur). */
 export type PrefixeLocation = string;
@@ -32,8 +28,11 @@ export function prefixeAdminLocation(partenaireId: number | string): PrefixeLoca
 
 export const PREFIXE_MON_ESPACE_LOCATION: PrefixeLocation = 'mon-espace';
 
-/** Ressource portant images et panoramas : mêmes routes pour les logements et les véhicules. */
-export type RessourceLocation = 'logements' | 'vehicules';
+/** Ressource portant images et panoramas : mêmes routes pour tous les biens. */
+export type RessourceLocation = 'logements' | 'vehicules' | 'hebergements';
+
+/** Biens gérés par le socle commun OngletBiensBase / DialogBienBase. */
+export type RessourceBien = 'vehicules' | 'hebergements';
 
 /**
  * Service unique de l'espace loueur, paramétré par un préfixe (mon-espace côté loueur,
@@ -97,45 +96,67 @@ export class LocationService {
     return this.http.post<Logement>(`${this.base(prefixe)}logements/${id}/disponibilite/`, donnees);
   }
 
-  // ---- Véhicules (loueur_voiture) : mêmes conventions que les logements ----
+  // ---- Biens à la journée/nuit : véhicules (loueur_voiture) et hébergements (hotelier) ----
+  // Mêmes routes pour les deux ressources (et mêmes conventions que les logements) ; le type T est
+  // Vehicule ou Hebergement, la requête RequeteVehicule ou RequeteHebergement.
 
-  listerVehicules(prefixe: PrefixeLocation, disponibilite?: string): Observable<Vehicule[]> {
+  listerBiens<T extends BienLocation>(
+    prefixe: PrefixeLocation,
+    ressource: RessourceBien,
+    disponibilite?: string,
+  ): Observable<T[]> {
     let params = new HttpParams();
     if (disponibilite) {
       params = params.set('disponibilite', disponibilite);
     }
     return this.http
-      .get<ReponseVehicules>(`${this.base(prefixe)}vehicules/`, { params })
+      .get<{ resultats: T[] }>(`${this.base(prefixe)}${ressource}/`, { params })
       .pipe(map((reponse) => reponse.resultats));
   }
 
-  obtenirVehicule(prefixe: PrefixeLocation, id: number): Observable<Vehicule> {
-    return this.http.get<Vehicule>(`${this.base(prefixe)}vehicules/${id}/`);
-  }
-
-  creerVehicule(prefixe: PrefixeLocation, donnees: RequeteVehicule): Observable<Vehicule> {
-    return this.http.post<Vehicule>(`${this.base(prefixe)}vehicules/`, donnees);
-  }
-
-  modifierVehicule(prefixe: PrefixeLocation, id: number, donnees: Partial<RequeteVehicule>): Observable<Vehicule> {
-    return this.http.patch<Vehicule>(`${this.base(prefixe)}vehicules/${id}/`, donnees);
-  }
-
-  /** 409 si le véhicule a des demandes : proposer alors de le désactiver. */
-  supprimerVehicule(prefixe: PrefixeLocation, id: number): Observable<void> {
-    return this.http.delete<void>(`${this.base(prefixe)}vehicules/${id}/`);
-  }
-
-  changerDisponibiliteVehicule(
+  creerBien<T extends BienLocation>(
     prefixe: PrefixeLocation,
-    id: number,
-    donnees: RequeteDisponibiliteVehicule,
-  ): Observable<Vehicule> {
-    return this.http.post<Vehicule>(`${this.base(prefixe)}vehicules/${id}/disponibilite/`, donnees);
+    ressource: RessourceBien,
+    donnees: object,
+  ): Observable<T> {
+    return this.http.post<T>(`${this.base(prefixe)}${ressource}/`, donnees);
   }
 
-  // ---- Images des logements et des véhicules (ressource) ----
-  // Corps multipart : "article" = id du logement ou du véhicule (même convention que les images de
+  modifierBien<T extends BienLocation>(
+    prefixe: PrefixeLocation,
+    ressource: RessourceBien,
+    id: number,
+    donnees: object,
+  ): Observable<T> {
+    return this.http.patch<T>(`${this.base(prefixe)}${ressource}/${id}/`, donnees);
+  }
+
+  /** 409 si le bien a des demandes : proposer alors de le désactiver. */
+  supprimerBien(prefixe: PrefixeLocation, ressource: RessourceBien, id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base(prefixe)}${ressource}/${id}/`);
+  }
+
+  changerDisponibiliteBien<T extends BienLocation>(
+    prefixe: PrefixeLocation,
+    ressource: RessourceBien,
+    id: number,
+    donnees: RequeteDisponibiliteBien,
+  ): Observable<T> {
+    return this.http.post<T>(`${this.base(prefixe)}${ressource}/${id}/disponibilite/`, donnees);
+  }
+
+  // ---- Établissement (hotelier) : fiche unique ----
+
+  obtenirEtablissement(prefixe: PrefixeLocation): Observable<Etablissement> {
+    return this.http.get<Etablissement>(`${this.base(prefixe)}etablissement/`);
+  }
+
+  modifierEtablissement(prefixe: PrefixeLocation, donnees: RequeteEtablissement): Observable<Etablissement> {
+    return this.http.patch<Etablissement>(`${this.base(prefixe)}etablissement/`, donnees);
+  }
+
+  // ---- Images des logements, véhicules et hébergements (ressource) ----
+  // Corps multipart : "article" = id du bien (même convention que les images de
   // plats/produits).
 
   listerImagesLogement(
@@ -184,7 +205,7 @@ export class LocationService {
   }
 
   // ---- Panoramas (visite immersive) ----
-  // Corps multipart : "article" = id du logement ou du véhicule, "image", "titre", "type_vue", "ordre".
+  // Corps multipart : "article" = id du bien, "image", "titre", "type_vue", "ordre".
 
   listerPanoramas(
     prefixe: PrefixeLocation,

@@ -4,6 +4,7 @@ import { LocationService, PrefixeLocation } from '../../location.service';
 import { LogementImages } from '../logement-images/logement-images';
 import { LogementPanoramas } from '../logement-panoramas/logement-panoramas';
 import { LocalisationLocation } from '../../localisation-location/localisation-location';
+import { PucesOptions, basculerDansEnsemble } from '../../partage-biens/puces-options';
 import { CoordonneesGps } from '../../../../partage/position-gps/position-gps';
 import { extraireMessageErreur } from '../../../administration/tableau-de-bord-admin/extraire-message-erreur';
 import { ReponseLocationMeta } from '../../../../modeles/location-meta.model';
@@ -41,7 +42,7 @@ const ONGLETS: { valeur: OngletDialogLogement; libelle: string }[] = [
  */
 @Component({
   selector: 'app-dialog-logement',
-  imports: [LogementImages, LogementPanoramas, LocalisationLocation],
+  imports: [LogementImages, LogementPanoramas, LocalisationLocation, PucesOptions],
   templateUrl: './dialog-logement.html',
   styleUrl: './dialog-logement.scss',
 })
@@ -155,15 +156,7 @@ export class DialogLogement implements OnInit {
   }
 
   basculerEquipement(valeur: string): void {
-    this.equipementsSelectionnes.update((ensemble) => {
-      const copie = new Set(ensemble);
-      if (copie.has(valeur)) {
-        copie.delete(valeur);
-      } else {
-        copie.add(valeur);
-      }
-      return copie;
-    });
+    this.equipementsSelectionnes.update((ensemble) => basculerDansEnsemble(ensemble, valeur));
   }
 
   // ---- Localisation ----

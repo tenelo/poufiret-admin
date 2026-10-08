@@ -6,7 +6,7 @@
         <option [value]="option.valeur">{{ option.libelle }}</option>
       }
     </select>
-    <button type="button" class="bouton-principal" (click)="ouvrirCreation()">+ Ajouter un véhicule</button>
+    <button type="button" class="bouton-principal" (click)="ouvrirCreation()">+ Ajouter un hébergement</button>
   </div>
 
   @if (messageErreur()) {
@@ -14,7 +14,7 @@
   }
 
   @if (chargementEnCours()) {
-    <p class="etat">Chargement des véhicules…</p>
+    <p class="etat">Chargement des hébergements…</p>
   } @else if (erreurChargement()) {
     <div class="etat-erreur">
       <p>{{ erreurChargement() }}</p>
@@ -22,29 +22,29 @@
     </div>
   } @else if (biens().length === 0) {
     <div class="etat-vide">
-      <p>Aucun véhicule pour ce filtre.</p>
+      <p>Aucun hébergement pour ce filtre.</p>
     </div>
   } @else {
     <div class="grille-logements">
-      @for (vehicule of biens(); track vehicule.id) {
+      @for (hebergement of biens(); track hebergement.id) {
         <div class="carte-logement">
-          <button type="button" class="zone-cliquable" (click)="ouvrirEdition(vehicule)">
-            @if (imagePrincipale(vehicule); as image) {
-              <img [src]="image" [alt]="vehicule.nom" class="photo-logement" />
+          <button type="button" class="zone-cliquable" (click)="ouvrirEdition(hebergement)">
+            @if (imagePrincipale(hebergement); as image) {
+              <img [src]="image" [alt]="hebergement.nom" class="photo-logement" />
             } @else {
               <div class="photo-logement photo-vide">Aucune photo</div>
             }
             <div class="corps-carte">
-              <span class="nom-logement">{{ titreVehicule(vehicule) }}</span>
+              <span class="nom-logement">{{ hebergement.nom }}</span>
               <span class="type-logement">
-                {{ libelle(meta()?.categories_vehicule, vehicule.categorie_vehicule, vehicule.categorie_vehicule_libelle) || '—' }}
+                {{ libelle(meta()?.types_hebergement, hebergement.type_hebergement, hebergement.type_hebergement_libelle) || '—' }}
               </span>
-              <span class="caracteristiques-logement">
-                {{ vehicule.nb_places ?? '—' }} places · {{ libelle(meta()?.boites, vehicule.boite, vehicule.boite_libelle) || '—' }}
-              </span>
-              <span class="loyer-logement">{{ formaterFrancs(vehicule.prix) }}/jour</span>
-              @if (vehicule.chauffeur_disponible) {
-                <span class="localisation-logement">Avec chauffeur</span>
+              <span class="caracteristiques-logement">{{ capacite(hebergement) }}</span>
+              <span class="loyer-logement">{{ formaterFrancs(hebergement.prix) }}/nuit</span>
+              @if (hebergement.nb_unites) {
+                <span class="localisation-logement">
+                  {{ hebergement.nb_unites }} unité{{ hebergement.nb_unites > 1 ? 's' : '' }}
+                </span>
               }
             </div>
           </button>
@@ -52,20 +52,20 @@
           <div class="pied-carte">
             <select
               class="select-disponibilite"
-              [value]="vehicule.disponibilite"
-              [disabled]="disponibiliteEnCoursId() === vehicule.id"
-              (change)="changerDisponibiliteRapide(vehicule, $any($event.target).value)"
+              [value]="hebergement.disponibilite"
+              [disabled]="disponibiliteEnCoursId() === hebergement.id"
+              (change)="changerDisponibiliteRapide(hebergement, $any($event.target).value)"
             >
               @for (option of optionsDisponibilite; track option.valeur) {
-                <option [value]="option.valeur" [selected]="option.valeur === vehicule.disponibilite">{{ option.libelle }}</option>
+                <option [value]="option.valeur" [selected]="option.valeur === hebergement.disponibilite">{{ option.libelle }}</option>
               }
             </select>
             <label class="interrupteur-actif">
               <input
                 type="checkbox"
-                [checked]="vehicule.est_actif"
-                [disabled]="actifEnCoursId() === vehicule.id"
-                (change)="basculerActif(vehicule)"
+                [checked]="hebergement.est_actif"
+                [disabled]="actifEnCoursId() === hebergement.id"
+                (change)="basculerActif(hebergement)"
               />
               Actif
             </label>
@@ -77,7 +77,7 @@
 </div>
 
 @if (dialogOuvert()) {
-  <app-dialog-vehicule
+  <app-dialog-hebergement
     [prefixe]="prefixe()"
     [bien]="bienEnEdition()"
     [meta]="meta()"

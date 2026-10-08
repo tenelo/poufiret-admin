@@ -3,7 +3,7 @@ import { Component, HostListener, OnDestroy, effect, inject, input, output, sign
 import { DemandesLocationService } from '../../../locations/demandes-location.service';
 import { extraireMessageErreur } from '../../tableau-de-bord-admin/extraire-message-erreur';
 import { formaterDateHeure, lienTel, lienWhatsApp } from '../../commandes-admin/formater-commande';
-import { formaterFrancs, libelleTypeBien } from '../../../locations/formater-location';
+import { formaterFrancs, libelleTypeBien, nombreNuits, occupationHebergement } from '../../../locations/formater-location';
 import {
   DemandeLocationDetail,
   MetaDemandes,
@@ -39,6 +39,8 @@ export class DetailDemandeLocation implements OnDestroy {
   readonly lienWhatsApp = lienWhatsApp;
   readonly formaterFrancs = formaterFrancs;
   readonly libelleTypeBien = libelleTypeBien;
+  readonly nombreNuits = nombreNuits;
+  readonly occupationHebergement = occupationHebergement;
 
   readonly detail = signal<DemandeLocationDetail | null>(null);
   readonly chargementEnCours = signal(true);

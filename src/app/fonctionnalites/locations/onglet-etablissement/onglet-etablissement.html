@@ -1,0 +1,104 @@
+<div class="onglet-etablissement">
+  @if (chargementEnCours()) {
+    <p class="indice">Chargement de l'établissement…</p>
+  } @else if (erreurChargement()) {
+    <p class="erreur-generale">{{ erreurChargement() }}</p>
+    <button type="button" class="bouton-secondaire" (click)="charger()">Réessayer</button>
+  } @else {
+    @if (etablissement()?.modifie_le) {
+      <p class="tracabilite">
+        Dernière modification {{ etablissement()!.modifie_par_role === 'admin' ? "par l'administration" : 'par le loueur' }}
+        @if (etablissement()!.modifie_par_nom) { ({{ etablissement()!.modifie_par_nom }}) }
+      </p>
+    }
+
+    <p class="rappel-photos">
+      Les photos et la vue 360° de l'établissement sont celles du partenaire (logo et photo de couverture).
+      @if (estAdmin()) {
+        Pour les changer : <a routerLink="/administration/partenaires-liste">Partenaires</a> → ce partenaire →
+        « Voir les informations » → « Modifier ».
+      } @else {
+        Pour les changer : <a routerLink="/mon-profil">Mon profil</a> → « Modifier ».
+      }
+    </p>
+
+    @if (messageErreur()) {
+      <p class="erreur-generale">{{ messageErreur() }}</p>
+    }
+    @if (messageSucces()) {
+      <p class="message-succes">{{ messageSucces() }}</p>
+    }
+
+    <form (submit)="$event.preventDefault(); soumettre()">
+      <div class="grille-champs">
+        <div>
+          <label for="de-type">Type d'établissement</label>
+          <select id="de-type" [value]="typeEtablissement()" (change)="typeEtablissement.set($any($event.target).value)">
+            <option value="">— Choisir —</option>
+            @for (option of meta()?.types_etablissement ?? []; track option.valeur) {
+              <option [value]="option.valeur" [selected]="option.valeur === typeEtablissement()">{{ option.libelle }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label for="de-etoiles">Étoiles</label>
+          <select id="de-etoiles" [value]="etoiles()" (change)="etoiles.set($any($event.target).value)">
+            <option value="">Non classé</option>
+            @for (n of optionsEtoiles; track n) {
+              <option [value]="n" [selected]="n + '' === etoiles()">{{ n }} ★</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label for="de-arrivee">Heure d'arrivée</label>
+          <input id="de-arrivee" type="time" [value]="heureArrivee()" (input)="heureArrivee.set($any($event.target).value)" />
+        </div>
+        <div>
+          <label for="de-depart">Heure de départ</label>
+          <input id="de-depart" type="time" [value]="heureDepart()" (input)="heureDepart.set($any($event.target).value)" />
+        </div>
+      </div>
+
+      <label>Équipements de l'établissement</label>
+      <app-puces-options
+        [options]="meta()?.equipements_etablissement ?? []"
+        [selection]="equipementsSelectionnes()"
+        (basculer)="basculerEquipement($event)"
+      />
+
+      <div class="grille-champs">
+        <div>
+          <label for="de-petit-dej">Petit-déjeuner</label>
+          <select id="de-petit-dej" [value]="petitDejeuner()" (change)="petitDejeuner.set($any($event.target).value)">
+            <option value="">— Choisir —</option>
+            @for (option of meta()?.petit_dejeuner ?? []; track option.valeur) {
+              <option [value]="option.valeur" [selected]="option.valeur === petitDejeuner()">{{ option.libelle }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label for="de-prix-petit-dej">Prix du petit-déjeuner (FCFA)</label>
+          <input
+            id="de-prix-petit-dej"
+            type="number"
+            min="0"
+            [value]="prixPetitDejeuner()"
+            (input)="prixPetitDejeuner.set($any($event.target).value)"
+          />
+        </div>
+      </div>
+
+      <label for="de-annulation">Politique d'annulation</label>
+      <textarea id="de-annulation" rows="3" [value]="politiqueAnnulation()" (input)="politiqueAnnulation.set($any($event.target).value)"></textarea>
+
+      <label for="de-conditions">Conditions</label>
+      <textarea id="de-conditions" rows="3" [value]="conditions()" (input)="conditions.set($any($event.target).value)"></textarea>
+
+      <div class="actions-modale">
+        <button type="submit" class="bouton-principal" [disabled]="enregistrementEnCours()">
+          {{ enregistrementEnCours() ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

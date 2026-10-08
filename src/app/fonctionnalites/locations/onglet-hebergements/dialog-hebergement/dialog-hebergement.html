@@ -1,0 +1,168 @@
+<div class="voile-modale" (click)="ferme.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>{{ bienCourant() ? 'Modifier « ' + bienCourant()!.nom + ' »' : 'Nouvel hébergement' }}</h2>
+
+    @if (bienCourant()?.modifie_le) {
+      <p class="tracabilite">
+        Dernière modification {{ bienCourant()!.modifie_par_role === 'admin' ? "par l'administration" : 'par le loueur' }}
+        @if (bienCourant()!.modifie_par_nom) { ({{ bienCourant()!.modifie_par_nom }}) }
+      </p>
+    }
+
+    <nav class="onglets-dialog">
+      @for (onglet of onglets; track onglet.valeur) {
+        <button
+          type="button"
+          class="onglet"
+          [disabled]="(onglet.valeur === 'photos' || onglet.valeur === 'visite') && !bienCourant()"
+          [class.onglet-actif]="ongletActif() === onglet.valeur"
+          (click)="changerOnglet(onglet.valeur)"
+        >
+          {{ onglet.libelle }}
+        </button>
+      }
+    </nav>
+    @if (!bienCourant()) {
+      <p class="aide">Enregistrez l'hébergement pour gérer ses photos et sa vue 360°.</p>
+    }
+
+    @if (messageErreur()) {
+      <p class="erreur-generale">{{ messageErreur() }}</p>
+    }
+
+    <form (submit)="$event.preventDefault(); soumettre('Le prix par nuit')">
+      @if (ongletActif() === 'infos') {
+        <label for="dh-nom">Titre de l'annonce</label>
+        <input id="dh-nom" type="text" [value]="nom()" (input)="nom.set($any($event.target).value)" />
+        @if (erreursChamps()['nom']) {
+          <p class="erreur-champ">{{ erreursChamps()['nom'] }}</p>
+        }
+
+        <label for="dh-type">Type d'hébergement</label>
+        <select id="dh-type" [value]="typeHebergement()" (change)="typeHebergement.set($any($event.target).value)">
+          <option value="">— Choisir —</option>
+          @for (option of metaInterne()?.types_hebergement ?? []; track option.valeur) {
+            <option [value]="option.valeur" [selected]="option.valeur === typeHebergement()">{{ option.libelle }}</option>
+          }
+        </select>
+
+        <label for="dh-description">Description</label>
+        <textarea id="dh-description" rows="3" [value]="description()" (input)="description.set($any($event.target).value)"></textarea>
+
+        <label class="ligne-case">
+          <input type="checkbox" [checked]="estActif()" (change)="estActif.set($any($event.target).checked)" />
+          Actif (visible dans l'application)
+        </label>
+      }
+
+      @if (ongletActif() === 'capacite') {
+        <div class="grille-champs">
+          <div>
+            <label for="dh-adultes">Adultes</label>
+            <input id="dh-adultes" type="number" min="0" [value]="capaciteAdultes()" (input)="capaciteAdultes.set($any($event.target).value)" />
+          </div>
+          <div>
+            <label for="dh-enfants">Enfants</label>
+            <input id="dh-enfants" type="number" min="0" [value]="capaciteEnfants()" (input)="capaciteEnfants.set($any($event.target).value)" />
+          </div>
+          <div>
+            <label for="dh-surface">Surface (m²)</label>
+            <input id="dh-surface" type="number" min="0" [value]="surfaceM2()" (input)="surfaceM2.set($any($event.target).value)" />
+          </div>
+        </div>
+
+        <label for="dh-lits">Lits</label>
+        <input id="dh-lits" type="text" placeholder="Ex. 1 lit double + 1 lit simple" [value]="lits()" (input)="lits.set($any($event.target).value)" />
+      }
+
+      @if (ongletActif() === 'tarifs') {
+        <label for="dh-prix">Prix par nuit (FCFA)</label>
+        <input id="dh-prix" type="number" min="0" [value]="prix()" (input)="prix.set($any($event.target).value)" />
+        @if (erreursChamps()['prix']) {
+          <p class="erreur-champ">{{ erreursChamps()['prix'] }}</p>
+        }
+
+        <div class="grille-champs">
+          <div>
+            <label for="dh-prix-semaine">Prix par semaine (FCFA)</label>
+            <input id="dh-prix-semaine" type="number" min="0" [value]="prixSemaine()" (input)="prixSemaine.set($any($event.target).value)" />
+          </div>
+          <div>
+            <label for="dh-prix-mois">Prix par mois (FCFA)</label>
+            <input id="dh-prix-mois" type="number" min="0" [value]="prixMois()" (input)="prixMois.set($any($event.target).value)" />
+          </div>
+          <div>
+            <label for="dh-duree-min">Durée minimale (nuits)</label>
+            <input id="dh-duree-min" type="number" min="1" [value]="dureeMinNuits()" (input)="dureeMinNuits.set($any($event.target).value)" />
+          </div>
+        </div>
+      }
+
+      @if (ongletActif() === 'unites') {
+        <label for="dh-unites">Nombre d'unités</label>
+        <input id="dh-unites" type="number" min="1" [value]="nbUnites()" (input)="nbUnites.set($any($event.target).value)" />
+        <p class="indice">Nombre de chambres identiques proposées à la réservation.</p>
+        @if (erreursChamps()['nb_unites']) {
+          <p class="erreur-champ">{{ erreursChamps()['nb_unites'] }}</p>
+        }
+      }
+
+      @if (ongletActif() === 'equipements') {
+        <app-puces-options
+          [options]="metaInterne()?.equipements_hebergement ?? []"
+          [selection]="equipementsSelectionnes()"
+          (basculer)="basculerEquipement($event)"
+        />
+      }
+
+      @if (ongletActif() === 'disponibilite') {
+        <label for="dh-disponibilite">Disponibilité</label>
+        <select id="dh-disponibilite" [value]="disponibilite()" (change)="disponibilite.set($any($event.target).value)">
+          @for (option of optionsDisponibilite; track option.valeur) {
+            <option [value]="option.valeur" [selected]="option.valeur === disponibilite()">{{ option.libelle }}</option>
+          }
+        </select>
+
+        <app-reservations-confirmees [reservations]="bienCourant()?.reservations_confirmees ?? []" />
+      }
+
+      @if (ongletActif() !== 'photos' && ongletActif() !== 'visite') {
+        <div class="actions-modale">
+          @if (bienCourant()) {
+            <button type="button" class="bouton-danger" (click)="demanderSuppression()">Supprimer</button>
+          }
+          <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Fermer</button>
+          <button type="submit" class="bouton-principal" [disabled]="enregistrementEnCours()">
+            {{ enregistrementEnCours() ? 'Enregistrement…' : (bienCourant() ? 'Enregistrer' : "Créer l'hébergement") }}
+          </button>
+        </div>
+      }
+    </form>
+
+    @if (ongletActif() === 'photos' && bienCourant()) {
+      <app-logement-images [prefixe]="prefixe()" [logementId]="bienCourant()!.id" ressource="hebergements" />
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Fermer</button>
+      </div>
+    }
+
+    @if (ongletActif() === 'visite' && bienCourant()) {
+      <p class="aide">Optionnel : photos 360° ou panoramiques de l'hébergement.</p>
+      <app-logement-panoramas [prefixe]="prefixe()" [logementId]="bienCourant()!.id" ressource="hebergements" />
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Fermer</button>
+      </div>
+    }
+
+    @if (confirmationSuppression()) {
+      <app-suppression-bien
+        [nom]="bienCourant()?.nom ?? ''"
+        [enCours]="suppressionEnCours()"
+        [proposerDesactivation]="proposerDesactivation()"
+        (annuler)="annulerSuppression()"
+        (supprimer)="supprimer()"
+        (desactiver)="desactiver()"
+      />
+    }
+  </div>
+</div>

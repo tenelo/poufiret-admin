@@ -1,5 +1,5 @@
 /**
- * Reflète GET /api/v1/locations/meta/ (lecture seule) : référentiels des logements et des véhicules —
+ * Reflète GET /api/v1/locations/meta/ (lecture seule) : référentiels des logements, véhicules et hébergements —
  * alimente toutes les listes déroulantes et puces des écrans Locations.
  */
 
@@ -17,4 +17,10 @@ export interface ReponseLocationMeta {
   boites?: OptionLocationMeta[];
   carburants?: OptionLocationMeta[];
   equipements_vehicule?: OptionLocationMeta[];
+  // Hôtels & résidences (V2).
+  types_etablissement?: OptionLocationMeta[];
+  types_hebergement?: OptionLocationMeta[];
+  equipements_etablissement?: OptionLocationMeta[];
+  equipements_hebergement?: OptionLocationMeta[];
+  petit_dejeuner?: OptionLocationMeta[];
 }
