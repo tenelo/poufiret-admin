@@ -1,0 +1,61 @@
+<label [for]="prefixeId() + 'departement'">Département</label>
+<select [id]="prefixeId() + 'departement'" [value]="departementId()" (change)="changerDepartement($any($event.target).value)">
+  <option value="">— Choisir —</option>
+  @for (departement of departements(); track departement.id) {
+    <option [value]="departement.id" [selected]="departement.id + '' === departementId()">
+      {{ departement.nom }} ({{ departement.region }})
+    </option>
+  }
+</select>
+
+<label [for]="prefixeId() + 'localite'">Localité</label>
+@if (chargementLocalites()) {
+  <p class="indice">Chargement des localités…</p>
+} @else if (erreurLocalites()) {
+  <p class="erreur-champ">{{ erreurLocalites() }}</p>
+} @else {
+  <select
+    [id]="prefixeId() + 'localite'"
+    [value]="localiteId()"
+    [disabled]="!departementId()"
+    (change)="changerLocalite($any($event.target).value)"
+  >
+    <option value="">— Non renseigné —</option>
+    @for (localite of localites(); track localite.id) {
+      <option [value]="localite.id" [selected]="localite.id + '' === localiteId()">{{ localite.nom }}</option>
+    }
+  </select>
+}
+
+<label [for]="prefixeId() + 'quartier'">Quartier</label>
+@if (chargementQuartiers()) {
+  <p class="indice">Chargement des quartiers…</p>
+} @else if (erreurQuartiers()) {
+  <p class="erreur-champ">{{ erreurQuartiers() }}</p>
+} @else {
+  <select
+    [id]="prefixeId() + 'quartier'"
+    [value]="quartierId()"
+    [disabled]="!localiteId()"
+    (change)="quartierId.set($any($event.target).value)"
+  >
+    <option value="">— Non renseigné —</option>
+    @for (quartier of quartiers(); track quartier.id) {
+      <option [value]="quartier.id" [selected]="quartier.id + '' === quartierId()">{{ quartier.nom }}</option>
+    }
+  </select>
+}
+
+<label [for]="prefixeId() + 'secteur'">Secteur</label>
+<input [id]="prefixeId() + 'secteur'" type="text" [value]="secteur()" (input)="secteur.set($any($event.target).value)" />
+
+<label [for]="prefixeId() + 'reperes'">{{ libelleReperes() }}</label>
+<textarea
+  [id]="prefixeId() + 'reperes'"
+  rows="2"
+  [value]="adresseReperes()"
+  (input)="adresseReperes.set($any($event.target).value)"
+></textarea>
+
+<label>Position GPS</label>
+<app-position-gps [latitude]="latitude()" [longitude]="longitude()" (enregistrer)="position.emit($event)" />

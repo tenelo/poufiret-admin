@@ -74,7 +74,9 @@
               <th>Numéro</th>
               <th>Date</th>
               <th>Nature</th>
-              <th>Logement</th>
+              <th>Bien</th>
+              <th>Dates</th>
+              <th>Montant estimé</th>
               @if (!partenaireFixe()) {
                 <th>Loueur</th>
               }
@@ -88,7 +90,21 @@
                 <td class="fort">{{ demande.numero }}</td>
                 <td>{{ formaterDateHeure(demande.created_at) }}</td>
                 <td>{{ demande.nature_libelle }}</td>
-                <td>{{ demande.objet_nom }}</td>
+                <td>
+                  <span class="type-bien">{{ libelleTypeBien(demande.objet_type) }}</span>
+                  {{ demande.objet_nom }}
+                  @if (demande.avec_chauffeur) {
+                    <span class="mention">Avec chauffeur</span>
+                  }
+                </td>
+                <td>
+                  @if (demande.date_debut) {
+                    {{ demande.date_debut }}@if (demande.date_fin) { → {{ demande.date_fin }} }
+                  } @else {
+                    {{ demande.date_souhaitee ?? '—' }}
+                  }
+                </td>
+                <td>{{ demande.montant_estime != null ? formaterFrancs(demande.montant_estime) : '—' }}</td>
                 @if (!partenaireFixe()) {
                   <td>{{ demande.partenaire_nom }}</td>
                 }
@@ -108,7 +124,17 @@
               <span class="fort">{{ demande.numero }}</span>
               <span class="badge">{{ demande.statut_libelle }}</span>
             </span>
-            <span class="carte-ligne">{{ demande.objet_nom }}@if (!partenaireFixe()) { · {{ demande.partenaire_nom }} }</span>
+            <span class="carte-ligne">
+              {{ libelleTypeBien(demande.objet_type) }} · {{ demande.objet_nom }}@if (!partenaireFixe()) { · {{ demande.partenaire_nom }} }
+            </span>
+            @if (demande.date_debut) {
+              <span class="carte-ligne">
+                Du {{ demande.date_debut }}@if (demande.date_fin) { au {{ demande.date_fin }} }@if (demande.avec_chauffeur) { · avec chauffeur }
+              </span>
+            }
+            @if (demande.montant_estime != null) {
+              <span class="carte-ligne">Montant estimé : {{ formaterFrancs(demande.montant_estime) }}</span>
+            }
             <span class="carte-ligne">{{ demande.nature_libelle }} · {{ demande.client_nom }}</span>
             <span class="carte-ligne">{{ formaterDateHeure(demande.created_at) }}</span>
           </button>

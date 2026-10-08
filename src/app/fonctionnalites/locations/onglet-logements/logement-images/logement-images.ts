@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit, computed, inject, input, signal } from '@
 import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Observable, forkJoin, of, switchMap } from 'rxjs';
 
-import { LocationService, PrefixeLocation } from '../../location.service';
+import { LocationService, PrefixeLocation, RessourceLocation } from '../../location.service';
 import { ImageLogement } from '../../../../modeles/logement.model';
 import { extraireMessageErreur } from '../../../administration/tableau-de-bord-admin/extraire-message-erreur';
 
@@ -23,7 +23,10 @@ export class LogementImages implements OnInit, OnDestroy {
   private readonly service = inject(LocationService);
 
   readonly prefixe = input.required<PrefixeLocation>();
+  /** Id du logement ou du véhicule (voir `ressource`). */
   readonly logementId = input.required<number>();
+  /** Réutilisé tel quel pour les véhicules : seule la ressource de l'URL change. */
+  readonly ressource = input<RessourceLocation>('logements');
 
   readonly chargementEnCours = signal(true);
   readonly erreurChargement = signal<string | null>(null);
@@ -54,7 +57,7 @@ export class LogementImages implements OnInit, OnDestroy {
     this.chargementEnCours.set(true);
     this.erreurChargement.set(null);
 
-    this.service.listerImagesLogement(this.prefixe(), this.logementId()).subscribe({
+    this.service.listerImagesLogement(this.prefixe(), this.logementId(), this.ressource()).subscribe({
       next: (images) => {
         this.chargementEnCours.set(false);
         this.images.set(images);
@@ -102,9 +105,15 @@ export class LogementImages implements OnInit, OnDestroy {
     this.messageErreur.set(null);
 
     this.service
-      .ajouterImageLogement(this.prefixe(), this.logementId(), fichier, {
-        estPrincipale: this.estPrincipaleSelection(),
-      })
+      .ajouterImageLogement(
+        this.prefixe(),
+        this.logementId(),
+        fichier,
+        {
+          estPrincipale: this.estPrincipaleSelection(),
+        },
+        this.ressource(),
+      )
       .subscribe({
         next: (image) => {
           this.envoiEnCours.set(false);
@@ -123,7 +132,7 @@ export class LogementImages implements OnInit, OnDestroy {
     this.suppressionEnCoursId.set(image.id);
     this.messageErreur.set(null);
 
-    this.service.supprimerImageLogement(this.prefixe(), this.logementId(), image.id).subscribe({
+    this.service.supprimerImageLogement(this.prefixe(), this.logementId(), image.id, this.ressource()).subscribe({
       next: () => {
         this.suppressionEnCoursId.set(null);
         this.images.update((liste) => liste.filter((i) => i.id !== image.id));
@@ -142,13 +151,25 @@ export class LogementImages implements OnInit, OnDestroy {
     this.messageErreur.set(null);
 
     const retirerAncienne$: Observable<ImageLogement | null> = ancienne
-      ? this.service.modifierImageLogement(this.prefixe(), this.logementId(), ancienne.id, { est_principale: false })
+      ? this.service.modifierImageLogement(
+          this.prefixe(),
+          this.logementId(),
+          ancienne.id,
+          { est_principale: false },
+          this.ressource(),
+        )
       : of(null);
 
     retirerAncienne$
       .pipe(
         switchMap(() =>
-          this.service.modifierImageLogement(this.prefixe(), this.logementId(), image.id, { est_principale: true }),
+          this.service.modifierImageLogement(
+            this.prefixe(),
+            this.logementId(),
+            image.id,
+            { est_principale: true },
+            this.ressource(),
+          ),
         ),
       )
       .subscribe({
@@ -184,7 +205,13 @@ export class LogementImages implements OnInit, OnDestroy {
     this.messageErreur.set(null);
     forkJoin(
       aPatcher.map((p) =>
-        this.service.modifierImageLogement(this.prefixe(), this.logementId(), p.id, { ordre: p.ordre }),
+        this.service.modifierImageLogement(
+          this.prefixe(),
+          this.logementId(),
+          p.id,
+          { ordre: p.ordre },
+          this.ressource(),
+        ),
       ),
     ).subscribe({
       next: () => this.reordonnancementEnCours.set(false),

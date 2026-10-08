@@ -3,11 +3,9 @@ import { Component, OnInit, inject, input, output, signal } from '@angular/core'
 import { LocationService, PrefixeLocation } from '../../location.service';
 import { LogementImages } from '../logement-images/logement-images';
 import { LogementPanoramas } from '../logement-panoramas/logement-panoramas';
-import { LocaliteQuartierService } from '../../../../noyau/geo/localite-quartier.service';
-import { CoordonneesGps, PositionGps } from '../../../../partage/position-gps/position-gps';
+import { LocalisationLocation } from '../../localisation-location/localisation-location';
+import { CoordonneesGps } from '../../../../partage/position-gps/position-gps';
 import { extraireMessageErreur } from '../../../administration/tableau-de-bord-admin/extraire-message-erreur';
-import { Departement } from '../../../../modeles/departement.model';
-import { OptionGeo } from '../../../../modeles/geographie.model';
 import { ReponseLocationMeta } from '../../../../modeles/location-meta.model';
 import { Logement, RequeteLogement } from '../../../../modeles/logement.model';
 
@@ -33,22 +31,22 @@ const ONGLETS: { valeur: OngletDialogLogement; libelle: string }[] = [
 ];
 
 /**
- * Dialog de création/édition d'un logement, en sections (voir ONGLETS) : réutilise le composant
- * partagé de position GPS et la cascade Département → Localité → Quartier déjà utilisés pour les
- * partenaires — préremplie en édition depuis departement_id/localite_id/quartier_id. Photos et
+ * Dialog de création/édition d'un logement, en sections (voir ONGLETS) : la section
+ * Localisation (cascade Département → Localité → Quartier, repères, position GPS) est le composant
+ * LocalisationLocation, partagé avec DialogVehicule — préremplie en édition depuis
+ * departement_id/localite_id/quartier_id. Photos et
  * visite immersive ne sont gérables qu'une fois le logement créé — en création, le dialog bascule
  * automatiquement en mode édition dès l'enregistrement réussi, sans se refermer (même principe que
  * DialogPlatCarte / DialogMenuRestaurant).
  */
 @Component({
   selector: 'app-dialog-logement',
-  imports: [LogementImages, LogementPanoramas, PositionGps],
+  imports: [LogementImages, LogementPanoramas, LocalisationLocation],
   templateUrl: './dialog-logement.html',
   styleUrl: './dialog-logement.scss',
 })
 export class DialogLogement implements OnInit {
   private readonly service = inject(LocationService);
-  private readonly localiteQuartierService = inject(LocaliteQuartierService);
 
   readonly prefixe = input.required<PrefixeLocation>();
   readonly logement = input<Logement | null>(null);
@@ -88,16 +86,9 @@ export class DialogLogement implements OnInit {
   readonly disponibilite = signal('');
   readonly disponibleAPartirDu = signal('');
 
-  // ---- Localisation ----
-  readonly departements = signal<Departement[]>([]);
+  // ---- Localisation (voir LocalisationLocation) ----
   readonly departementChoisi = signal('');
-  readonly localites = signal<OptionGeo[]>([]);
-  readonly chargementLocalites = signal(false);
-  readonly erreurLocalites = signal<string | null>(null);
   readonly localiteId = signal('');
-  readonly quartiers = signal<OptionGeo[]>([]);
-  readonly chargementQuartiers = signal(false);
-  readonly erreurQuartiers = signal<string | null>(null);
   readonly quartierId = signal('');
   readonly secteur = signal('');
   readonly adresseReperes = signal('');
@@ -118,16 +109,10 @@ export class DialogLogement implements OnInit {
       });
     }
 
-    this.service.listerDepartements().subscribe({
-      next: (departements) => this.departements.set(departements),
-      error: () => undefined,
-    });
-
     const logement = this.logement();
     this.logementCourant.set(logement);
     if (logement) {
       this.appliquerLogement(logement);
-      this.preremplirLocalisation(logement);
     }
   }
 
@@ -155,6 +140,7 @@ export class DialogLogement implements OnInit {
     this.disponibilite.set(logement.disponibilite);
     this.disponibleAPartirDu.set(logement.disponible_a_partir_du ?? '');
 
+    this.departementChoisi.set(logement.departement_id !== null ? String(logement.departement_id) : '');
     this.localiteId.set(logement.localite_id !== null ? String(logement.localite_id) : '');
     this.quartierId.set(logement.quartier_id !== null ? String(logement.quartier_id) : '');
     this.secteur.set(logement.secteur ?? '');
@@ -181,79 +167,6 @@ export class DialogLogement implements OnInit {
   }
 
   // ---- Localisation ----
-
-  /** Préremplit la cascade depuis la fiche existante, sans réinitialiser localite_id/quartier_id. */
-  private preremplirLocalisation(logement: Logement): void {
-    if (!logement.departement_id) return;
-    this.departementChoisi.set(String(logement.departement_id));
-    this.chargementLocalites.set(true);
-    this.localiteQuartierService.listerLocalites(logement.departement_id).subscribe({
-      next: (localites) => {
-        this.chargementLocalites.set(false);
-        this.localites.set(localites);
-      },
-      error: (erreur: unknown) => {
-        this.chargementLocalites.set(false);
-        this.erreurLocalites.set(extraireMessageErreur(erreur));
-      },
-    });
-
-    if (logement.localite_id) {
-      this.chargementQuartiers.set(true);
-      this.localiteQuartierService.listerQuartiers(logement.localite_id).subscribe({
-        next: (quartiers) => {
-          this.chargementQuartiers.set(false);
-          this.quartiers.set(quartiers);
-        },
-        error: (erreur: unknown) => {
-          this.chargementQuartiers.set(false);
-          this.erreurQuartiers.set(extraireMessageErreur(erreur));
-        },
-      });
-    }
-  }
-
-  changerDepartementChoisi(valeur: string): void {
-    this.departementChoisi.set(valeur);
-    this.localites.set([]);
-    this.quartiers.set([]);
-    this.localiteId.set('');
-    this.quartierId.set('');
-    this.erreurLocalites.set(null);
-    if (valeur) {
-      this.chargementLocalites.set(true);
-      this.localiteQuartierService.listerLocalites(Number(valeur)).subscribe({
-        next: (localites) => {
-          this.chargementLocalites.set(false);
-          this.localites.set(localites);
-        },
-        error: (erreur: unknown) => {
-          this.chargementLocalites.set(false);
-          this.erreurLocalites.set(extraireMessageErreur(erreur));
-        },
-      });
-    }
-  }
-
-  changerLocaliteChoisie(valeur: string): void {
-    this.localiteId.set(valeur);
-    this.quartiers.set([]);
-    this.quartierId.set('');
-    this.erreurQuartiers.set(null);
-    if (valeur) {
-      this.chargementQuartiers.set(true);
-      this.localiteQuartierService.listerQuartiers(Number(valeur)).subscribe({
-        next: (quartiers) => {
-          this.chargementQuartiers.set(false);
-          this.quartiers.set(quartiers);
-        },
-        error: (erreur: unknown) => {
-          this.chargementQuartiers.set(false);
-          this.erreurQuartiers.set(extraireMessageErreur(erreur));
-        },
-      });
-    }
-  }
 
   definirPosition(position: CoordonneesGps | null): void {
     this.positionChoisie.set(position);

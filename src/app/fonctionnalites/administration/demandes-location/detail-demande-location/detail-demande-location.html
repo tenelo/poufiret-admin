@@ -23,7 +23,7 @@
       <!-- Logement / objet et client -->
       <section class="contacts">
         <div class="contact">
-          <h3>{{ d.objet_type || 'Logement' }}</h3>
+          <h3>{{ libelleTypeBien(d.objet_type) }}</h3>
           <p class="nom">{{ d.objet_nom }}</p>
           <p class="detail-contact">Loueur : {{ d.partenaire_nom }}</p>
         </div>
@@ -51,8 +51,17 @@
         }
         @if (d.date_debut) {
           <p class="bloc-texte">
-            <strong>Séjour :</strong> du {{ d.date_debut }}@if (d.date_fin) { au {{ d.date_fin }} }
+            <strong>{{ d.objet_type === 'vehicule' ? 'Location' : 'Séjour' }} :</strong> du {{ d.date_debut }}@if (d.date_fin) { au {{ d.date_fin }} }
           </p>
+        }
+        @if (d.avec_chauffeur != null) {
+          <p class="bloc-texte"><strong>Avec chauffeur :</strong> {{ d.avec_chauffeur ? 'Oui' : 'Non' }}</p>
+        }
+        @if (d.lieu_prise_en_charge) {
+          <p class="bloc-texte"><strong>Lieu de prise en charge :</strong> {{ d.lieu_prise_en_charge }}</p>
+        }
+        @if (d.montant_estime != null) {
+          <p class="bloc-texte"><strong>Montant estimé :</strong> {{ formaterFrancs(d.montant_estime) }}</p>
         }
         @if (d.nb_personnes) {
           <p class="bloc-texte"><strong>Nombre de personnes :</strong> {{ d.nb_personnes }}</p>

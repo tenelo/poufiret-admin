@@ -1,0 +1,86 @@
+<div class="onglet-logements">
+  <div class="entete-onglet">
+    <select class="filtre" [value]="filtreDisponibilite()" (change)="changerFiltreDisponibilite($any($event.target).value)">
+      <option value="">Toutes disponibilités</option>
+      @for (option of optionsDisponibilite; track option.valeur) {
+        <option [value]="option.valeur">{{ option.libelle }}</option>
+      }
+    </select>
+    <button type="button" class="bouton-principal" (click)="ouvrirCreation()">+ Ajouter un véhicule</button>
+  </div>
+
+  @if (messageErreur()) {
+    <p class="erreur-generale">{{ messageErreur() }}</p>
+  }
+
+  @if (chargementEnCours()) {
+    <p class="etat">Chargement des véhicules…</p>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (vehicules().length === 0) {
+    <div class="etat-vide">
+      <p>Aucun véhicule pour ce filtre.</p>
+    </div>
+  } @else {
+    <div class="grille-logements">
+      @for (vehicule of vehicules(); track vehicule.id) {
+        <div class="carte-logement">
+          <button type="button" class="zone-cliquable" (click)="ouvrirEdition(vehicule)">
+            @if (imagePrincipale(vehicule); as image) {
+              <img [src]="image" [alt]="vehicule.nom" class="photo-logement" />
+            } @else {
+              <div class="photo-logement photo-vide">Aucune photo</div>
+            }
+            <div class="corps-carte">
+              <span class="nom-logement">{{ titreVehicule(vehicule) }}</span>
+              <span class="type-logement">
+                {{ libelle(meta()?.categories_vehicule, vehicule.categorie_vehicule, vehicule.categorie_vehicule_libelle) || '—' }}
+              </span>
+              <span class="caracteristiques-logement">
+                {{ vehicule.nb_places ?? '—' }} places · {{ libelle(meta()?.boites, vehicule.boite, vehicule.boite_libelle) || '—' }}
+              </span>
+              <span class="loyer-logement">{{ formaterFrancs(vehicule.prix) }}/jour</span>
+              @if (vehicule.chauffeur_disponible) {
+                <span class="localisation-logement">Avec chauffeur</span>
+              }
+            </div>
+          </button>
+
+          <div class="pied-carte">
+            <select
+              class="select-disponibilite"
+              [value]="vehicule.disponibilite"
+              [disabled]="disponibiliteEnCoursId() === vehicule.id"
+              (change)="changerDisponibiliteRapide(vehicule, $any($event.target).value)"
+            >
+              @for (option of optionsDisponibilite; track option.valeur) {
+                <option [value]="option.valeur" [selected]="option.valeur === vehicule.disponibilite">{{ option.libelle }}</option>
+              }
+            </select>
+            <label class="interrupteur-actif">
+              <input
+                type="checkbox"
+                [checked]="vehicule.est_actif"
+                [disabled]="actifEnCoursId() === vehicule.id"
+                (change)="basculerActif(vehicule)"
+              />
+              Actif
+            </label>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+@if (dialogOuvert()) {
+  <app-dialog-vehicule
+    [prefixe]="prefixe()"
+    [vehicule]="vehiculeEnEdition()"
+    [meta]="meta()"
+    (ferme)="fermerDialog()"
+  />
+}

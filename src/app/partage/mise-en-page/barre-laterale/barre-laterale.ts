@@ -59,6 +59,14 @@ const ENTREES_PARTENAIRE_LOUEUR: EntreeMenuPartenaire[] = [
   { libelle: 'Publicités', lien: '/publicites' },
 ];
 
+const ENTREES_PARTENAIRE_LOUEUR_VOITURE: EntreeMenuPartenaire[] = [
+  { libelle: 'Tableau de bord', lien: '/tableau-de-bord' },
+  { libelle: 'Mon profil', lien: '/mon-profil' },
+  { libelle: 'Mes véhicules', lien: '/mes-vehicules' },
+  { libelle: 'Mes demandes', lien: '/mes-demandes' },
+  { libelle: 'Publicités', lien: '/publicites' },
+];
+
 const ENTREES_ADMIN: EntreeMenuAdmin[] = [
   { libelle: 'Tableau de bord', lien: '/tableau-de-bord', icone: '📊', capacite: 'voir_stats' },
   {
@@ -219,6 +227,7 @@ export class BarreLaterale {
   readonly entreesPartenaire = computed<EntreeMenuPartenaire[]>(() => {
     if (this.profilPartenaireContexte.estRestaurateur()) return ENTREES_PARTENAIRE_RESTAURATEUR;
     if (this.profilPartenaireContexte.estLoueur()) return ENTREES_PARTENAIRE_LOUEUR;
+    if (this.profilPartenaireContexte.estLoueurVoiture()) return ENTREES_PARTENAIRE_LOUEUR_VOITURE;
     return ENTREES_PARTENAIRE_STANDARD;
   });
 

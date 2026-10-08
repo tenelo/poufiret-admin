@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit, computed, inject, input, signal } from '@
 import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 import { forkJoin } from 'rxjs';
 
-import { LocationService, PrefixeLocation } from '../../location.service';
+import { LocationService, PrefixeLocation, RessourceLocation } from '../../location.service';
 import { PanoramaLogement, TypeVuePanorama } from '../../../../modeles/logement.model';
 import { extraireMessageErreur } from '../../../administration/tableau-de-bord-admin/extraire-message-erreur';
 
@@ -28,7 +28,10 @@ export class LogementPanoramas implements OnInit, OnDestroy {
   private readonly service = inject(LocationService);
 
   readonly prefixe = input.required<PrefixeLocation>();
+  /** Id du logement ou du véhicule (voir `ressource`). */
   readonly logementId = input.required<number>();
+  /** Réutilisé tel quel pour les véhicules : seule la ressource de l'URL change. */
+  readonly ressource = input<RessourceLocation>('logements');
 
   readonly optionsTypeVue = OPTIONS_TYPE_VUE;
 
@@ -61,7 +64,7 @@ export class LogementPanoramas implements OnInit, OnDestroy {
     this.chargementEnCours.set(true);
     this.erreurChargement.set(null);
 
-    this.service.listerPanoramas(this.prefixe(), this.logementId()).subscribe({
+    this.service.listerPanoramas(this.prefixe(), this.logementId(), this.ressource()).subscribe({
       next: (panoramas) => {
         this.chargementEnCours.set(false);
         this.panoramas.set(panoramas);
@@ -123,10 +126,16 @@ export class LogementPanoramas implements OnInit, OnDestroy {
     this.messageErreur.set(null);
 
     this.service
-      .ajouterPanorama(this.prefixe(), this.logementId(), fichier, {
-        titre,
-        type_vue: this.typeVueSelection(),
-      })
+      .ajouterPanorama(
+        this.prefixe(),
+        this.logementId(),
+        fichier,
+        {
+          titre,
+          type_vue: this.typeVueSelection(),
+        },
+        this.ressource(),
+      )
       .subscribe({
         next: (panorama) => {
           this.envoiEnCours.set(false);
@@ -145,7 +154,7 @@ export class LogementPanoramas implements OnInit, OnDestroy {
     this.suppressionEnCoursId.set(panorama.id);
     this.messageErreur.set(null);
 
-    this.service.supprimerPanorama(this.prefixe(), this.logementId(), panorama.id).subscribe({
+    this.service.supprimerPanorama(this.prefixe(), this.logementId(), panorama.id, this.ressource()).subscribe({
       next: () => {
         this.suppressionEnCoursId.set(null);
         this.panoramas.update((liste) => liste.filter((p) => p.id !== panorama.id));
@@ -180,7 +189,9 @@ export class LogementPanoramas implements OnInit, OnDestroy {
     this.reordonnancementEnCours.set(true);
     this.messageErreur.set(null);
     forkJoin(
-      aPatcher.map((p) => this.service.modifierPanorama(this.prefixe(), this.logementId(), p.id, { ordre: p.ordre })),
+      aPatcher.map((p) =>
+        this.service.modifierPanorama(this.prefixe(), this.logementId(), p.id, { ordre: p.ordre }, this.ressource()),
+      ),
     ).subscribe({
       next: () => this.reordonnancementEnCours.set(false),
       error: (erreur: unknown) => {

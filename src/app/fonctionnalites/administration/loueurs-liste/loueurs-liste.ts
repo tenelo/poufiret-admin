@@ -6,9 +6,14 @@ import { LocationService } from '../../locations/location.service';
 import { extraireMessageErreur } from '../tableau-de-bord-admin/extraire-message-erreur';
 import { LoueurAdminListe } from '../../../modeles/logement.model';
 
+const OPTIONS_TYPE_LOUEUR: { valeur: string; libelle: string }[] = [
+  { valeur: 'loueur_maison', libelle: 'Maisons' },
+  { valeur: 'loueur_voiture', libelle: 'Véhicules' },
+];
+
 /**
- * Liste admin des loueurs (capacité gerer_locations) : indicateurs logements disponibles / réservés
- * / loués et demandes en attente (alerte si > 0). Recherche entièrement côté client (GET
+ * Liste admin des loueurs (capacité gerer_locations), maisons et véhicules (badge + filtre par
+ * type) : indicateurs biens disponibles / réservés / loués et demandes en attente (alerte si > 0). Recherche entièrement côté client (GET
  * /locations/admin/ renvoie la liste complète). Clic sur un loueur : l'espace loueur en tant
  * qu'admin (préfixe admin/<id>), même pattern que RestaurantsListe.
  */
@@ -35,10 +40,15 @@ export class LoueursListe implements OnInit {
   );
   readonly departementFiltre = signal('');
 
+  readonly optionsType = OPTIONS_TYPE_LOUEUR;
+  readonly typeFiltre = signal('');
+
   readonly loueursFiltres = computed(() => {
     const texte = this.recherche().trim().toLowerCase();
     const departement = this.departementFiltre();
+    const type = this.typeFiltre();
     return this.loueurs().filter((l) => {
+      if (type && l.type_partenaire !== type) return false;
       if (departement && l.departement_nom !== departement) return false;
       if (!texte) return true;
       return l.nom.toLowerCase().includes(texte) || (l.departement_nom?.toLowerCase().includes(texte) ?? false);
@@ -70,9 +80,17 @@ export class LoueursListe implements OnInit {
     this.departementFiltre.set(valeur);
   }
 
+  changerType(valeur: string): void {
+    this.typeFiltre.set(valeur);
+  }
+
+  libelleType(type: string): string {
+    return OPTIONS_TYPE_LOUEUR.find((o) => o.valeur === type)?.libelle ?? type;
+  }
+
   ouvrir(loueur: LoueurAdminListe): void {
     this.router.navigate(['/administration/locations', loueur.id], {
-      state: { nom: loueur.nom },
+      state: { nom: loueur.nom, type_partenaire: loueur.type_partenaire },
     });
   }
 }

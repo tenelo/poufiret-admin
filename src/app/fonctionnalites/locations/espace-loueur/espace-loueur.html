@@ -19,7 +19,7 @@
   <h1>{{ nomLoueur() ?? (estAdmin() ? 'Loueur' : 'Mon espace loueur') }}</h1>
 
   <nav class="barre-onglets" aria-label="Sections">
-    @for (onglet of onglets; track onglet.valeur) {
+    @for (onglet of onglets(); track onglet.valeur) {
       <button
         type="button"
         class="onglet"
@@ -34,7 +34,14 @@
   <div class="contenu-onglet">
     @switch (ongletActif()) {
       @case ('logements') {
-        <app-onglet-logements [prefixe]="prefixe()" />
+        @if (typePartenaire()) {
+          <app-onglet-logements [prefixe]="prefixe()" />
+        }
+      }
+      @case ('vehicules') {
+        @if (typePartenaire()) {
+          <app-onglet-vehicules [prefixe]="prefixe()" />
+        }
       }
       @case ('demandes') {
         <app-onglet-demandes-loueur

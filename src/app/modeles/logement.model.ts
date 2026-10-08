@@ -105,6 +105,8 @@ export interface ReponseLogements {
 export interface LoueurAdminListe {
   id: number;
   nom: string;
+  /** loueur_maison | loueur_voiture. */
+  type_partenaire: string;
   departement_nom: string | null;
   nb_disponibles: number;
   nb_reserves: number;

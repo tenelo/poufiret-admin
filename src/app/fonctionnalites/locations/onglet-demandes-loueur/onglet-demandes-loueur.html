@@ -39,7 +39,9 @@
               <span class="numero">{{ demande.numero }}</span>
               <span class="badge">{{ demande.statut_libelle }}</span>
             </button>
-            <p class="ligne"><strong>{{ demande.objet_nom }}</strong> · {{ demande.nature_libelle }}</p>
+            <p class="ligne">
+              {{ libelleTypeBien(demande.objet_type) }} · <strong>{{ demande.objet_nom }}</strong> · {{ demande.nature_libelle }}
+            </p>
             <p class="ligne">
               {{ demande.client_nom }}
               @if (lienTel(demande.telephone_contact); as tel) {
@@ -53,7 +55,18 @@
               <p class="ligne">Date souhaitée : {{ demande.date_souhaitee }}</p>
             }
             @if (demande.date_debut) {
-              <p class="ligne">Séjour : du {{ demande.date_debut }}@if (demande.date_fin) { au {{ demande.date_fin }} }</p>
+              <p class="ligne">
+                {{ demande.objet_type === 'vehicule' ? 'Location' : 'Séjour' }} : du {{ demande.date_debut }}@if (demande.date_fin) { au {{ demande.date_fin }} }
+              </p>
+            }
+            @if (demande.avec_chauffeur != null) {
+              <p class="ligne">Avec chauffeur : {{ demande.avec_chauffeur ? 'oui' : 'non' }}</p>
+            }
+            @if (demande.lieu_prise_en_charge) {
+              <p class="ligne">Lieu de prise en charge : {{ demande.lieu_prise_en_charge }}</p>
+            }
+            @if (demande.montant_estime != null) {
+              <p class="ligne">Montant estimé : <strong>{{ formaterFrancs(demande.montant_estime) }}</strong></p>
             }
             @if (demande.message) {
               <p class="ligne message">{{ demande.message }}</p>

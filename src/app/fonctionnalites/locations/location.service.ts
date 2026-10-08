@@ -16,6 +16,12 @@ import {
   RequeteLogement,
   TypeVuePanorama,
 } from '../../modeles/logement.model';
+import {
+  ReponseVehicules,
+  RequeteDisponibiliteVehicule,
+  RequeteVehicule,
+  Vehicule,
+} from '../../modeles/vehicule.model';
 
 /** Préfixe "mon-espace" (loueur) ou "admin/<partenaire_id>" (admin, n'importe quel loueur). */
 export type PrefixeLocation = string;
@@ -25,6 +31,9 @@ export function prefixeAdminLocation(partenaireId: number | string): PrefixeLoca
 }
 
 export const PREFIXE_MON_ESPACE_LOCATION: PrefixeLocation = 'mon-espace';
+
+/** Ressource portant images et panoramas : mêmes routes pour les logements et les véhicules. */
+export type RessourceLocation = 'logements' | 'vehicules';
 
 /**
  * Service unique de l'espace loueur, paramétré par un préfixe (mon-espace côté loueur,
@@ -88,83 +97,142 @@ export class LocationService {
     return this.http.post<Logement>(`${this.base(prefixe)}logements/${id}/disponibilite/`, donnees);
   }
 
-  // ---- Images des logements ----
-  // Corps multipart : "article" = id du logement (même convention que les images de plats/produits).
+  // ---- Véhicules (loueur_voiture) : mêmes conventions que les logements ----
 
-  listerImagesLogement(prefixe: PrefixeLocation, logementId: number): Observable<ImageLogement[]> {
+  listerVehicules(prefixe: PrefixeLocation, disponibilite?: string): Observable<Vehicule[]> {
+    let params = new HttpParams();
+    if (disponibilite) {
+      params = params.set('disponibilite', disponibilite);
+    }
     return this.http
-      .get<{ resultats: ImageLogement[] }>(`${this.base(prefixe)}logements/${logementId}/images/`)
+      .get<ReponseVehicules>(`${this.base(prefixe)}vehicules/`, { params })
+      .pipe(map((reponse) => reponse.resultats));
+  }
+
+  obtenirVehicule(prefixe: PrefixeLocation, id: number): Observable<Vehicule> {
+    return this.http.get<Vehicule>(`${this.base(prefixe)}vehicules/${id}/`);
+  }
+
+  creerVehicule(prefixe: PrefixeLocation, donnees: RequeteVehicule): Observable<Vehicule> {
+    return this.http.post<Vehicule>(`${this.base(prefixe)}vehicules/`, donnees);
+  }
+
+  modifierVehicule(prefixe: PrefixeLocation, id: number, donnees: Partial<RequeteVehicule>): Observable<Vehicule> {
+    return this.http.patch<Vehicule>(`${this.base(prefixe)}vehicules/${id}/`, donnees);
+  }
+
+  /** 409 si le véhicule a des demandes : proposer alors de le désactiver. */
+  supprimerVehicule(prefixe: PrefixeLocation, id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base(prefixe)}vehicules/${id}/`);
+  }
+
+  changerDisponibiliteVehicule(
+    prefixe: PrefixeLocation,
+    id: number,
+    donnees: RequeteDisponibiliteVehicule,
+  ): Observable<Vehicule> {
+    return this.http.post<Vehicule>(`${this.base(prefixe)}vehicules/${id}/disponibilite/`, donnees);
+  }
+
+  // ---- Images des logements et des véhicules (ressource) ----
+  // Corps multipart : "article" = id du logement ou du véhicule (même convention que les images de
+  // plats/produits).
+
+  listerImagesLogement(
+    prefixe: PrefixeLocation,
+    objetId: number,
+    ressource: RessourceLocation = 'logements',
+  ): Observable<ImageLogement[]> {
+    return this.http
+      .get<{ resultats: ImageLogement[] }>(`${this.base(prefixe)}${ressource}/${objetId}/images/`)
       .pipe(map((reponse) => reponse.resultats));
   }
 
   ajouterImageLogement(
     prefixe: PrefixeLocation,
-    logementId: number,
+    objetId: number,
     fichier: File,
     options: { estPrincipale?: boolean } = {},
+    ressource: RessourceLocation = 'logements',
   ): Observable<ImageLogement> {
     const formData = new FormData();
-    formData.append('article', String(logementId));
+    formData.append('article', String(objetId));
     formData.append('image', fichier);
     if (options.estPrincipale !== undefined) {
       formData.append('est_principale', String(options.estPrincipale));
     }
-    return this.http.post<ImageLogement>(`${this.base(prefixe)}logements/${logementId}/images/`, formData);
+    return this.http.post<ImageLogement>(`${this.base(prefixe)}${ressource}/${objetId}/images/`, formData);
   }
 
   modifierImageLogement(
     prefixe: PrefixeLocation,
-    logementId: number,
+    objetId: number,
     imageId: number,
     donnees: { est_principale?: boolean; ordre?: number },
+    ressource: RessourceLocation = 'logements',
   ): Observable<ImageLogement> {
-    return this.http.patch<ImageLogement>(
-      `${this.base(prefixe)}logements/${logementId}/images/${imageId}/`,
-      donnees,
-    );
+    return this.http.patch<ImageLogement>(`${this.base(prefixe)}${ressource}/${objetId}/images/${imageId}/`, donnees);
   }
 
-  supprimerImageLogement(prefixe: PrefixeLocation, logementId: number, imageId: number): Observable<void> {
-    return this.http.delete<void>(`${this.base(prefixe)}logements/${logementId}/images/${imageId}/`);
+  supprimerImageLogement(
+    prefixe: PrefixeLocation,
+    objetId: number,
+    imageId: number,
+    ressource: RessourceLocation = 'logements',
+  ): Observable<void> {
+    return this.http.delete<void>(`${this.base(prefixe)}${ressource}/${objetId}/images/${imageId}/`);
   }
 
   // ---- Panoramas (visite immersive) ----
-  // Corps multipart : "article" = id du logement, "image", "titre", "type_vue", "ordre".
+  // Corps multipart : "article" = id du logement ou du véhicule, "image", "titre", "type_vue", "ordre".
 
-  listerPanoramas(prefixe: PrefixeLocation, logementId: number): Observable<PanoramaLogement[]> {
+  listerPanoramas(
+    prefixe: PrefixeLocation,
+    objetId: number,
+    ressource: RessourceLocation = 'logements',
+  ): Observable<PanoramaLogement[]> {
     return this.http
-      .get<{ resultats: PanoramaLogement[] }>(`${this.base(prefixe)}logements/${logementId}/panoramas/`)
+      .get<{
+        resultats: PanoramaLogement[];
+      }>(`${this.base(prefixe)}${ressource}/${objetId}/panoramas/`)
       .pipe(map((reponse) => reponse.resultats));
   }
 
   ajouterPanorama(
     prefixe: PrefixeLocation,
-    logementId: number,
+    objetId: number,
     fichier: File,
     donnees: { titre: string; type_vue: TypeVuePanorama },
+    ressource: RessourceLocation = 'logements',
   ): Observable<PanoramaLogement> {
     const formData = new FormData();
-    formData.append('article', String(logementId));
+    formData.append('article', String(objetId));
     formData.append('image', fichier);
     formData.append('titre', donnees.titre);
     formData.append('type_vue', donnees.type_vue);
-    return this.http.post<PanoramaLogement>(`${this.base(prefixe)}logements/${logementId}/panoramas/`, formData);
+    return this.http.post<PanoramaLogement>(`${this.base(prefixe)}${ressource}/${objetId}/panoramas/`, formData);
   }
 
   modifierPanorama(
     prefixe: PrefixeLocation,
-    logementId: number,
+    objetId: number,
     panoramaId: number,
     donnees: { titre?: string; type_vue?: TypeVuePanorama; ordre?: number },
+    ressource: RessourceLocation = 'logements',
   ): Observable<PanoramaLogement> {
     return this.http.patch<PanoramaLogement>(
-      `${this.base(prefixe)}logements/${logementId}/panoramas/${panoramaId}/`,
+      `${this.base(prefixe)}${ressource}/${objetId}/panoramas/${panoramaId}/`,
       donnees,
     );
   }
 
-  supprimerPanorama(prefixe: PrefixeLocation, logementId: number, panoramaId: number): Observable<void> {
-    return this.http.delete<void>(`${this.base(prefixe)}logements/${logementId}/panoramas/${panoramaId}/`);
+  supprimerPanorama(
+    prefixe: PrefixeLocation,
+    objetId: number,
+    panoramaId: number,
+    ressource: RessourceLocation = 'logements',
+  ): Observable<void> {
+    return this.http.delete<void>(`${this.base(prefixe)}${ressource}/${objetId}/panoramas/${panoramaId}/`);
   }
 
   // ---- Admin : liste des loueurs ----

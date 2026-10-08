@@ -63,6 +63,7 @@ export interface DemandeLocation {
   nature_libelle: string;
   objet_id: number;
   objet_nom: string;
+  /** logement | vehicule. */
   objet_type: string;
   partenaire: number;
   partenaire_nom: string;
@@ -74,6 +75,10 @@ export interface DemandeLocation {
   nb_personnes: number | null;
   message: string;
   telephone_contact: string;
+  // Location de véhicule (V1) : absents ou nuls pour un logement.
+  avec_chauffeur?: boolean | null;
+  lieu_prise_en_charge?: string | null;
+  montant_estime?: number | null;
   statut: string;
   statut_libelle: string;
   raison_refus: string | null;

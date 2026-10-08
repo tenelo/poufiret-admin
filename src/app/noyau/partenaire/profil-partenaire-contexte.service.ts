@@ -20,6 +20,7 @@ export class ProfilPartenaireContexteService {
   readonly profil = this.profilInterne.asReadonly();
   readonly estRestaurateur = computed(() => this.profilInterne()?.type_partenaire === 'restaurateur');
   readonly estLoueur = computed(() => this.profilInterne()?.type_partenaire === 'loueur_maison');
+  readonly estLoueurVoiture = computed(() => this.profilInterne()?.type_partenaire === 'loueur_voiture');
 
   /** Renvoie le profil en cache, ou déclenche l'appel réseau si pas encore chargé. */
   charger(): Observable<ProfilPartenaire> {

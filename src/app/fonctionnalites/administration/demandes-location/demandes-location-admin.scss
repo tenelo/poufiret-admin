@@ -328,3 +328,25 @@
     }
   }
 }
+
+.type-bien,
+.mention {
+  display: inline-block;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.type-bien {
+  margin-right: 0.3rem;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.mention {
+  margin-left: 0.3rem;
+  background: #ecfeff;
+  color: #0e7490;
+}

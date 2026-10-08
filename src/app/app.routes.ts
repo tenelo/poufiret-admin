@@ -116,6 +116,14 @@ export const routes: Routes = [
           import('./fonctionnalites/locations/espace-loueur/espace-loueur').then((m) => m.EspaceLoueur),
       },
       {
+        // Loueur de voitures (loueur_voiture) : même hôte, onglet Véhicules.
+        path: 'mes-vehicules',
+        canActivate: [roleGuard(['partenaire'])],
+        data: { ongletInitial: 'vehicules' },
+        loadComponent: () =>
+          import('./fonctionnalites/locations/espace-loueur/espace-loueur').then((m) => m.EspaceLoueur),
+      },
+      {
         path: 'mes-demandes',
         canActivate: [roleGuard(['partenaire'])],
         data: { ongletInitial: 'demandes' },

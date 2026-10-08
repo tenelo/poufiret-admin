@@ -14,6 +14,12 @@
       [value]="recherche()"
       (input)="changerRecherche($any($event.target).value)"
     />
+    <select class="champ-departement" (change)="changerType($any($event.target).value)">
+      <option value="" [selected]="typeFiltre() === ''">Tous les types</option>
+      @for (option of optionsType; track option.valeur) {
+        <option [value]="option.valeur" [selected]="option.valeur === typeFiltre()">{{ option.libelle }}</option>
+      }
+    </select>
     @if (departements().length > 0) {
       <select class="champ-departement" (change)="changerDepartement($any($event.target).value)">
         <option value="" [selected]="departementFiltre() === ''">Tous les départements</option>
@@ -41,6 +47,9 @@
         <button type="button" class="carte-loueur" (click)="ouvrir(loueur)">
           <div class="entete-carte">
             <span class="nom">{{ loueur.nom }}</span>
+            <span class="badge badge-type" [class.badge-vehicules]="loueur.type_partenaire === 'loueur_voiture'">
+              {{ libelleType(loueur.type_partenaire) }}
+            </span>
             @if (loueur.demandes_en_attente > 0) {
               <span class="badge badge-alerte">{{ loueur.demandes_en_attente }} à traiter</span>
             }

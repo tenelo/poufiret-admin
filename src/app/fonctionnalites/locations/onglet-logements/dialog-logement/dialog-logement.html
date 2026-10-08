@@ -159,53 +159,16 @@
       }
 
       @if (ongletActif() === 'localisation') {
-        <label for="dl-departement">Département</label>
-        <select id="dl-departement" [value]="departementChoisi()" (change)="changerDepartementChoisi($any($event.target).value)">
-          <option value="">— Choisir —</option>
-          @for (departement of departements(); track departement.id) {
-            <option [value]="departement.id">{{ departement.nom }} ({{ departement.region }})</option>
-          }
-        </select>
-
-        <label for="dl-localite">Localité</label>
-        @if (chargementLocalites()) {
-          <p class="indice">Chargement des localités…</p>
-        } @else if (erreurLocalites()) {
-          <p class="erreur-champ">{{ erreurLocalites() }}</p>
-        } @else {
-          <select id="dl-localite" [value]="localiteId()" [disabled]="!departementChoisi()" (change)="changerLocaliteChoisie($any($event.target).value)">
-            <option value="">— Non renseigné —</option>
-            @for (localite of localites(); track localite.id) {
-              <option [value]="localite.id">{{ localite.nom }}</option>
-            }
-          </select>
-        }
-
-        <label for="dl-quartier">Quartier</label>
-        @if (chargementQuartiers()) {
-          <p class="indice">Chargement des quartiers…</p>
-        } @else if (erreurQuartiers()) {
-          <p class="erreur-champ">{{ erreurQuartiers() }}</p>
-        } @else {
-          <select id="dl-quartier" [value]="quartierId()" [disabled]="!localiteId()" (change)="quartierId.set($any($event.target).value)">
-            <option value="">— Non renseigné —</option>
-            @for (quartier of quartiers(); track quartier.id) {
-              <option [value]="quartier.id">{{ quartier.nom }}</option>
-            }
-          </select>
-        }
-
-        <label for="dl-secteur">Secteur</label>
-        <input id="dl-secteur" type="text" [value]="secteur()" (input)="secteur.set($any($event.target).value)" />
-
-        <label for="dl-reperes">Repères / indications d'accès</label>
-        <textarea id="dl-reperes" rows="2" [value]="adresseReperes()" (input)="adresseReperes.set($any($event.target).value)"></textarea>
-
-        <label>Position GPS</label>
-        <app-position-gps
+        <app-localisation-location
+          prefixeId="dl-"
+          [(departementId)]="departementChoisi"
+          [(localiteId)]="localiteId"
+          [(quartierId)]="quartierId"
+          [(secteur)]="secteur"
+          [(adresseReperes)]="adresseReperes"
           [latitude]="logementCourant()?.latitude ?? null"
           [longitude]="logementCourant()?.longitude ?? null"
-          (enregistrer)="definirPosition($event)"
+          (position)="definirPosition($event)"
         />
       }
 
