@@ -4,7 +4,7 @@ import { map } from 'rxjs';
 
 import { AuthService } from './auth.service';
 import { PermissionsService } from '../permissions/permissions.service';
-import { ENTREES_ADMIN } from '../permissions/entrees-admin';
+import { ENTREES_ADMIN, premiereEntreeAccessible } from '../permissions/entrees-admin';
 
 /**
  * Posée sur /tableau-de-bord : un admin sans la capacité voir_stats y atterrissait quand même
@@ -28,16 +28,8 @@ export const tableauDeBordAdminGuard: CanActivateFn = () => {
         return true;
       }
 
-      const premiereEntree = ENTREES_ADMIN.find((entree) => {
-        if (entree.lien === '/tableau-de-bord' || entree.toujoursVisible) {
-          return false;
-        }
-        if (entree.capacite) {
-          const capacites = Array.isArray(entree.capacite) ? entree.capacite : [entree.capacite];
-          return capacites.some((c) => permissions.capacites[c]);
-        }
-        return permissions.isSuperuser;
-      });
+      const candidats = ENTREES_ADMIN.filter((entree) => entree.lien !== '/tableau-de-bord' && !entree.toujoursVisible);
+      const premiereEntree = premiereEntreeAccessible(candidats, permissions);
 
       return router.createUrlTree([premiereEntree?.lien ?? '/acces-refuse']);
     }),

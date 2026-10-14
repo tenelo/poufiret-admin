@@ -1,10 +1,11 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 import { AuthService } from '../../../noyau/auth/auth.service';
 import { PermissionsService } from '../../../noyau/permissions/permissions.service';
-import { ENTREES_ADMIN, EntreeMenuAdmin } from '../../../noyau/permissions/entrees-admin';
+import { ENTREES_ADMIN, EntreeMenuAdmin, entreeAccessible } from '../../../noyau/permissions/entrees-admin';
 import { ProfilPartenaireContexteService } from '../../../noyau/partenaire/profil-partenaire-contexte.service';
+import { PermissionsAdmin } from '../../../modeles/permissions-admin.model';
 
 interface EntreeMenuPartenaire {
   libelle: string;
@@ -86,16 +87,44 @@ export class BarreLaterale {
     return ENTREES_PARTENAIRE_STANDARD;
   });
 
-  readonly entreesAdmin = computed<EntreeMenuAdmin[]>(() =>
-    ENTREES_ADMIN.filter((entree) => {
-      if (entree.capacite) {
-        const capacites = Array.isArray(entree.capacite) ? entree.capacite : [entree.capacite];
-        return capacites.some((c) => this.permissionsService.aLaCapacite(c));
+  readonly entreesAdmin = computed<EntreeMenuAdmin[]>(() => {
+    const permissions = this.permissionsService.permissionsActuelles();
+    return permissions ? this.filtrerEntrees(ENTREES_ADMIN, permissions) : [];
+  });
+
+  // Groupes dépliants (ex. "Audit") explicitement dépliés par l'admin ; vide = tous repliés par défaut.
+  private readonly groupesDeplies = signal<ReadonlySet<string>>(new Set());
+
+  estGroupeDeplie(groupe: EntreeMenuAdmin): boolean {
+    return this.groupesDeplies().has(groupe.libelle);
+  }
+
+  basculerGroupe(groupe: EntreeMenuAdmin): void {
+    this.groupesDeplies.update((ensemble) => {
+      const copie = new Set(ensemble);
+      if (copie.has(groupe.libelle)) {
+        copie.delete(groupe.libelle);
+      } else {
+        copie.add(groupe.libelle);
       }
-      if (entree.toujoursVisible) {
-        return true;
+      return copie;
+    });
+  }
+
+  private filtrerEntrees(entrees: EntreeMenuAdmin[], permissions: PermissionsAdmin): EntreeMenuAdmin[] {
+    const resultat: EntreeMenuAdmin[] = [];
+    for (const entree of entrees) {
+      if (entree.sousEntrees) {
+        const sousEntrees = this.filtrerEntrees(entree.sousEntrees, permissions);
+        if (sousEntrees.length > 0) {
+          resultat.push({ ...entree, sousEntrees });
+        }
+        continue;
       }
-      return this.permissionsService.permissionsActuelles()?.isSuperuser ?? false;
-    }),
-  );
+      if (entreeAccessible(entree, permissions)) {
+        resultat.push(entree);
+      }
+    }
+    return resultat;
+  }
 }

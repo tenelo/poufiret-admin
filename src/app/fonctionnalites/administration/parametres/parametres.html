@@ -2,11 +2,11 @@
   <h1>Paramètres</h1>
 
   <nav class="barre-onglets" aria-label="Sections">
-    @for (onglet of onglets; track onglet.valeur) {
+    @for (onglet of onglets(); track onglet.valeur) {
       <button
         type="button"
         class="onglet"
-        [class.onglet-actif]="ongletActif() === onglet.valeur"
+        [class.onglet-actif]="ongletActifEffectif() === onglet.valeur"
         (click)="changerOnglet(onglet.valeur)"
       >
         {{ onglet.libelle }}
@@ -14,9 +14,21 @@
     }
   </nav>
 
-  @switch (ongletActif()) {
-    @default {
+  @switch (ongletActifEffectif()) {
+    @case ('admins') {
+      <app-gestion-admins />
+    }
+    @case ('geographie') {
+      <app-geographie />
+    }
+    @case ('recherche') {
       <app-onglet-recherche-parametres />
+    }
+    @case ('moderation') {
+      <app-moderation />
+    }
+    @default {
+      <p class="indice-aucun-droit">Vous n'avez accès à aucune section de cet écran.</p>
     }
   }
 </section>

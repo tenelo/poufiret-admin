@@ -15,7 +15,7 @@
   .placeholder {
     display: block;
     padding: 0.65rem 1.25rem;
-    font-size: 0.9rem;
+    font-size: 1.02rem;
   }
 
   a {
@@ -41,7 +41,7 @@
   .icone {
     flex: none;
     width: 1.5rem;
-    font-size: 1rem;
+    font-size: 1.12rem;
     text-align: center;
   }
 
@@ -51,7 +51,50 @@
 
     em {
       font-style: normal;
-      font-size: 0.75rem;
+      font-size: 0.82rem;
+    }
+  }
+
+  // Groupe dépliant (ex. "Audit", "Locations").
+  .entete-groupe {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.75rem 1.25rem;
+    background: none;
+    border: none;
+    border-left: 3px solid transparent;
+    color: #e5e7eb;
+    font-size: 1.05rem;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(147, 197, 253, 0.1);
+    }
+
+    .icone {
+      font-size: 1.25rem;
+    }
+  }
+
+  .chevron {
+    margin-left: auto;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #9ca3af;
+    transition: transform 0.15s ease;
+  }
+
+  .chevron-deplie {
+    transform: rotate(90deg);
+  }
+
+  .sous-menu {
+    a {
+      padding-left: 3rem;
     }
   }
 }

@@ -1,13 +1,35 @@
 <nav class="barre-laterale">
   @if (estAdmin()) {
     <ul>
-      @for (entree of entreesAdmin(); track entree.lien) {
-        <li>
-          <a [routerLink]="entree.lien" routerLinkActive="actif">
-            <span class="icone">{{ entree.icone }}</span>
-            {{ entree.libelle }}
-          </a>
-        </li>
+      @for (entree of entreesAdmin(); track entree.libelle) {
+        @if (entree.sousEntrees) {
+          <li class="groupe">
+            <button type="button" class="entete-groupe" (click)="basculerGroupe(entree)">
+              <span class="icone">{{ entree.icone }}</span>
+              {{ entree.libelle }}
+              <span class="chevron" [class.chevron-deplie]="estGroupeDeplie(entree)">›</span>
+            </button>
+            @if (estGroupeDeplie(entree)) {
+              <ul class="sous-menu">
+                @for (sousEntree of entree.sousEntrees; track sousEntree.lien) {
+                  <li>
+                    <a [routerLink]="sousEntree.lien" routerLinkActive="actif">
+                      <span class="icone">{{ sousEntree.icone }}</span>
+                      {{ sousEntree.libelle }}
+                    </a>
+                  </li>
+                }
+              </ul>
+            }
+          </li>
+        } @else {
+          <li>
+            <a [routerLink]="entree.lien" routerLinkActive="actif">
+              <span class="icone">{{ entree.icone }}</span>
+              {{ entree.libelle }}
+            </a>
+          </li>
+        }
       }
     </ul>
   } @else {

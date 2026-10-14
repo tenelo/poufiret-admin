@@ -4,12 +4,12 @@ import { Routes } from '@angular/router';
 import { authGuard } from './noyau/auth/auth.guard';
 import { roleGuard } from './noyau/auth/role.guard';
 import { capaciteGuard } from './noyau/permissions/capacite.guard';
-import { superAdminGuard } from './noyau/permissions/super-admin.guard';
-import { gestionAdminsGuard } from './noyau/permissions/gestion-admins.guard';
 import { partenairesMenuGuard } from './noyau/permissions/partenaires-menu.guard';
+import { parametresMenuGuard } from './noyau/permissions/parametres-menu.guard';
 import { redirectionRacineGuard } from './noyau/auth/redirection-racine.guard';
 import { tableauDeBordAdminGuard } from './noyau/auth/tableau-de-bord-admin.guard';
 import { redirectionOngletPartenaires } from './noyau/auth/redirection-onglet-partenaires';
+import { redirectionOngletParametres } from './noyau/auth/redirection-onglet-parametres';
 import { AuthService } from './noyau/auth/auth.service';
 import { livraisonGuard } from './fonctionnalites/livraison/livraison.guard';
 import { niveauDepuisEspace, racineNiveau } from './fonctionnalites/livraison/niveau-livraison';
@@ -316,19 +316,16 @@ export const routes: Routes = [
         children: [],
       },
       {
-        // Super-admin (le backend renvoie toutes les capacités à true) OU capacité gerer_geographie.
+        // Ancienne route, désormais l'onglet "Géographie" du menu Paramètres unique.
         path: 'administration/geographie',
-        canActivate: [roleGuard(['admin']), capaciteGuard],
-        data: { capacite: 'gerer_geographie' },
-        loadComponent: () =>
-          import('./fonctionnalites/administration/geographie/geographie').then((m) => m.Geographie),
+        canActivate: [roleGuard(['admin']), redirectionOngletParametres('geographie')],
+        children: [],
       },
       {
-        // Réservé super-admin : is_superuser, pas une capacité fine.
+        // Ancienne route, désormais l'onglet "Modération de comptes" du menu Paramètres unique.
         path: 'administration/moderation',
-        canActivate: [roleGuard(['admin']), superAdminGuard],
-        loadComponent: () =>
-          import('./fonctionnalites/administration/moderation/moderation').then((m) => m.Moderation),
+        canActivate: [roleGuard(['admin']), redirectionOngletParametres('moderation')],
+        children: [],
       },
       {
         path: 'administration/paiements',
@@ -342,19 +339,16 @@ export const routes: Routes = [
           import('./fonctionnalites/administration/ecran-a-venir/ecran-a-venir').then((m) => m.EcranAVenir),
       },
       {
-        // Accès combiné : super-admin OU capacité gerer_admins (voir gestionAdminsGuard).
+        // Ancienne route, désormais l'onglet "Gestion des admins" du menu Paramètres unique.
         path: 'administration/gestion-admins',
-        canActivate: [roleGuard(['admin']), gestionAdminsGuard],
-        loadComponent: () =>
-          import('./fonctionnalites/administration/gestion-admins/gestion-admins').then(
-            (m) => m.GestionAdmins,
-          ),
+        canActivate: [roleGuard(['admin']), redirectionOngletParametres('admins')],
+        children: [],
       },
       {
-        // Super-admin (le backend renvoie toutes les capacités à true) OU capacité gerer_parametres.
+        // Onglets Gestion des admins/Géographie/Recherche/Modération de comptes, chacun gardant
+        // son propre droit (voir parametresMenuGuard et Parametres).
         path: 'administration/parametres',
-        canActivate: [roleGuard(['admin']), capaciteGuard],
-        data: { capacite: 'gerer_parametres' },
+        canActivate: [roleGuard(['admin']), parametresMenuGuard],
         loadComponent: () =>
           import('./fonctionnalites/administration/parametres/parametres').then((m) => m.Parametres),
       },

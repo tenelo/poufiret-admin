@@ -80,7 +80,7 @@
                 } @else if (localitesPour(ligne.partenaire_id).length === 0) {
                   <p class="indice-blocage">
                     Ce département ne possède aucune localité.
-                    <a routerLink="/administration/geographie">Gérez les localités</a>
+                    <a routerLink="/administration/parametres" [queryParams]="{ onglet: 'geographie' }">Gérez les localités</a>
                   </p>
                 } @else {
                   <select

@@ -188,7 +188,7 @@
         }
 
         @if (peutGererGeographie()) {
-          <a class="lien-geographie" routerLink="/administration/geographie">
+          <a class="lien-geographie" routerLink="/administration/parametres" [queryParams]="{ onglet: 'geographie' }">
             Quartier absent ? Ajoutez-le dans Géographie
           </a>
         }
