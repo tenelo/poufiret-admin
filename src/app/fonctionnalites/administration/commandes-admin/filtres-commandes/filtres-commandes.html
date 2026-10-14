@@ -94,12 +94,14 @@
       </select>
     </div>
 
-    <label class="champ champ-toggle">
-      <span>&nbsp;</span>
-      <span class="ligne-toggle">
-        <input type="checkbox" [checked]="filtres().restauration" (change)="basculerRestauration($any($event.target).checked)" />
-        Restaurants uniquement
-      </span>
-    </label>
+    @if (!categorieChoisie()) {
+      <label class="champ champ-toggle">
+        <span>&nbsp;</span>
+        <span class="ligne-toggle">
+          <input type="checkbox" [checked]="filtres().restauration" (change)="basculerRestauration($any($event.target).checked)" />
+          Restaurants uniquement
+        </span>
+      </label>
+    }
   }
 </div>

@@ -9,7 +9,7 @@ import { declencherTelechargementFichier, nomFichierHorodate } from '../telechar
 /**
  * Service de lecture des demandes d'intervention (admin, lecture seule) et de
  * leur export CSV. Endpoints protégés côté backend par la capacité
- * `voir_interventions` (les deux, y compris l'export).
+ * `voir_interventions` ou `gerer_interventions` (les deux, y compris l'export).
  */
 @Injectable({ providedIn: 'root' })
 export class InterventionsService {

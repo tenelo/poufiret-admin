@@ -20,7 +20,34 @@
     <p class="erreur-generale">{{ erreurExport() }}</p>
   }
 
-  @if (!partenaireFixe() && restaurantsBandeau(); as restaurants) {
+  @if (categories().length > 0) {
+    <nav class="barre-categories" aria-label="Catégories">
+      <button
+        type="button"
+        class="categorie"
+        [class.categorie-active]="filtres().categorie === ''"
+        (click)="choisirCategorie('')"
+      >
+        Toutes
+      </button>
+      @for (categorie of categories(); track categorie.id) {
+        <button
+          type="button"
+          class="categorie"
+          [class.categorie-active]="filtres().categorie === categorie.id"
+          (click)="choisirCategorie(categorie.id)"
+        >
+          <span class="icone-categorie">{{ categorie.icone }}</span>
+          {{ categorie.nom }}
+          @if (categorie.nb_a_traiter > 0) {
+            <span class="compteur compteur-a-traiter">{{ categorie.nb_a_traiter }}</span>
+          }
+        </button>
+      }
+    </nav>
+  }
+
+  @if (!partenaireFixe() && filtres().categorie === '' && restaurantsBandeau(); as restaurants) {
     @if (restaurants.length > 0) {
       <div class="bandeau-restaurants">
         <span class="etiquette-bandeau">Restaurants :</span>
@@ -65,6 +92,7 @@
       [groupe]="groupeCourant()"
       [modeStats]="onglet() === 'tableau'"
       [partenaireVerrouille]="!!partenaireFixe()"
+      [categorieChoisie]="filtres().categorie"
       (filtresChange)="surFiltres($event)"
     />
 

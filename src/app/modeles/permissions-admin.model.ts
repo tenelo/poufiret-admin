@@ -6,9 +6,9 @@
 // Les capacités possibles de la grille admin, pour l'autocomplétion lors
 // de la déclaration des entrées de menu / des routes protégées.
 // `gerer_admins`, `gerer_geographie`, `gerer_formules_pub`, `gerer_commandes`, `gerer_restaurants`,
-// `modifier_identifiant_partenaire`, `gerer_parametres`, `gerer_locations` et `gerer_reservations`
-// sont privilégiées : seul un super-admin peut la poser à true (le backend ignore silencieusement
-// toute tentative d'un non-superuser).
+// `modifier_identifiant_partenaire`, `gerer_parametres`, `gerer_locations`, `gerer_reservations` et
+// `gerer_interventions` sont privilégiées : seul un super-admin peut la poser à true (le backend
+// ignore silencieusement toute tentative d'un non-superuser).
 export type NomCapacite =
   | 'suspendre_client'
   | 'suspendre_partenaire'
@@ -41,6 +41,7 @@ export type NomCapacite =
   | 'voir_stats'
   | 'voir_indicateurs'
   | 'voir_interventions'
+  | 'gerer_interventions'
   | 'lire_journal'
   | 'exporter_csv'
   | 'gerer_admins'
@@ -107,6 +108,7 @@ export const LIBELLES_CAPACITE: Record<NomCapacite, string> = {
   voir_stats: 'Voir les statistiques',
   voir_indicateurs: 'Voir les indicateurs partenaires',
   voir_interventions: "Voir les demandes d'intervention",
+  gerer_interventions: "Gérer les demandes d'intervention",
   lire_journal: "Lire le journal d'audit",
   exporter_csv: 'Exporter des données (CSV)',
   gerer_admins: 'Gérer les administrateurs',

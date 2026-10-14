@@ -43,8 +43,8 @@ export interface CapaciteDescriptor {
   nom: NomCapacite;
   libelle: string;
   // true pour `gerer_admins`, `gerer_geographie`, `gerer_formules_pub`, `gerer_commandes`,
-  // `gerer_restaurants`, `modifier_identifiant_partenaire`, `gerer_parametres`, `gerer_locations`
-  // et `gerer_reservations` : non modifiable par un admin non-superuser.
+  // `gerer_restaurants`, `modifier_identifiant_partenaire`, `gerer_parametres`, `gerer_locations`,
+  // `gerer_reservations` et `gerer_interventions` : non modifiable par un admin non-superuser.
   privilegiee?: boolean;
 }
 
@@ -152,6 +152,8 @@ export const GROUPES_CAPACITES: GroupeCapacites[] = [
       { nom: 'voir_stats', libelle: 'Voir les statistiques' },
       { nom: 'voir_indicateurs', libelle: 'Voir les indicateurs partenaires' },
       { nom: 'voir_interventions', libelle: "Voir les demandes d'intervention" },
+      // Privilégiée : seul un super-admin peut la modifier (case verrouillée pour les autres).
+      { nom: 'gerer_interventions', libelle: "Gérer les demandes d'intervention", privilegiee: true },
       { nom: 'lire_journal', libelle: "Lire le journal d'audit" },
       { nom: 'exporter_csv', libelle: 'Exporter en CSV' },
     ],

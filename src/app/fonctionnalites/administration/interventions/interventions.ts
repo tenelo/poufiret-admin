@@ -1,8 +1,9 @@
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { InterventionsService } from './interventions.service';
+import { PermissionsService } from '../../../noyau/permissions/permissions.service';
 import { extraireMessageErreur } from '../tableau-de-bord-admin/extraire-message-erreur';
 import {
   InterventionAdmin,
@@ -15,10 +16,12 @@ import {
 const DEBOUNCE_RECHERCHE_MS = 350;
 
 /**
- * Écran "Demandes d'intervention" (lecture seule, capacité voir_interventions) :
- * liste filtrable par statut/recherche (filtrage backend), export CSV
- * respectant les filtres courants, détail (description + adresse) au clic sur
- * une ligne. Aucune action de modification, aucune transition de statut.
+ * Écran "Demandes d'intervention", accessible avec voir_interventions OU gerer_interventions
+ * (un superuser a toujours les deux, déjà reflété par le backend) : liste filtrable par
+ * statut/recherche (filtrage backend), export CSV respectant les filtres courants, détail
+ * (description + adresse) au clic sur une ligne. Aucune action d'écriture (statut, assignation,
+ * notes…) n'existe encore côté backend ; `peutGerer` est exposé pour les gater quand elles
+ * existeront — en attendant, l'écran reste en lecture seule pour tout le monde.
  */
 @Component({
   selector: 'app-interventions',
@@ -28,7 +31,11 @@ const DEBOUNCE_RECHERCHE_MS = 350;
 })
 export class Interventions implements OnInit {
   private readonly service = inject(InterventionsService);
+  private readonly permissionsService = inject(PermissionsService);
   private readonly destroyRef = inject(DestroyRef);
+
+  /** Droit d'écriture (statut, assignation, notes…) — à utiliser pour gater ces actions futures. */
+  readonly peutGerer = computed(() => this.permissionsService.aLaCapacite('gerer_interventions'));
 
   readonly optionsStatut = OPTIONS_STATUT_INTERVENTION;
   readonly classeChipStatut = classeChipStatutIntervention;

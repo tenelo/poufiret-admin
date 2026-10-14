@@ -8,6 +8,7 @@ import { superAdminGuard } from './noyau/permissions/super-admin.guard';
 import { gestionAdminsGuard } from './noyau/permissions/gestion-admins.guard';
 import { partenairesMenuGuard } from './noyau/permissions/partenaires-menu.guard';
 import { redirectionRacineGuard } from './noyau/auth/redirection-racine.guard';
+import { tableauDeBordAdminGuard } from './noyau/auth/tableau-de-bord-admin.guard';
 import { redirectionOngletPartenaires } from './noyau/auth/redirection-onglet-partenaires';
 import { AuthService } from './noyau/auth/auth.service';
 import { livraisonGuard } from './fonctionnalites/livraison/livraison.guard';
@@ -35,6 +36,7 @@ export const routes: Routes = [
     children: [
       {
         path: 'tableau-de-bord',
+        canActivate: [tableauDeBordAdminGuard],
         loadComponent: () =>
           import('./fonctionnalites/tableau-de-bord/tableau-de-bord').then((m) => m.TableauDeBord),
       },
@@ -199,7 +201,7 @@ export const routes: Routes = [
       {
         path: 'administration/interventions',
         canActivate: [roleGuard(['admin']), capaciteGuard],
-        data: { capacite: 'voir_interventions' },
+        data: { capacite: ['voir_interventions', 'gerer_interventions'] },
         loadComponent: () =>
           import('./fonctionnalites/administration/interventions/interventions').then(
             (m) => m.Interventions,

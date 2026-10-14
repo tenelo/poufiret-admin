@@ -28,6 +28,15 @@ export interface TypePartenaireMeta {
   libelle: string;
 }
 
+/** Onglet de premier niveau (au-dessus de Tableau de bord/À traiter/…), filtre ?categorie=<id>. */
+export interface CategorieCommandeMeta {
+  id: number;
+  nom: string;
+  icone: string;
+  nb_commandes: number;
+  nb_a_traiter: number;
+}
+
 /** GET meta/. */
 export interface MetaCommandes {
   statuts: StatutCommandeMeta[];
@@ -35,6 +44,8 @@ export interface MetaCommandes {
   modes_livraison: ModeLivraisonMeta[];
   // Phase restaurants : filtre "Type de partenaire" (ex. "Restaurants uniquement" via restauration=1).
   types_partenaire?: TypePartenaireMeta[];
+  // Déjà triées par le backend (Restaurants d'abord).
+  categories: CategorieCommandeMeta[];
 }
 
 export interface LivraisonCommande {
@@ -210,6 +221,8 @@ export interface FiltresCommandesAdmin {
   // Phase restaurants.
   typePartenaire: string;
   restauration: boolean;
+  // Onglet de premier niveau (catégorie) ; '' = « Toutes ».
+  categorie: number | '';
 }
 
 export const FILTRES_COMMANDES_DEFAUT: FiltresCommandesAdmin = {
@@ -223,6 +236,7 @@ export const FILTRES_COMMANDES_DEFAUT: FiltresCommandesAdmin = {
   statut: '',
   typePartenaire: '',
   restauration: false,
+  categorie: '',
 };
 
 function formaterDateIso(date: Date): string {

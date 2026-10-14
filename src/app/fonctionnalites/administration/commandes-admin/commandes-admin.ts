@@ -24,11 +24,13 @@ const TAILLE_PAGE = 20;
 const INTERVALLE_RAFRAICHISSEMENT_MS = 30000;
 
 /**
- * Centre de gestion des commandes (admin / super-admin, capacité gerer_commandes) : onglets
- * Tableau de bord | À traiter | En cours | Terminées | Annulées | Toutes avec compteurs, filtres
- * communs, liste, détail en panneau latéral et export CSV. Statuts, groupes et libellés viennent
- * du backend (meta) ; l'onglet « À traiter » se rafraîchit toutes les 30 s (en pause si l'onglet du
- * navigateur est masqué). ?commande=<id> ouvre directement le détail (et l'onglet du groupe).
+ * Centre de gestion des commandes (admin / super-admin, capacité gerer_commandes) : au-dessus,
+ * onglets de premier niveau par catégorie (meta.categories, ?categorie=<id> appliqué à tout le
+ * contenu) ; en dessous, onglets Tableau de bord | À traiter | En cours | Terminées | Annulées |
+ * Toutes avec compteurs, filtres communs, liste, détail en panneau latéral et export CSV. Statuts,
+ * groupes et libellés viennent du backend (meta) ; l'onglet « À traiter » se rafraîchit toutes les
+ * 30 s (en pause si l'onglet du navigateur est masqué). ?commande=<id> ouvre directement le détail
+ * (et l'onglet du groupe).
  */
 @Component({
   selector: 'app-commandes-admin',
@@ -72,6 +74,9 @@ export class CommandesAdmin implements OnInit {
   // ---- Bandeau de puces "Restaurants" (chaque restaurant + son nb de commandes sur la période) ----
   readonly restaurantsBandeau = signal<PartenaireDetailCommandes[] | null>(null);
 
+  /** Catégories (onglets de premier niveau), déjà triées par le backend. */
+  readonly categories = computed(() => this.meta()?.categories ?? []);
+
   /** Groupe envoyé à l'API (null pour « Toutes » et pour le tableau de bord). */
   readonly groupeCourant = computed<string | null>(() => {
     const onglet = this.onglet();
@@ -82,10 +87,15 @@ export class CommandesAdmin implements OnInit {
   private abonnementListe?: Subscription;
 
   ngOnInit(): void {
+    const categorieParam = Number(this.route.snapshot.queryParamMap.get('categorie'));
+    if (categorieParam > 0) {
+      this.filtres.update((f) => ({ ...f, categorie: categorieParam }));
+    }
+
     const partenaireFixe = this.partenaireFixe();
     if (partenaireFixe) {
       this.filtres.update((f) => ({ ...f, partenaire: partenaireFixe }));
-    } else {
+    } else if (!this.filtres().categorie) {
       this.chargerBandeauRestaurants();
     }
 
@@ -231,9 +241,30 @@ export class CommandesAdmin implements OnInit {
     this.filtres.set(filtres);
     this.page.set(1);
     this.chargerContenu();
-    if (!this.partenaireFixe()) {
+    if (!this.partenaireFixe() && !filtres.categorie) {
       this.chargerBandeauRestaurants();
     }
+  }
+
+  /** Onglet de premier niveau : applique ?categorie=<id> à tout le contenu existant. */
+  choisirCategorie(categorie: number | ''): void {
+    if (this.filtres().categorie === categorie) return;
+    this.filtres.update((f) => ({ ...f, categorie }));
+    this.page.set(1);
+    this.chargerContenu();
+    if (!this.partenaireFixe()) {
+      if (categorie) {
+        this.restaurantsBandeau.set(null);
+      } else {
+        this.chargerBandeauRestaurants();
+      }
+    }
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { categorie: categorie || null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   /** Puces "Restaurants" (nb de commandes sur la période courante), cliquables pour filtrer. */

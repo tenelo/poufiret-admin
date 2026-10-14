@@ -34,6 +34,8 @@ export class FiltresCommandes implements OnInit {
   readonly modeStats = input(false);
   /** Partenaire imposé par le parent (ex. onglet Commandes de l'espace restaurant) : champ masqué. */
   readonly partenaireVerrouille = input(false);
+  /** Onglet de premier niveau choisi (catégorie) : masque l'interrupteur "Restaurants uniquement", devenu inutile. */
+  readonly categorieChoisie = input<number | ''>('');
 
   readonly filtresChange = output<FiltresCommandesAdmin>();
 

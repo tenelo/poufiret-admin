@@ -28,7 +28,7 @@ export class CommandesAdminService {
     return `${this.configuration.apiUrl}/orders/admin/`;
   }
 
-  /** GET meta/ : statuts, groupes et modes de livraison (aucun nom de statut n'est supposé côté UI). */
+  /** GET meta/ : statuts, groupes, modes de livraison et catégories (onglets de premier niveau, déjà triées). */
   meta(): Observable<MetaCommandes> {
     return this.http.get<MetaCommandes>(`${this.base}meta/`);
   }
@@ -82,6 +82,7 @@ export class CommandesAdminService {
     if (filtres.departement !== '') params = params.set('departement', filtres.departement);
     if (filtres.typePartenaire) params = params.set('type_partenaire', filtres.typePartenaire);
     if (filtres.restauration) params = params.set('restauration', '1');
+    if (filtres.categorie !== '') params = params.set('categorie', filtres.categorie);
     return this.http.get<StatsCommandes>(`${this.base}stats/`, { params });
   }
 
@@ -108,6 +109,7 @@ export class CommandesAdminService {
     if (filtres.recherche.trim()) params = params.set('search', filtres.recherche.trim());
     if (filtres.typePartenaire) params = params.set('type_partenaire', filtres.typePartenaire);
     if (filtres.restauration) params = params.set('restauration', '1');
+    if (filtres.categorie !== '') params = params.set('categorie', filtres.categorie);
     const { du, au } = bornesPeriode(filtres);
     if (du) params = params.set('du', du);
     if (au) params = params.set('au', au);
