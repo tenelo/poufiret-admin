@@ -273,6 +273,42 @@ export class OngletCarteRestaurant implements OnInit {
     return plat.images.find((i) => i.est_principale)?.image ?? plat.images[0]?.image ?? null;
   }
 
+  /** Glisser-déposer d'un plat (grand écran) : réordonne dans la section déposée, rien d'autre. */
+  surDepotPlat(evenement: CdkDragDrop<PlatCarte[]>, groupe: SectionAvecPlats): void {
+    if (evenement.previousIndex === evenement.currentIndex) return;
+
+    const reordonnes = [...groupe.plats];
+    moveItemInArray(reordonnes, evenement.previousIndex, evenement.currentIndex);
+    this.appliquerNouvelOrdrePlats(groupe, reordonnes);
+  }
+
+  /** Boutons Monter/Descendre (mobile) : échange le plat avec son voisin dans la même section. */
+  deplacerPlat(groupe: SectionAvecPlats, plat: PlatCarte, direction: -1 | 1): void {
+    const index = groupe.plats.findIndex((p) => p.id === plat.id);
+    const indexCible = index + direction;
+    if (index === -1 || indexCible < 0 || indexCible >= groupe.plats.length) return;
+
+    const reordonnes = [...groupe.plats];
+    moveItemInArray(reordonnes, index, indexCible);
+    this.appliquerNouvelOrdrePlats(groupe, reordonnes);
+  }
+
+  /** Applique le nouvel ordre localement (affichage immédiat) puis l'enregistre côté serveur. */
+  private appliquerNouvelOrdrePlats(groupe: SectionAvecPlats, platsOrdonnes: PlatCarte[]): void {
+    // Index local de chaque plat déplacé = son nouveau champ `ordre`.
+    const indexParId = new Map(platsOrdonnes.map((p, index) => [p.id, index]));
+    this.plats.update((liste) => liste.map((p) => (indexParId.has(p.id) ? { ...p, ordre: indexParId.get(p.id)! } : p)));
+
+    const sectionId = groupe.section.id === ID_SANS_SECTION ? null : groupe.section.id;
+    this.service.reordonnerPlats(this.prefixe(), sectionId, platsOrdonnes.map((p) => p.id)).subscribe({
+      error: (erreur: unknown) => {
+        this.messageErreur.set(extraireMessageErreur(erreur));
+        // Retour visuel en arrière : on recharge l'ordre réel depuis le serveur.
+        this.charger();
+      },
+    });
+  }
+
   basculerEpuise(plat: PlatCarte): void {
     if (this.epuisementEnCoursId()) return;
     this.epuisementEnCoursId.set(plat.id);

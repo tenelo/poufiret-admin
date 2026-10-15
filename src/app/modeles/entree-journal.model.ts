@@ -13,6 +13,11 @@ export interface EntreeJournal {
   cible: string;
   cible_role: string;
   motif: string;
+  // Plusieurs événements identiques regroupés en une seule ligne (ex. 5 tentatives de connexion
+  // ratées de suite) : > 1 affiche « ×N » et la date de la dernière occurrence (voir `date` pour la
+  // première).
+  occurrences: number;
+  derniere_occurrence: string;
 }
 
 export interface ReponseJournalAudit {

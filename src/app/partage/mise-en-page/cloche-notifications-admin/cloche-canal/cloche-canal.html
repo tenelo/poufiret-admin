@@ -1,0 +1,61 @@
+<div class="cloche-notifications">
+  <!-- Bouton cloche : icône + pastille rouge avec le nombre de non-lues de ce canal -->
+  <button
+    type="button"
+    class="bouton-cloche"
+    [class]="classeCouleur()"
+    [class.en-animation]="enAnimation()"
+    aria-haspopup="true"
+    [attr.aria-expanded]="panneauOuvert()"
+    [attr.aria-label]="nbNonLues() > 0 ? nbNonLues() + ' ' + libelleAccessibilite() + ' non lue(s)' : libelleAccessibilite()"
+    (click)="bascule.emit()"
+  >
+    <span class="icone-cloche">{{ icone() }}</span>
+    @if (nbNonLues() > 0) {
+      <span class="badge-cloche">{{ texteBadge() }}</span>
+    }
+  </button>
+
+  @if (panneauOuvert()) {
+    <!-- Panneau déroulant : liste des dernières notifications de ce canal uniquement -->
+    <div class="voile-panneau" (click)="bascule.emit()">
+      <div class="panneau-notifications" (click)="$event.stopPropagation()">
+        <div class="entete-panneau">
+          <h3>{{ titrePanneau() }}</h3>
+          @if (nbNonLues() > 0) {
+            <button type="button" class="lien-tout-lire" (click)="toutLire.emit()">
+              Tout marquer comme lu
+            </button>
+          }
+        </div>
+
+        @if (erreur()) {
+          <p class="erreur-panneau">{{ erreur() }}</p>
+        }
+
+        @if (chargementEnCours() && notifications().length === 0) {
+          <p class="etat-panneau">Chargement…</p>
+        } @else if (notifications().length === 0 && !erreur()) {
+          <p class="etat-panneau">Aucune notification</p>
+        } @else {
+          <ul class="liste-notifications">
+            @for (notification of notifications(); track notification.id) {
+              <li>
+                <button
+                  type="button"
+                  class="notification"
+                  [class.non-lue]="!notification.lue"
+                  (click)="ouvrir.emit(notification)"
+                >
+                  <span class="titre-notification">{{ notification.titre }}</span>
+                  <span class="message-notification">{{ notification.message }}</span>
+                  <span class="date-notification">{{ formaterDateRelative(notification.cree_le) }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+  }
+</div>

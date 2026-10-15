@@ -3,7 +3,7 @@
     <div>
       <h1>Connexions admin</h1>
       @if (!chargementEnCours() && !erreurChargement()) {
-        <span class="compteur">{{ total() }} connexion{{ total() > 1 ? 's' : '' }}</span>
+        <span class="compteur">{{ total() }} admin{{ total() > 1 ? 's' : '' }}</span>
       }
     </div>
     <div class="actions-entete">
@@ -58,9 +58,11 @@
       <table class="tableau-connexions">
         <thead>
           <tr>
-            <th>Date / heure</th>
+            <th>Dernière connexion</th>
             <th>Utilisateur</th>
-            <th>Adresse IP</th>
+            <th>Nb connexions</th>
+            <th>Première connexion</th>
+            <th>Dernière IP</th>
             <th>Plateforme</th>
             <th>Appareil</th>
             <th>Statut</th>
@@ -79,6 +81,8 @@
                   }
                 </div>
               </td>
+              <td class="centre">{{ connexion.nb_connexions }}</td>
+              <td>{{ formaterDate(connexion.premiere_connexion) }}</td>
               <td>{{ connexion.adresse_ip }}</td>
               <td>{{ connexion.plateforme_libelle }}</td>
               <td>{{ connexion.appareil_nom || '—' }}</td>

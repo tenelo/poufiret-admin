@@ -1,14 +1,9 @@
 <section class="page-interventions">
   <div class="entete">
-    <div>
-      <h1>Demandes d'intervention</h1>
-      @if (!chargementEnCours() && !erreurChargement()) {
-        <span class="compteur">{{ total() }} demande{{ total() > 1 ? 's' : '' }}</span>
-      }
-    </div>
+    <h1>Demandes d'intervention</h1>
     <div class="actions-entete">
-      <button type="button" class="bouton-secondaire" [disabled]="chargementEnCours()" (click)="charger()">
-        {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
+      <button type="button" class="bouton-secondaire" [disabled]="chargementListe()" (click)="rafraichir()">
+        ↻ Rafraîchir
       </button>
       <button type="button" class="bouton-principal" [disabled]="exportEnCours()" (click)="exporter()">
         {{ exportEnCours() ? 'Export en cours…' : '⭳ Exporter CSV' }}
@@ -20,102 +15,102 @@
     <p class="erreur-generale">{{ erreurExport() }}</p>
   }
 
-  <div class="barre-filtres">
-    <input
-      type="text"
-      class="champ-recherche"
-      placeholder="Rechercher un client, un artisan, un numéro…"
-      [value]="rechercheTexte()"
-      (input)="changerRecherche($any($event.target).value)"
-    />
-    <select
-      class="filtre-statut"
-      [value]="filtreStatut()"
-      (change)="changerFiltreStatut($any($event.target).value)"
-    >
-      @for (option of optionsStatut; track option.valeur) {
-        <option [value]="option.valeur">{{ option.libelle }}</option>
-      }
-    </select>
-  </div>
-
-  @if (chargementEnCours()) {
-    <div class="etat-chargement">
-      <span class="spinner"></span>
-      <p>Chargement des demandes…</p>
-    </div>
-  } @else if (erreurChargement()) {
-    <div class="etat-erreur">
-      <p>{{ erreurChargement() }}</p>
-      <button type="button" (click)="charger()">Réessayer</button>
-    </div>
-  } @else if (interventions().length === 0) {
-    <div class="etat-vide">
-      <p>Aucune demande d'intervention pour ces filtres.</p>
-    </div>
+  @if (!pret()) {
+    <p class="etat">Chargement du centre des demandes…</p>
   } @else {
-    <div class="conteneur-tableau">
-      <table class="tableau-interventions">
-        <thead>
-          <tr>
-            <th>Numéro</th>
-            <th>Client</th>
-            <th>Artisan</th>
-            <th>Type</th>
-            <th>Urgence</th>
-            <th>Statut</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (intervention of interventions(); track intervention.id) {
-            <tr
-              class="ligne-intervention"
-              [class.ligne-ouverte]="interventionOuverteId() === intervention.id"
-              (click)="basculerDetail(intervention)"
-            >
-              <td>{{ intervention.numero }}</td>
-              <td>
-                <div class="cellule-client">
-                  <span class="nom">{{ intervention.client_nom }}</span>
-                  <a
-                    class="telephone"
-                    [href]="'tel:' + intervention.client_telephone"
-                    (click)="$event.stopPropagation()"
-                  >
-                    {{ intervention.client_telephone }}
-                  </a>
-                </div>
-              </td>
-              <td>{{ intervention.artisan_nom || '—' }}</td>
-              <td>{{ libelleType(intervention) }}</td>
-              <td>{{ intervention.urgence_libelle }}</td>
-              <td>
-                <span class="badge {{ classeChipStatut(intervention.statut) }}">
-                  {{ intervention.statut_libelle }}
-                </span>
-              </td>
-              <td>{{ formaterDate(intervention.created_at) }}</td>
+    <nav class="barre-onglets" aria-label="Sections">
+      @for (item of onglets(); track item.valeur) {
+        <button
+          type="button"
+          class="onglet"
+          [class.onglet-actif]="onglet() === item.valeur"
+          (click)="changerOnglet(item.valeur)"
+        >
+          {{ item.libelle }}
+          @if (compteur(item.valeur) !== null) {
+            <span class="compteur">{{ compteur(item.valeur) }}</span>
+          }
+        </button>
+      }
+    </nav>
+
+    <app-filtres-interventions [filtres]="filtres()" [meta]="meta()" (filtresChange)="surFiltres($event)" />
+
+    @if (erreurListe()) {
+      <div class="etat-erreur">
+        <p>{{ erreurListe() }}</p>
+        <button type="button" (click)="chargerListe()">Réessayer</button>
+      </div>
+    } @else if (chargementListe() && interventions().length === 0) {
+      <p class="etat">Chargement des demandes…</p>
+    } @else if (interventions().length === 0) {
+      <p class="etat">Aucune demande ne correspond à ces critères.</p>
+    } @else {
+      <p class="total">{{ total() }} demande{{ total() > 1 ? 's' : '' }}</p>
+
+      <!-- Grand écran : tableau -->
+      <div class="conteneur-tableau">
+        <table class="tableau">
+          <thead>
+            <tr>
+              <th>Numéro</th>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Urgence</th>
+              <th>Client</th>
+              <th>Artisan</th>
+              <th>Statut</th>
             </tr>
-            @if (interventionOuverteId() === intervention.id) {
-              <tr class="ligne-detail">
-                <td colspan="7">
-                  <div class="panneau-detail">
-                    <div class="champ-detail">
-                      <span class="etiquette">Description</span>
-                      <p class="valeur">{{ intervention.description || '—' }}</p>
-                    </div>
-                    <div class="champ-detail">
-                      <span class="etiquette">Adresse</span>
-                      <p class="valeur">{{ intervention.adresse_snapshot || '—' }}</p>
-                    </div>
-                  </div>
-                </td>
+          </thead>
+          <tbody>
+            @for (intervention of interventions(); track intervention.id) {
+              <tr [class.ligne-ouverte]="intervention.id === interventionOuverteId()" (click)="ouvrirDetail(intervention.id)">
+                <td class="fort">{{ intervention.numero }}</td>
+                <td>{{ formaterDateHeure(intervention.created_at) }}</td>
+                <td>{{ intervention.type_intervention_libelle || intervention.type_libre || '—' }}</td>
+                <td>{{ intervention.urgence_libelle }}</td>
+                <td>{{ intervention.client_nom }}</td>
+                <td>{{ intervention.artisan_nom || '—' }}</td>
+                <td><span class="badge">{{ intervention.statut_libelle }}</span></td>
               </tr>
             }
-          }
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile : cartes -->
+      <div class="cartes">
+        @for (intervention of interventions(); track intervention.id) {
+          <button
+            type="button"
+            class="carte"
+            [class.ligne-ouverte]="intervention.id === interventionOuverteId()"
+            (click)="ouvrirDetail(intervention.id)"
+          >
+            <span class="carte-entete">
+              <span class="fort">{{ intervention.numero }}</span>
+              <span class="badge">{{ intervention.statut_libelle }}</span>
+            </span>
+            <span class="carte-ligne">{{ intervention.type_intervention_libelle || intervention.type_libre || '—' }} · {{ intervention.urgence_libelle }}</span>
+            <span class="carte-ligne">{{ intervention.client_nom }} → {{ intervention.artisan_nom || 'Non assigné' }}</span>
+            <span class="carte-ligne">{{ formaterDateHeure(intervention.created_at) }}</span>
+          </button>
+        }
+      </div>
+
+      @if (nombrePages() > 1) {
+        <div class="pagination">
+          <button type="button" [disabled]="page() === 1" (click)="changerPage(page() - 1)">← Précédent</button>
+          <span>Page {{ page() }} / {{ nombrePages() }}</span>
+          <button type="button" [disabled]="page() >= nombrePages()" (click)="changerPage(page() + 1)">
+            Suivant →
+          </button>
+        </div>
+      }
+    }
   }
 </section>
+
+@if (interventionOuverteId(); as id) {
+  <app-detail-intervention [interventionId]="id" (ferme)="fermerDetail()" (modifiee)="surDetailModifie()" />
+}

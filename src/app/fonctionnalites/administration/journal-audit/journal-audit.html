@@ -88,8 +88,22 @@
                 <td class="cellule-date">
                   <span class="date-complete">{{ formaterDateComplete(entree.date) }}</span>
                   <span class="date-relative">{{ formaterDateRelative(entree.date) }}</span>
+                  @if (entree.occurrences > 1) {
+                    <!-- Plusieurs occurrences identiques regroupées : date de la plus récente -->
+                    <span class="date-derniere-occurrence">
+                      Dernière : {{ formaterDateRelative(entree.derniere_occurrence) }}
+                    </span>
+                  }
                 </td>
-                <td>{{ entree.action_libelle }}</td>
+                <td>
+                  {{ entree.action_libelle }}
+                  @if (entree.occurrences > 1) {
+                    <!-- Compteur de répétitions (ex. 5 tentatives de connexion identiques) -->
+                    <span class="badge-occurrences" [title]="entree.occurrences + ' occurrences regroupées'">
+                      ×{{ entree.occurrences }}
+                    </span>
+                  }
+                </td>
                 <td>{{ entree.acteur }}</td>
                 <td>{{ entree.cible }}</td>
                 <td>

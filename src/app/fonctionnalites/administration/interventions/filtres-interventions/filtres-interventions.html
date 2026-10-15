@@ -1,0 +1,60 @@
+<div class="filtres">
+  <!-- Recherche texte libre (numéro, client, description…) -->
+  <div class="champ champ-large">
+    <label for="fi-recherche">Recherche</label>
+    <input
+      id="fi-recherche"
+      type="search"
+      placeholder="Numéro, client, description…"
+      [value]="rechercheAffichee()"
+      (input)="saisirRecherche($any($event.target).value)"
+    />
+  </div>
+
+  @if (meta()?.urgences?.length) {
+    <!-- Urgence : options issues de meta.urgences (aucune valeur supposée côté UI) -->
+    <div class="champ">
+      <label for="fi-urgence">Urgence</label>
+      <select id="fi-urgence" (change)="changerUrgence($any($event.target).value)">
+        <option value="" [selected]="filtres().urgence === ''">Toutes</option>
+        @for (urgence of meta()!.urgences; track urgence.valeur) {
+          <option [value]="urgence.valeur" [selected]="urgence.valeur === filtres().urgence">{{ urgence.libelle }}</option>
+        }
+      </select>
+    </div>
+  }
+
+  @if (meta()?.types?.length) {
+    <!-- Type d'intervention : options issues de meta.types -->
+    <div class="champ">
+      <label for="fi-type">Type</label>
+      <select id="fi-type" (change)="changerType($any($event.target).value)">
+        <option value="" [selected]="filtres().type === ''">Tous</option>
+        @for (type of meta()!.types; track type.valeur) {
+          <option [value]="type.valeur" [selected]="type.valeur === filtres().type">{{ type.libelle }}</option>
+        }
+      </select>
+    </div>
+  }
+
+  <!-- Artisan : pas d'annuaire fourni, recherche texte envoyée telle quelle au backend -->
+  <div class="champ">
+    <label for="fi-artisan">Artisan</label>
+    <input
+      id="fi-artisan"
+      type="search"
+      placeholder="Nom de l'artisan…"
+      [value]="artisanAffiche()"
+      (input)="saisirArtisan($any($event.target).value)"
+    />
+  </div>
+
+  <div class="champ champ-date">
+    <label for="fi-du">Du</label>
+    <input id="fi-du" type="date" [value]="filtres().du" (change)="changerDu($any($event.target).value)" />
+  </div>
+  <div class="champ champ-date">
+    <label for="fi-au">Au</label>
+    <input id="fi-au" type="date" [value]="filtres().au" (change)="changerAu($any($event.target).value)" />
+  </div>
+</div>

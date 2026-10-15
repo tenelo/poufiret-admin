@@ -1,31 +1,52 @@
 /**
- * Reflète GET /administration/interventions/ (lecture seule, protégé par la
- * capacité `voir_interventions`).
+ * Reflète /administration/interventions/... : centre des demandes d'intervention, sur le modèle du
+ * centre des commandes (onglets par statut avec compteurs, filtres, détail en panneau, actions,
+ * notes, export). Lecture : capacité voir_interventions OU gerer_interventions. Écriture
+ * (transition, assignation d'un artisan, notes) : réservée à gerer_interventions (voir
+ * Interventions.peutGerer). Aucun nom de statut n'est supposé côté interface : statuts, urgences,
+ * types et libellés viennent tous du backend (GET meta/).
  */
+import { EvenementHistorique, NoteAdmin } from './commande-admin.model';
 
-export type StatutIntervention =
-  | 'en_attente'
-  | 'acceptee'
-  | 'refusee'
-  | 'en_cours'
-  | 'terminee'
-  | 'annulee';
+export interface StatutInterventionMeta {
+  valeur: string;
+  libelle: string;
+}
 
+export interface UrgenceInterventionMeta {
+  valeur: string;
+  libelle: string;
+}
+
+export interface TypeInterventionMeta {
+  valeur: string;
+  libelle: string;
+}
+
+/** GET administration/interventions/meta/. */
+export interface MetaInterventions {
+  statuts: StatutInterventionMeta[];
+  urgences: UrgenceInterventionMeta[];
+  types: TypeInterventionMeta[];
+}
+
+/** Ligne de GET administration/interventions/. */
 export interface InterventionAdmin {
   id: number;
   numero: string;
-  statut: StatutIntervention;
+  statut: string;
   statut_libelle: string;
   type_intervention: string;
+  type_intervention_libelle: string;
   type_libre: string;
   description: string;
   urgence: string;
   urgence_libelle: string;
   client_telephone: string;
   client_nom: string;
-  artisan_id: number;
-  artisan_nom: string;
-  artisan_type: string;
+  artisan_id: number | null;
+  artisan_nom: string | null;
+  artisan_type: string | null;
   adresse_snapshot: string;
   latitude: string | null;
   longitude: string | null;
@@ -34,34 +55,94 @@ export interface InterventionAdmin {
   terminee_le: string | null;
 }
 
+/** Compteur par statut (clé = code statut, voir meta.statuts), pour les badges des onglets. */
+export type CompteursStatutInterventions = Record<string, number>;
+
+/** GET administration/interventions/ : liste paginée filtrée + compteurs par statut. */
 export interface ReponseInterventionsAdmin {
-  total: number;
-  resultats: InterventionAdmin[];
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: InterventionAdmin[];
+  compteurs_statut: CompteursStatutInterventions;
 }
 
-export const OPTIONS_STATUT_INTERVENTION: { valeur: StatutIntervention | ''; libelle: string }[] = [
-  { valeur: '', libelle: 'Tous' },
-  { valeur: 'en_attente', libelle: 'En attente' },
-  { valeur: 'acceptee', libelle: 'Acceptée' },
-  { valeur: 'refusee', libelle: 'Refusée' },
-  { valeur: 'en_cours', libelle: 'En cours' },
-  { valeur: 'terminee', libelle: 'Terminée' },
-  { valeur: 'annulee', libelle: 'Annulée' },
-];
-
-export function classeChipStatutIntervention(statut: StatutIntervention): string {
-  switch (statut) {
-    case 'en_attente':
-      return 'badge-en-attente';
-    case 'acceptee':
-      return 'badge-acceptee';
-    case 'refusee':
-      return 'badge-refusee';
-    case 'en_cours':
-      return 'badge-en-cours';
-    case 'terminee':
-      return 'badge-terminee';
-    case 'annulee':
-      return 'badge-annulee';
-  }
+export interface ContactIntervention {
+  id: number;
+  nom: string;
+  telephone: string;
 }
+
+/** GET /<id>/artisans-compatibles/ : partenaires actifs compatibles avec cette demande, pour la liste déroulante d'assignation. */
+export interface ArtisanCompatible {
+  id: number;
+  nom: string;
+  telephone: string;
+}
+
+export interface PhotoIntervention {
+  id: number;
+  image: string;
+}
+
+export interface TransitionPossibleIntervention {
+  action: string;
+  libelle: string;
+  commentaire_obligatoire: boolean;
+}
+
+/**
+ * GET administration/interventions/<id>/ : fiche complète. `historique`/`notes_admin` réutilisent
+ * la forme déjà employée pour les commandes (même convention backend) — voir HistoriqueCommande,
+ * réutilisé tel quel pour l'affichage.
+ */
+export interface InterventionAdminDetail {
+  id: number;
+  numero: string;
+  statut: string;
+  statut_libelle: string;
+  type_intervention: string;
+  type_intervention_libelle: string;
+  type_libre: string;
+  urgence: string;
+  urgence_libelle: string;
+  description: string;
+  adresse: string;
+  latitude: string | null;
+  longitude: string | null;
+  client: ContactIntervention;
+  artisan: ContactIntervention | null;
+  photos: PhotoIntervention[];
+  created_at: string;
+  acceptee_le: string | null;
+  terminee_le: string | null;
+  historique: EvenementHistorique[];
+  notes_admin: NoteAdmin[];
+  transitions_possibles: TransitionPossibleIntervention[];
+}
+
+// ---- Onglets et filtres (centre admin) ----
+
+/** Onglet « Toutes » + un onglet par statut connu de meta (voir Interventions.onglets). */
+export const ONGLET_TOUTES_INTERVENTIONS = 'toutes' as const;
+
+export interface FiltresInterventionsAdmin {
+  statut: string;
+  urgence: string;
+  type: string;
+  // Pas d'annuaire d'artisans fourni par le contrat : recherche texte envoyée telle quelle.
+  artisan: string;
+  recherche: string;
+  du: string;
+  au: string;
+}
+
+export const FILTRES_INTERVENTIONS_DEFAUT: FiltresInterventionsAdmin = {
+  statut: '',
+  urgence: '',
+  type: '',
+  artisan: '',
+  recherche: '',
+  du: '',
+  au: '',
+};

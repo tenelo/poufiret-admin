@@ -56,9 +56,12 @@
           }
         </div>
 
-        <div class="grille-plats">
-          @for (plat of groupe.plats; track plat.id) {
-            <div class="carte-plat" [class.plat-inactif]="!plat.est_actif">
+        <!-- Plats d'UNE section : glisser-déposer uniquement à l'intérieur de cette section (pas de connexion entre sections) -->
+        <div class="grille-plats" cdkDropList [cdkDropListData]="groupe.plats" (cdkDropListDropped)="surDepotPlat($event, groupe)">
+          @for (plat of groupe.plats; track plat.id; let premier = $first, dernier = $last) {
+            <div class="carte-plat" [class.plat-inactif]="!plat.est_actif" cdkDrag>
+              <!-- Poignée de glisser-déposer (souris/tactile large écran) : masquée sur mobile, voir .actions-ordre -->
+              <span class="poignee-plat" cdkDragHandle title="Glisser pour réordonner">⠿</span>
               @if (imagePrincipale(plat); as image) {
                 <img [src]="image" [alt]="plat.nom" class="image-plat" />
               } @else {
@@ -74,7 +77,11 @@
                     <span class="badge-reserve">Réservé aux menus</span>
                   }
                   @if (!plat.est_actif) {
+                    <!-- Plat désactivé : masqué côté client -->
                     <span class="badge-etat badge-inactif">Inactif</span>
+                  } @else {
+                    <!-- Plat actif : visible côté client -->
+                    <span class="badge-etat badge-visible">Visible</span>
                   }
                   @if (!plat.est_disponible) {
                     <span class="badge-etat badge-indisponible">Indisponible</span>
@@ -92,6 +99,11 @@
                   />
                   Marquer comme épuisé
                 </label>
+                <!-- Monter/Descendre : affichés uniquement sur mobile (la poignée ⠿ gère le réordonnement sur grand écran) -->
+                <div class="actions-ordre">
+                  <button type="button" [disabled]="premier" (click)="deplacerPlat(groupe, plat, -1)" aria-label="Monter">↑ Monter</button>
+                  <button type="button" [disabled]="dernier" (click)="deplacerPlat(groupe, plat, 1)" aria-label="Descendre">↓ Descendre</button>
+                </div>
                 <div class="actions-plat">
                   <button type="button" (click)="ouvrirEditionPlat(plat)">Modifier</button>
                   <button type="button" class="danger" (click)="demanderSuppressionPlat(plat)">Supprimer</button>

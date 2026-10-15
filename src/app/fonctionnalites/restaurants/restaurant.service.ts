@@ -276,6 +276,12 @@ export class RestaurantService {
       .pipe(map(normaliserPlat));
   }
 
+  // Réordonne les plats d'UNE section (glisser-déposer ou boutons Monter/Descendre dans l'onglet
+  // Carte) : envoie la liste complète des ids de plats de cette section, dans le nouvel ordre.
+  reordonnerPlats(prefixe: PrefixeRestaurant, sectionId: number | null, ordre: number[]): Observable<void> {
+    return this.http.post<void>(`${this.base(prefixe)}carte/plats/ordre/`, { section_id: sectionId, ordre });
+  }
+
   // ---- Carte : images des plats ----
 
   listerImagesPlat(prefixe: PrefixeRestaurant, platId: number): Observable<ImagePlatCarte[]> {

@@ -197,6 +197,11 @@
     border-bottom: 1px solid #f3f4f6;
     color: #374151;
   }
+
+  // Colonne "Nb connexions" : chiffre centré, plus lisible qu'aligné à gauche.
+  .centre {
+    text-align: center;
+  }
 }
 
 .cellule-utilisateur {

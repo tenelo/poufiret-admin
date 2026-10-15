@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import { ConfigurationService } from '../config/configuration.service';
 import {
+  CanalNotificationAdmin,
   NotificationAdmin,
   ReponseCompteurNotificationsAdmin,
   ReponseNotificationsAdmin,
@@ -20,14 +21,14 @@ export class NotificationsAdminService {
     return `${this.configuration.apiUrl}/notifications/admin/`;
   }
 
-  /** GET admin/compteur/ : très léger, prévu pour un polling toutes les 30 s. */
+  /** GET admin/compteur/ : {restaurant, general, nb_non_lues} — très léger, prévu pour un polling toutes les 30 s. */
   compteur(): Observable<ReponseCompteurNotificationsAdmin> {
     return this.http.get<ReponseCompteurNotificationsAdmin>(`${this.base}compteur/`);
   }
 
-  /** GET admin/?page_size=N : dernières notifications + nb_non_lues. */
-  lister(pageSize = 10): Observable<ReponseNotificationsAdmin> {
-    const params = new HttpParams().set('page_size', pageSize);
+  /** GET admin/?canal=&page_size=N : dernières notifications de ce canal + nb_non_lues du canal. */
+  lister(canal: CanalNotificationAdmin, pageSize = 10): Observable<ReponseNotificationsAdmin> {
+    const params = new HttpParams().set('canal', canal).set('page_size', pageSize);
     return this.http.get<ReponseNotificationsAdmin>(this.base, { params });
   }
 
@@ -36,8 +37,9 @@ export class NotificationsAdminService {
     return this.http.post<NotificationAdmin>(`${this.base}${id}/lire/`, null);
   }
 
-  /** POST admin/tout-lire/ */
-  toutLire(): Observable<ReponseToutLireNotificationsAdmin> {
-    return this.http.post<ReponseToutLireNotificationsAdmin>(`${this.base}tout-lire/`, null);
+  /** POST admin/tout-lire/?canal= : ne marque comme lu que les notifications de ce canal. */
+  toutLire(canal: CanalNotificationAdmin): Observable<ReponseToutLireNotificationsAdmin> {
+    const params = new HttpParams().set('canal', canal);
+    return this.http.post<ReponseToutLireNotificationsAdmin>(`${this.base}tout-lire/`, null, { params });
   }
 }

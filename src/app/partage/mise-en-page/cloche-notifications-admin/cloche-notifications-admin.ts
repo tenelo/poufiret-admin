@@ -4,7 +4,6 @@ import {
   ElementRef,
   HostListener,
   OnInit,
-  computed,
   effect,
   inject,
   signal,
@@ -16,8 +15,10 @@ import { AuthService } from '../../../noyau/auth/auth.service';
 import { DetecteurCompteur } from '../../../noyau/notifications/detecteur-compteur';
 import { NotificationsAdminService } from '../../../noyau/notifications/notifications-admin.service';
 import { CHEMIN_SON_NOTIFICATION, SonNotification } from '../../../noyau/notifications/son-notification';
+import { ClocheCanal } from './cloche-canal/cloche-canal';
 import { extraireMessageErreur } from '../../../fonctionnalites/administration/tableau-de-bord-admin/extraire-message-erreur';
 import {
+  CanalNotificationAdmin,
   NotificationAdmin,
   ReponseCompteurNotificationsAdmin,
   STATUT_CAMPAGNE_PAR_TYPE,
@@ -29,20 +30,23 @@ const DUREE_ANIMATION_MS = 1200;
 const NB_NOTIFICATIONS_AFFICHEES = 10;
 
 /**
- * Cloche de notifications de l'en-tête admin / super-admin : campagnes de publicité soumises ou à
- * valider, commandes nouvelles ou annulées par le client, nouvelles demandes de location. Compteur
- * interrogé toutes les 30 s (en pause quand l'onglet du navigateur est masqué),
- * son et animation quand il augmente, panneau des 10 dernières notifications. Même moteur de
- * détection (DetecteurCompteur) et même son que la cloche partenaire.
+ * Deux cloches de notifications de l'en-tête admin / super-admin, chacune pour son canal :
+ * 🍽️ Restaurants (commandes restaurant) et 🔔 Général (campagnes de pub, autres commandes,
+ * demandes de location, demandes d'intervention). Un seul polling du compteur combiné
+ * (GET compteur/ → {restaurant, general, nb_non_lues}), son/animation dès que l'un des deux
+ * augmente ; chaque cloche a son propre panneau, sa propre liste et son propre « Tout marquer
+ * comme lu » (POST tout-lire/?canal=). Même moteur de détection (DetecteurCompteur) et même son
+ * que la cloche partenaire.
  */
 @Component({
   selector: 'app-cloche-notifications-admin',
-  imports: [],
+  imports: [ClocheCanal],
   providers: [DetecteurCompteur],
   templateUrl: './cloche-notifications-admin.html',
   styleUrl: './cloche-notifications-admin.scss',
 })
 export class ClocheNotificationsAdmin implements OnInit {
+  // Un seul détecteur, partagé par les deux canaux : son/animation sur le TOTAL (restaurant + general).
   private readonly detecteur = inject(DetecteurCompteur<ReponseCompteurNotificationsAdmin>);
   private readonly service = inject(NotificationsAdminService);
   private readonly authService = inject(AuthService);
@@ -55,18 +59,32 @@ export class ClocheNotificationsAdmin implements OnInit {
   readonly cheminSon = CHEMIN_SON_NOTIFICATION;
   readonly formaterDateRelative = formaterDateRelative;
 
-  readonly nbNonLues = this.detecteur.compteur;
-  /** Texte du badge : masqué à 0 (voir le template), « 99+ » au-delà de 99. */
-  readonly texteBadge = computed(() => (this.nbNonLues() > 99 ? '99+' : String(this.nbNonLues())));
-
   readonly enAnimation = signal(false);
-  readonly panneauOuvert = signal(false);
-  readonly chargementEnCours = signal(false);
-  readonly erreur = signal<string | null>(null);
-  readonly notifications = signal<NotificationAdmin[]>([]);
+
+  // ---- Canal "restaurant" (🍽️) ----
+  readonly nbNonLuesRestaurant = signal(0);
+  readonly panneauOuvertRestaurant = signal(false);
+  readonly chargementRestaurant = signal(false);
+  readonly erreurRestaurant = signal<string | null>(null);
+  readonly notificationsRestaurant = signal<NotificationAdmin[]>([]);
+
+  // ---- Canal "general" (🔔) ----
+  readonly nbNonLuesGeneral = signal(0);
+  readonly panneauOuvertGeneral = signal(false);
+  readonly chargementGeneral = signal(false);
+  readonly erreurGeneral = signal<string | null>(null);
+  readonly notificationsGeneral = signal<NotificationAdmin[]>([]);
 
   constructor() {
     // effect() doit être appelé dans un contexte d'injection (constructeur).
+    effect(() => {
+      // Chaque tick de polling recale les deux compteurs sur la réponse serveur.
+      const reponse = this.detecteur.derniereReponse();
+      if (reponse) {
+        this.nbNonLuesRestaurant.set(reponse.restaurant);
+        this.nbNonLuesGeneral.set(reponse.general);
+      }
+    });
     effect(() => {
       if (this.detecteur.aAugmente()) {
         this.declencherNotification();
@@ -85,58 +103,77 @@ export class ClocheNotificationsAdmin implements OnInit {
     });
   }
 
-  basculerPanneau(): void {
-    const ouverture = !this.panneauOuvert();
-    this.panneauOuvert.set(ouverture);
+  /** Texte du badge d'une cloche : masqué à 0 (voir le template), « 99+ » au-delà de 99. */
+  texteBadge(nbNonLues: number): string {
+    return nbNonLues > 99 ? '99+' : String(nbNonLues);
+  }
+
+  basculerPanneau(canal: CanalNotificationAdmin): void {
+    const panneauOuvert = canal === 'restaurant' ? this.panneauOuvertRestaurant : this.panneauOuvertGeneral;
+    const ouverture = !panneauOuvert();
+    // Un seul panneau ouvert à la fois (ferme l'autre cloche si elle était ouverte).
+    this.fermerPanneaux();
+    panneauOuvert.set(ouverture);
     if (ouverture) {
-      this.chargerNotifications();
+      this.chargerNotifications(canal);
     }
   }
 
   @HostListener('document:keydown.escape')
-  fermerPanneau(): void {
-    this.panneauOuvert.set(false);
+  fermerPanneaux(): void {
+    this.panneauOuvertRestaurant.set(false);
+    this.panneauOuvertGeneral.set(false);
   }
 
-  private chargerNotifications(): void {
-    this.chargementEnCours.set(true);
-    this.erreur.set(null);
+  private chargerNotifications(canal: CanalNotificationAdmin): void {
+    const chargement = canal === 'restaurant' ? this.chargementRestaurant : this.chargementGeneral;
+    const erreur = canal === 'restaurant' ? this.erreurRestaurant : this.erreurGeneral;
+    const notifications = canal === 'restaurant' ? this.notificationsRestaurant : this.notificationsGeneral;
 
-    this.service.lister(NB_NOTIFICATIONS_AFFICHEES).subscribe({
+    chargement.set(true);
+    erreur.set(null);
+
+    this.service.lister(canal, NB_NOTIFICATIONS_AFFICHEES).subscribe({
       next: (reponse) => {
-        this.chargementEnCours.set(false);
-        this.notifications.set(reponse.results);
-        this.detecteur.definirCompteur(reponse.nb_non_lues);
+        chargement.set(false);
+        notifications.set(reponse.results);
+        this.definirCompteurCanal(canal, reponse.nb_non_lues);
       },
-      error: (erreur: unknown) => {
-        this.chargementEnCours.set(false);
-        this.erreur.set(extraireMessageErreur(erreur));
+      error: (erreur2: unknown) => {
+        chargement.set(false);
+        erreur.set(extraireMessageErreur(erreur2));
       },
     });
   }
 
-  toutMarquerCommeLu(): void {
-    this.service.toutLire().subscribe({
+  toutMarquerCommeLu(canal: CanalNotificationAdmin): void {
+    const erreur = canal === 'restaurant' ? this.erreurRestaurant : this.erreurGeneral;
+    const notifications = canal === 'restaurant' ? this.notificationsRestaurant : this.notificationsGeneral;
+
+    this.service.toutLire(canal).subscribe({
       next: (reponse) => {
-        this.notifications.update((liste) => liste.map((n) => ({ ...n, lue: true })));
-        this.detecteur.definirCompteur(reponse.nb_non_lues);
+        notifications.update((liste) => liste.map((n) => ({ ...n, lue: true })));
+        this.definirCompteurCanal(canal, reponse.nb_non_lues);
       },
-      error: (erreur: unknown) => this.erreur.set(extraireMessageErreur(erreur)),
+      error: (e: unknown) => erreur.set(extraireMessageErreur(e)),
     });
   }
 
   /**
-   * Marque la notification comme lue, ferme le panneau puis ouvre la page Publicités > Campagnes
-   * sur l'onglet de statut correspondant, avec la campagne concernée mise en évidence.
+   * Marque la notification comme lue, ferme les panneaux puis navigue vers l'écran cible
+   * (commandes/interventions/demandes de location) ou, pour les campagnes de pub, vers Publicités
+   * > Campagnes sur l'onglet de statut correspondant — comportement inchangé pour ce dernier cas.
    */
   ouvrirNotification(notification: NotificationAdmin): void {
+    const notifications = notification.canal === 'restaurant' ? this.notificationsRestaurant : this.notificationsGeneral;
     if (!notification.lue) {
       this.service.lire(notification.id).subscribe({
         next: () => {
-          this.notifications.update((liste) =>
+          notifications.update((liste) =>
             liste.map((n) => (n.id === notification.id ? { ...n, lue: true } : n)),
           );
-          this.detecteur.definirCompteur(Math.max(0, this.nbNonLues() - 1));
+          const nbActuel = notification.canal === 'restaurant' ? this.nbNonLuesRestaurant() : this.nbNonLuesGeneral();
+          this.definirCompteurCanal(notification.canal, Math.max(0, nbActuel - 1));
         },
         error: () => {
           // Non bloquant : la navigation a lieu quand même, le compteur se recalera au prochain polling.
@@ -144,34 +181,48 @@ export class ClocheNotificationsAdmin implements OnInit {
       });
     }
 
-    this.fermerPanneau();
+    this.fermerPanneaux();
     this.naviguerVers(notification);
   }
 
-  /**
-   * Commandes (commande_nouvelle, commande_annulee_client) : centre des commandes, détail ouvert
-   * via ?commande=<id>. Campagnes de pub : page Publicités > Campagnes, onglet de statut
-   * correspondant, campagne mise en évidence.
-   */
   private naviguerVers(notification: NotificationAdmin): void {
-    if (notification.type === 'commande_nouvelle' || notification.type === 'commande_annulee_client') {
+    const cible = notification.cible;
+    if (cible?.ecran === 'commandes') {
       this.router.navigate(['/administration/commandes'], {
-        queryParams: { commande: notification.commande_id ?? undefined },
+        queryParams: {
+          commande: cible.id,
+          // Canal restaurant : pré-filtre le centre des commandes sur la catégorie Restaurants
+          // (résolue dynamiquement côté CommandesAdmin, l'id de catégorie n'est pas fixe).
+          categorie: notification.canal === 'restaurant' ? 'restaurants' : undefined,
+        },
       });
       return;
     }
-    if (notification.type === 'reservation_nouvelle') {
-      this.router.navigate(['/administration/demandes-location'], {
-        queryParams: { demande: notification.demande_id ?? undefined },
-      });
+    if (cible?.ecran === 'interventions') {
+      this.router.navigate(['/administration/interventions'], { queryParams: { intervention: cible.id } });
       return;
     }
+    if (cible?.ecran === 'demandes_location') {
+      this.router.navigate(['/administration/demandes-location'], { queryParams: { demande: cible.id } });
+      return;
+    }
+    // Campagnes de publicité : comportement actuel, inchangé (onglet dérivé du type de notification).
     this.router.navigate(['/administration/publicites'], {
       queryParams: {
         statut: STATUT_CAMPAGNE_PAR_TYPE[notification.type],
         pub: notification.publicite_id ?? undefined,
       },
     });
+  }
+
+  /** Ajuste un canal localement (lu / tout-lire) et resynchronise le total du détecteur partagé. */
+  private definirCompteurCanal(canal: CanalNotificationAdmin, valeur: number): void {
+    if (canal === 'restaurant') {
+      this.nbNonLuesRestaurant.set(valeur);
+    } else {
+      this.nbNonLuesGeneral.set(valeur);
+    }
+    this.detecteur.definirCompteur(this.nbNonLuesRestaurant() + this.nbNonLuesGeneral());
   }
 
   private declencherNotification(): void {

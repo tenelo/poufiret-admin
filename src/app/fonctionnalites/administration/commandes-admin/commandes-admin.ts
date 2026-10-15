@@ -87,9 +87,12 @@ export class CommandesAdmin implements OnInit {
   private abonnementListe?: Subscription;
 
   ngOnInit(): void {
-    const categorieParam = Number(this.route.snapshot.queryParamMap.get('categorie'));
-    if (categorieParam > 0) {
-      this.filtres.update((f) => ({ ...f, categorie: categorieParam }));
+    // "restaurants" (non numérique) : lien direct depuis la cloche canal restaurant — résolu plus
+    // bas une fois meta() chargée, l'id réel de la catégorie n'est pas connu à l'avance.
+    const categorieParam = this.route.snapshot.queryParamMap.get('categorie');
+    const categorieNumerique = Number(categorieParam);
+    if (categorieParam && categorieNumerique > 0) {
+      this.filtres.update((f) => ({ ...f, categorie: categorieNumerique }));
     }
 
     const partenaireFixe = this.partenaireFixe();
@@ -100,7 +103,15 @@ export class CommandesAdmin implements OnInit {
     }
 
     this.service.meta().subscribe({
-      next: (meta) => this.meta.set(meta),
+      next: (meta) => {
+        this.meta.set(meta);
+        if (categorieParam === 'restaurants' && !this.filtres().categorie) {
+          const categorieRestaurants = meta.categories.find((c) => c.nom.toLowerCase() === 'restaurants');
+          if (categorieRestaurants) {
+            this.choisirCategorie(categorieRestaurants.id);
+          }
+        }
+      },
       // Sans meta, les filtres mode de livraison / statut n'ont pas d'options, le reste fonctionne.
       error: () => undefined,
     });

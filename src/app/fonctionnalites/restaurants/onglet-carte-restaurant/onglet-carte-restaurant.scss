@@ -1,3 +1,4 @@
+// Message affiché pendant le chargement (ex. "Chargement de la carte…").
 .etat {
   margin: 0;
   padding: 2rem 0;
@@ -5,6 +6,7 @@
   text-align: center;
 }
 
+// Encadré rouge affiché si le chargement de la carte a échoué, avec un bouton "Réessayer".
 .etat-erreur {
   display: flex;
   flex-wrap: wrap;
@@ -26,6 +28,7 @@
   }
 }
 
+// Message d'erreur générique (ex. échec d'une création/suppression), affiché en haut de l'écran.
 .erreur-generale {
   margin: 0 0 1rem;
   padding: 0.6rem 0.75rem;
@@ -36,6 +39,7 @@
   font-size: 0.85rem;
 }
 
+// Barre tout en haut de l'onglet Carte : champ "Nouvelle section" + case "Plats réservés aux menus uniquement".
 .barre-haute {
   display: flex;
   flex-wrap: wrap;
@@ -45,6 +49,7 @@
   margin-bottom: 1.25rem;
 }
 
+// Champ texte + bouton "+ Section" pour créer une nouvelle section (ex. "Entrées", "Plats").
 .ligne-ajout-section {
   display: flex;
   gap: 0.5rem;
@@ -58,6 +63,7 @@
   }
 }
 
+// Case à cocher générique (ex. "Plats réservés aux menus uniquement", "Marquer comme épuisé").
 .ligne-case {
   display: flex;
   align-items: center;
@@ -67,6 +73,7 @@
   cursor: pointer;
 }
 
+// Bouton gris neutre générique (ex. "Fermer" dans une fenêtre de confirmation).
 .bouton-secondaire {
   padding: 0.5rem 1rem;
   background: #ffffff;
@@ -83,12 +90,14 @@
   }
 }
 
+// Conteneur qui empile toutes les sections de la carte (une sous chaque autre, avec un espace entre).
 .sections {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
 
+// Le bloc blanc entier d'UNE section (ex. tout le pavé "P'tit déj" avec ses plats à l'intérieur).
 .bloc-section {
   padding: 1rem;
   background: #ffffff;
@@ -96,6 +105,7 @@
   border-radius: 12px;
 }
 
+// La ligne de titre d'une section : nom de la section ("P'tit déj") + icônes crayon/poubelle + bouton "+ Plat".
 .entete-section {
   display: flex;
   flex-wrap: wrap;
@@ -103,18 +113,22 @@
   gap: 0.5rem;
   margin-bottom: 0.9rem;
 
+  // Titre de la section lui-même (ex. "P'tit déj") : c'est ICI que se change sa couleur/taille.
   h2 {
     margin: 0;
-    font-size: 1rem;
-    color: #1a1a1a;
+    font-size: 1.3rem;
+    color: #1c9b03;
+    //color: #1a1a1a;
   }
 }
 
+// Petite icône "⠿" à gauche du titre de section, pour glisser-déposer et réordonner les sections.
 .poignee {
   cursor: grab;
   color: #9ca3af;
 }
 
+// Champ texte qui remplace le titre de la section quand on clique sur le crayon pour la renommer.
 .champ-nom-section {
   padding: 0.3rem 0.5rem;
   border: 1px solid #d1d5db;
@@ -123,6 +137,7 @@
   font-size: 0.9rem;
 }
 
+// Petit bouton sans fond, juste une icône (crayon ✏️, poubelle 🗑, coche ✔, croix ✖…).
 .bouton-icone {
   padding: 0.1rem 0.3rem;
   background: none;
@@ -130,6 +145,7 @@
   cursor: pointer;
 }
 
+// Bouton violet clair "+ Plat", collé à droite de la ligne de titre de section.
 .bouton-ajout-plat {
   margin-left: auto;
   padding: 0.35rem 0.8rem;
@@ -142,13 +158,17 @@
   cursor: pointer;
 }
 
+// La grille qui range les cartes-plats d'une section (plusieurs colonnes, qui s'adaptent à la largeur d'écran).
 .grille-plats {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 0.9rem;
 }
 
+// UNE carte de plat entière (le cadre gris qui contient la photo, le nom, le prix, les boutons…).
+// "relative" sert de repère pour positionner la poignée ⠿ (.poignee-plat) au-dessus de la photo.
 .carte-plat {
+  position: relative;
   display: flex;
   flex-direction: column;
   background: #f9fafb;
@@ -157,16 +177,37 @@
   overflow: hidden;
 }
 
+// Poignée "⠿" pour glisser-déposer un plat (réordonner dans sa section) : petit badge rond posé sur la photo.
+.poignee-plat {
+  position: absolute;
+  top: 0.35rem;
+  left: 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+  color: #374151;
+  font-size: 0.9rem;
+  cursor: grab;
+  z-index: 1;
+}
+
+// Assombrit la carte quand le plat est désactivé (est_actif = false).
 .plat-inactif {
   opacity: 0.6;
 }
 
+// La photo du plat en haut de sa carte (si une image principale existe).
 .image-plat {
   width: 100%;
   height: 100px;
   object-fit: cover;
 }
 
+// Rectangle gris affiché à la place de la photo quand le plat n'a aucune image ("Aucune image").
 .image-vide {
   display: flex;
   align-items: center;
@@ -177,6 +218,7 @@
   font-size: 0.72rem;
 }
 
+// Partie basse de la carte-plat (sous la photo) : nom, prix, badges et boutons.
 .corps-plat {
   display: flex;
   flex-direction: column;
@@ -184,17 +226,21 @@
   padding: 0.7rem;
 }
 
+// Ligne nom + prix du plat, côte à côte (ex. "Foie de bœuf sauté" ... "1500 FCFA").
 .entete-plat {
   display: flex;
   justify-content: space-between;
   gap: 0.5rem;
   font-size: 0.85rem;
 
+  // Nom du plat (ex. "Foie de bœuf sauté") : c'est ICI que se change sa couleur, PAS dans .entete-section.
   .nom-plat {
     font-weight: 700;
     color: #1a1a1a;
+
   }
 
+  // Prix du plat (ex. "1500 FCFA"), en violet.
   .prix-plat {
     color: #4f46e5;
     font-weight: 600;
@@ -202,12 +248,14 @@
   }
 }
 
+// Conteneur des petites pastilles d'état sous le nom du plat (réservé, inactif, indisponible, épuisé…).
 .badges-etat {
   display: flex;
   flex-wrap: wrap;
   gap: 0.3rem;
 }
 
+// Forme commune (pastille arrondie) à tous les badges d'état du plat.
 .badge-reserve,
 .badge-etat {
   align-self: flex-start;
@@ -217,30 +265,42 @@
   font-weight: 600;
 }
 
+// Couleur du badge "Réservé aux menus" (plat non vendable seul).
 .badge-reserve {
   background: #fffbeb;
   color: #92400e;
 }
 
+// Couleur du badge "Inactif" (plat désactivé, masqué côté client).
 .badge-inactif {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: #e6eaf0;
+  color: #3b3d41;
 }
 
+// Couleur du badge "Visible" (plat actif, affiché côté client) — en vert.
+.badge-visible {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+// Couleur du badge "Indisponible".
 .badge-indisponible {
   background: #fef2f2;
   color: #b91c1c;
 }
 
+// Couleur du badge "Épuisé" (fond noir, texte blanc).
 .badge-epuise {
   background: #1f2937;
   color: #ffffff;
 }
 
+// Texte d'aide à côté de la case "Marquer comme épuisé".
 .ligne-epuise {
   font-size: 0.75rem;
 }
 
+// Ligne des boutons "Modifier" / "Supprimer" en bas de chaque carte-plat.
 .actions-plat {
   display: flex;
   gap: 0.4rem;
@@ -255,18 +315,55 @@
     cursor: pointer;
   }
 
+  // Variante rouge du bouton (ex. "Supprimer").
   .danger {
     border-color: #fecaca;
     color: #b91c1c;
   }
 }
 
+// Boutons "↑ Monter" / "↓ Descendre" : réordonnement sans glisser-déposer, pour le tactile (mobile).
+// Masqués par défaut (la poignée ⠿ suffit sur grand écran) ; réapparaissent sous 576px, voir plus bas.
+.actions-ordre {
+  display: none;
+  gap: 0.4rem;
+
+  button {
+    flex: 1;
+    padding: 0.3rem 0.4rem;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// Sous 576px (mobile) : la poignée ⠿ se glisse mal au doigt dans une grille dense, on la remplace
+// par les boutons Monter/Descendre, plus fiables au tactile.
+@media (max-width: 575.98px) {
+  .poignee-plat {
+    display: none;
+  }
+
+  .actions-ordre {
+    display: flex;
+  }
+}
+
+// Texte affiché quand une section n'a aucun plat ("Aucun plat dans cette section").
 .vide {
   margin: 0;
   color: #9ca3af;
   font-size: 0.82rem;
 }
 
+// Fond semi-transparent derrière une fenêtre de confirmation (ex. "Supprimer ce plat ?").
 .voile-confirmation {
   position: fixed;
   inset: 0;
@@ -278,6 +375,7 @@
   z-index: 110;
 }
 
+// La fenêtre blanche de confirmation elle-même, centrée à l'écran.
 .boite-confirmation {
   width: 100%;
   max-width: 400px;
@@ -292,12 +390,14 @@
   }
 }
 
+// Ligne des boutons "Annuler" / "Supprimer" en bas de la fenêtre de confirmation.
 .actions-confirmation {
   display: flex;
   justify-content: flex-end;
   gap: 0.6rem;
 }
 
+// Bouton rouge "Supprimer" (confirmation définitive).
 .bouton-danger {
   padding: 0.5rem 1rem;
   background: #ffffff;
