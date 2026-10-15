@@ -19,9 +19,11 @@ import { ClocheCanal } from './cloche-canal/cloche-canal';
 import { extraireMessageErreur } from '../../../fonctionnalites/administration/tableau-de-bord-admin/extraire-message-erreur';
 import {
   CanalNotificationAdmin,
+  EcranCibleNotificationAdmin,
   NotificationAdmin,
   ReponseCompteurNotificationsAdmin,
   STATUT_CAMPAGNE_PAR_TYPE,
+  TypeNotificationAdmin,
 } from '../../../modeles/notification-admin.model';
 import { formaterDateRelative } from '../../formater-date-relative';
 
@@ -30,9 +32,10 @@ const DUREE_ANIMATION_MS = 1200;
 const NB_NOTIFICATIONS_AFFICHEES = 10;
 
 /**
- * Deux cloches de notifications de l'en-tête admin / super-admin, chacune pour son canal :
- * 🍽️ Restaurants (commandes restaurant) et 🔔 Général (campagnes de pub, autres commandes,
- * demandes de location, demandes d'intervention). Un seul polling du compteur combiné
+ * Deux cloches de notifications de l'en-tête admin / super-admin, chacune pour son canal : même
+ * icône 🔔 pour les deux, jaune pour Restaurants (commandes restaurant), bleue pour Général
+ * (campagnes de pub, autres commandes, demandes de location, demandes d'intervention). Un seul
+ * polling du compteur combiné
  * (GET compteur/ → {restaurant, general, nb_non_lues}), son/animation dès que l'un des deux
  * augmente ; chaque cloche a son propre panneau, sa propre liste et son propre « Tout marquer
  * comme lu » (POST tout-lire/?canal=). Même moteur de détection (DetecteurCompteur) et même son
@@ -185,12 +188,19 @@ export class ClocheNotificationsAdmin implements OnInit {
     this.naviguerVers(notification);
   }
 
+  /**
+   * `cible` pilote la navigation quand le backend la fournit ; sinon repli sur le type et les
+   * anciens champs plats (commande_id, demande_id, publicite_id…), pour ne jamais rester sans
+   * destination si un type de notification ne la peuple pas encore.
+   */
   private naviguerVers(notification: NotificationAdmin): void {
     const cible = notification.cible;
-    if (cible?.ecran === 'commandes') {
+    const ecran = cible?.ecran ?? this.ecranReplisurType(notification.type);
+
+    if (ecran === 'commandes') {
       this.router.navigate(['/administration/commandes'], {
         queryParams: {
-          commande: cible.id,
+          commande: cible?.id ?? notification.commande_id ?? undefined,
           // Canal restaurant : pré-filtre le centre des commandes sur la catégorie Restaurants
           // (résolue dynamiquement côté CommandesAdmin, l'id de catégorie n'est pas fixe).
           categorie: notification.canal === 'restaurant' ? 'restaurants' : undefined,
@@ -198,21 +208,40 @@ export class ClocheNotificationsAdmin implements OnInit {
       });
       return;
     }
-    if (cible?.ecran === 'interventions') {
-      this.router.navigate(['/administration/interventions'], { queryParams: { intervention: cible.id } });
+    if (ecran === 'interventions') {
+      this.router.navigate(['/administration/interventions'], {
+        queryParams: { intervention: cible?.id ?? undefined },
+      });
       return;
     }
-    if (cible?.ecran === 'demandes_location') {
-      this.router.navigate(['/administration/demandes-location'], { queryParams: { demande: cible.id } });
+    if (ecran === 'demandes_location') {
+      this.router.navigate(['/administration/demandes-location'], {
+        queryParams: { demande: cible?.id ?? notification.demande_id ?? undefined },
+      });
       return;
     }
     // Campagnes de publicité : comportement actuel, inchangé (onglet dérivé du type de notification).
     this.router.navigate(['/administration/publicites'], {
       queryParams: {
         statut: STATUT_CAMPAGNE_PAR_TYPE[notification.type],
-        pub: notification.publicite_id ?? undefined,
+        pub: cible?.id ?? notification.publicite_id ?? undefined,
       },
     });
+  }
+
+  /** Repli quand le backend ne renvoie pas (encore) `cible` pour ce type de notification. */
+  private ecranReplisurType(type: TypeNotificationAdmin): EcranCibleNotificationAdmin {
+    switch (type) {
+      case 'commande_nouvelle':
+      case 'commande_annulee_client':
+        return 'commandes';
+      case 'intervention_nouvelle':
+        return 'interventions';
+      case 'reservation_nouvelle':
+        return 'demandes_location';
+      default:
+        return 'publicites';
+    }
   }
 
   /** Ajuste un canal localement (lu / tout-lire) et resynchronise le total du détecteur partagé. */

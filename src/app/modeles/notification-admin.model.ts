@@ -25,7 +25,9 @@ export type EcranCibleNotificationAdmin = 'commandes' | 'interventions' | 'deman
 
 export interface CibleNotificationAdmin {
   ecran: EcranCibleNotificationAdmin;
-  id: number;
+  // Numérique pour commandes/interventions/demandes_location ; UUID (chaîne) pour publicites —
+  // vérifié sur une réponse réelle du serveur.
+  id: number | string;
 }
 
 export interface NotificationAdmin {
@@ -36,12 +38,16 @@ export interface NotificationAdmin {
   message: string;
   lue: boolean;
   cree_le: string;
-  // Présent pour commandes/interventions/demandes_location ; absent pour les campagnes de pub
-  // (navigation inchangée, voir publicite_id/statut_publicite ci-dessous).
+  // Peut être absent selon le type de notification (pas encore peuplé partout côté backend) :
+  // ClocheNotificationsAdmin retombe alors sur le type et les champs historiques ci-dessous.
   cible: CibleNotificationAdmin | null;
-  // UUID de la campagne concernée (notifications de publicité uniquement).
+  // UUID de la campagne concernée (notifications de publicité).
   publicite_id: string | null;
   statut_publicite: string | null;
+  // Anciens champs, gardés comme repli quand `cible` est absent (voir contrat).
+  commande_id?: number | null;
+  groupe?: string | null;
+  demande_id?: number | null;
 }
 
 /** GET admin/?canal=&page_size=10 (option ?non_lues=1) : nb_non_lues compte seulement le canal demandé. */

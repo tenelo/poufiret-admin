@@ -67,7 +67,7 @@
               <tr [class.ligne-ouverte]="intervention.id === interventionOuverteId()" (click)="ouvrirDetail(intervention.id)">
                 <td class="fort">{{ intervention.numero }}</td>
                 <td>{{ formaterDateHeure(intervention.created_at) }}</td>
-                <td>{{ intervention.type_intervention_libelle || intervention.type_libre || '—' }}</td>
+                <td>{{ intervention.type_libelle || intervention.type_libre || '—' }}</td>
                 <td>{{ intervention.urgence_libelle }}</td>
                 <td>{{ intervention.client_nom }}</td>
                 <td>{{ intervention.artisan_nom || '—' }}</td>
@@ -91,7 +91,7 @@
               <span class="fort">{{ intervention.numero }}</span>
               <span class="badge">{{ intervention.statut_libelle }}</span>
             </span>
-            <span class="carte-ligne">{{ intervention.type_intervention_libelle || intervention.type_libre || '—' }} · {{ intervention.urgence_libelle }}</span>
+            <span class="carte-ligne">{{ intervention.type_libelle || intervention.type_libre || '—' }} · {{ intervention.urgence_libelle }}</span>
             <span class="carte-ligne">{{ intervention.client_nom }} → {{ intervention.artisan_nom || 'Non assigné' }}</span>
             <span class="carte-ligne">{{ formaterDateHeure(intervention.created_at) }}</span>
           </button>

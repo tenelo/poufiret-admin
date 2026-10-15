@@ -5,6 +5,26 @@
   background: #2563eb;
 }
 
+// Même icône 🔔 pour les deux cloches : médaillon coloré derrière pour les distinguer au premier
+// coup d'œil (jaune = Restaurants, bleu = Général). Badges et panneau : inchangés (voir ci-dessus).
+.cloche-restaurant .icone-cloche,
+.cloche-generale .icone-cloche {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+}
+
+.cloche-restaurant .icone-cloche {
+  background: #fef3c7;
+}
+
+.cloche-generale .icone-cloche {
+  background: #dbeafe;
+}
+
 // Panneau ancré à droite de la cloche (elle est dans la zone utilisateur, à droite de l'en-tête).
 .panneau-notifications {
   position: absolute;

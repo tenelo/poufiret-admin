@@ -1,10 +1,12 @@
 /**
  * Reflète /administration/interventions/... : centre des demandes d'intervention, sur le modèle du
- * centre des commandes (onglets par statut avec compteurs, filtres, détail en panneau, actions,
- * notes, export). Lecture : capacité voir_interventions OU gerer_interventions. Écriture
- * (transition, assignation d'un artisan, notes) : réservée à gerer_interventions (voir
- * Interventions.peutGerer). Aucun nom de statut n'est supposé côté interface : statuts, urgences,
- * types et libellés viennent tous du backend (GET meta/).
+ * centre des commandes (onglets par statut, filtres, détail en panneau, actions, notes, export).
+ * Lecture : capacité voir_interventions OU gerer_interventions. Écriture (transition, assignation
+ * d'un artisan, notes) : réservée à gerer_interventions (voir Interventions.peutGerer). Aucun nom
+ * de statut n'est supposé côté interface : statuts, urgences, types et libellés viennent tous du
+ * backend (GET meta/). Pas de pagination DRF classique (vérifié sur une réponse réelle du serveur,
+ * voir ReponseInterventionsAdmin) : { total, resultats, compteurs_statut }, ce dernier portant une
+ * clé par statut de meta.statuts PLUS une clé `total` (pas à recalculer en sommant les autres).
  */
 import { EvenementHistorique, NoteAdmin } from './commande-admin.model';
 
@@ -37,7 +39,8 @@ export interface InterventionAdmin {
   statut: string;
   statut_libelle: string;
   type_intervention: string;
-  type_intervention_libelle: string;
+  // Confirmé sur une réponse réelle : la clé est `type_libelle`, pas `type_intervention_libelle`.
+  type_libelle: string;
   type_libre: string;
   description: string;
   urgence: string;
@@ -55,16 +58,17 @@ export interface InterventionAdmin {
   terminee_le: string | null;
 }
 
-/** Compteur par statut (clé = code statut, voir meta.statuts), pour les badges des onglets. */
+/**
+ * Compteur par onglet (clé = code statut de meta.statuts, + une clé `total` pour « Toutes ») —
+ * optionnel : absent → aucun badge affiché, sans erreur (voir Interventions.compteur).
+ */
 export type CompteursStatutInterventions = Record<string, number>;
 
-/** GET administration/interventions/ : liste paginée filtrée + compteurs par statut. */
+/** GET administration/interventions/ : filtrée, { total, resultats, compteurs_statut } — pas de count/next/previous. */
 export interface ReponseInterventionsAdmin {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: InterventionAdmin[];
-  compteurs_statut: CompteursStatutInterventions;
+  total: number;
+  resultats: InterventionAdmin[];
+  compteurs_statut?: CompteursStatutInterventions;
 }
 
 export interface ContactIntervention {
@@ -94,7 +98,8 @@ export interface TransitionPossibleIntervention {
 /**
  * GET administration/interventions/<id>/ : fiche complète. `historique`/`notes_admin` réutilisent
  * la forme déjà employée pour les commandes (même convention backend) — voir HistoriqueCommande,
- * réutilisé tel quel pour l'affichage.
+ * réutilisé tel quel pour l'affichage. Champs non vérifiés sur une réponse réelle (seules la liste
+ * et meta/ l'ont été) : `type_libelle` aligné par cohérence avec la liste, à confirmer si besoin.
  */
 export interface InterventionAdminDetail {
   id: number;
@@ -102,7 +107,7 @@ export interface InterventionAdminDetail {
   statut: string;
   statut_libelle: string;
   type_intervention: string;
-  type_intervention_libelle: string;
+  type_libelle: string;
   type_libre: string;
   urgence: string;
   urgence_libelle: string;

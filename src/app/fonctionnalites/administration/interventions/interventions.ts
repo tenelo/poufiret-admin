@@ -1,7 +1,7 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, finalize } from 'rxjs';
 
 import { InterventionsService } from './interventions.service';
 import { DetailIntervention } from './detail-intervention/detail-intervention';
@@ -9,6 +9,7 @@ import { FiltresInterventions } from './filtres-interventions/filtres-interventi
 import { extraireMessageErreur } from '../tableau-de-bord-admin/extraire-message-erreur';
 import { formaterDateHeure } from '../commandes-admin/formater-commande';
 import {
+  CompteursStatutInterventions,
   FILTRES_INTERVENTIONS_DEFAUT,
   FiltresInterventionsAdmin,
   InterventionAdmin,
@@ -20,10 +21,11 @@ const TAILLE_PAGE = 20;
 
 /**
  * Centre des demandes d'intervention (admin / super-admin, capacité voir_interventions OU
- * gerer_interventions) : onglet « Toutes » + un onglet par statut connu du backend (meta), avec
- * compteurs, filtres (recherche, urgence, type, artisan, période), liste, détail en panneau
- * latéral et export CSV. Même pattern que le centre des commandes (sans tableau de bord
- * graphique, non demandé ici). Statuts/urgences/types/libellés viennent tous du backend. Actions
+ * gerer_interventions) : onglet « Toutes » + un onglet par statut connu du backend (meta), filtres
+ * (recherche, urgence, type, artisan, période), liste, détail en panneau latéral et export CSV.
+ * Même pattern que le centre des commandes (sans tableau de bord graphique). Compteurs d'onglets
+ * optionnels (compteurs_statut) : absents → pas de badge, sans erreur. Statuts/urgences/
+ * types/libellés viennent tous du backend. Actions
  * (transitions, assignation d'un artisan, notes) visibles uniquement avec gerer_interventions,
  * sinon écran en lecture seule (voir DetailIntervention.peutGerer). `?intervention=<id>` ouvre
  * directement le détail (et l'onglet de son statut).
@@ -47,7 +49,7 @@ export class Interventions implements OnInit {
   readonly onglet = signal<string>(ONGLET_TOUTES_INTERVENTIONS);
   readonly pret = signal(false);
   readonly filtres = signal<FiltresInterventionsAdmin>(FILTRES_INTERVENTIONS_DEFAUT);
-  readonly compteursStatut = signal<Record<string, number>>({});
+  readonly compteursStatut = signal<CompteursStatutInterventions | null>(null);
 
   readonly interventions = signal<InterventionAdmin[]>([]);
   readonly total = signal(0);
@@ -127,6 +129,9 @@ export class Interventions implements OnInit {
   }
 
   chargerListe(silencieux = false): void {
+    // Désabonne l'appel précédent AVANT de (re)poser le drapeau de chargement : sinon le
+    // finalize() de l'ancien appel (déclenché par unsubscribe) écraserait aussitôt le nouveau.
+    this.abonnementListe?.unsubscribe();
     if (!silencieux) {
       this.chargementListe.set(true);
     }
@@ -134,29 +139,28 @@ export class Interventions implements OnInit {
 
     const filtresAvecOnglet: FiltresInterventionsAdmin = { ...this.filtres(), statut: this.statutCourant() ?? '' };
 
-    this.abonnementListe?.unsubscribe();
-    this.abonnementListe = this.service.lister(filtresAvecOnglet, this.page(), TAILLE_PAGE).subscribe({
-      next: (reponse) => {
-        this.chargementListe.set(false);
-        this.interventions.set(reponse.results);
-        this.total.set(reponse.count);
-        this.compteursStatut.set(reponse.compteurs_statut);
-      },
-      error: (erreur: unknown) => {
-        this.chargementListe.set(false);
-        this.erreurListe.set(extraireMessageErreur(erreur));
-      },
-    });
+    this.abonnementListe = this.service
+      .lister(filtresAvecOnglet, this.page(), TAILLE_PAGE)
+      .pipe(finalize(() => this.chargementListe.set(false)))
+      .subscribe({
+        next: (reponse) => {
+          this.interventions.set(reponse.resultats);
+          this.total.set(reponse.total);
+          // Optionnel côté backend : absent → compteursStatut reste null, voir compteur().
+          this.compteursStatut.set(reponse.compteurs_statut ?? null);
+        },
+        error: (erreur: unknown) => {
+          this.erreurListe.set(extraireMessageErreur(erreur));
+        },
+      });
   }
 
-  /** Badge d'un onglet : somme de tous les statuts pour « Toutes », sinon son propre compteur. */
+  /** Badge d'un onglet : clé `total` pour « Toutes », sinon son propre statut. Null si non fourni. */
   compteur(onglet: string): number | null {
     const compteurs = this.compteursStatut();
-    if (Object.keys(compteurs).length === 0) return null;
-    if (onglet === ONGLET_TOUTES_INTERVENTIONS) {
-      return Object.values(compteurs).reduce((total, n) => total + n, 0);
-    }
-    return compteurs[onglet] ?? 0;
+    if (!compteurs) return null;
+    const cle = onglet === ONGLET_TOUTES_INTERVENTIONS ? 'total' : onglet;
+    return compteurs[cle] ?? null;
   }
 
   // ---- Interactions ----
@@ -199,7 +203,7 @@ export class Interventions implements OnInit {
     }
   }
 
-  /** Après une action dans le détail : la liste et ses compteurs se mettent à jour. */
+  /** Après une action dans le détail : la liste se recharge silencieusement. */
   surDetailModifie(): void {
     this.chargerListe(true);
   }
