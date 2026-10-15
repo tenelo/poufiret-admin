@@ -4,6 +4,7 @@ import {
   ElementRef,
   HostListener,
   OnInit,
+  computed,
   effect,
   inject,
   signal,
@@ -64,16 +65,19 @@ export class ClocheNotificationsAdmin implements OnInit {
 
   readonly enAnimation = signal(false);
 
+  // Au plus un panneau ouvert à la fois : null = les deux fermés, sinon le canal ouvert.
+  readonly canalOuvert = signal<CanalNotificationAdmin | null>(null);
+  readonly panneauOuvertRestaurant = computed(() => this.canalOuvert() === 'restaurant');
+  readonly panneauOuvertGeneral = computed(() => this.canalOuvert() === 'general');
+
   // ---- Canal "restaurant" (🍽️) ----
   readonly nbNonLuesRestaurant = signal(0);
-  readonly panneauOuvertRestaurant = signal(false);
   readonly chargementRestaurant = signal(false);
   readonly erreurRestaurant = signal<string | null>(null);
   readonly notificationsRestaurant = signal<NotificationAdmin[]>([]);
 
   // ---- Canal "general" (🔔) ----
   readonly nbNonLuesGeneral = signal(0);
-  readonly panneauOuvertGeneral = signal(false);
   readonly chargementGeneral = signal(false);
   readonly erreurGeneral = signal<string | null>(null);
   readonly notificationsGeneral = signal<NotificationAdmin[]>([]);
@@ -112,11 +116,9 @@ export class ClocheNotificationsAdmin implements OnInit {
   }
 
   basculerPanneau(canal: CanalNotificationAdmin): void {
-    const panneauOuvert = canal === 'restaurant' ? this.panneauOuvertRestaurant : this.panneauOuvertGeneral;
-    const ouverture = !panneauOuvert();
-    // Un seul panneau ouvert à la fois (ferme l'autre cloche si elle était ouverte).
-    this.fermerPanneaux();
-    panneauOuvert.set(ouverture);
+    // Un seul panneau ouvert à la fois : re-cliquer la cloche déjà ouverte la referme.
+    const ouverture = this.canalOuvert() !== canal;
+    this.canalOuvert.set(ouverture ? canal : null);
     if (ouverture) {
       this.chargerNotifications(canal);
     }
@@ -124,8 +126,7 @@ export class ClocheNotificationsAdmin implements OnInit {
 
   @HostListener('document:keydown.escape')
   fermerPanneaux(): void {
-    this.panneauOuvertRestaurant.set(false);
-    this.panneauOuvertGeneral.set(false);
+    this.canalOuvert.set(null);
   }
 
   private chargerNotifications(canal: CanalNotificationAdmin): void {

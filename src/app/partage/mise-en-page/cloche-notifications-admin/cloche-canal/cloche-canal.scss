@@ -1,28 +1,17 @@
 @use '../../cloche-notifications/cloche-commune';
 
-// Variante bleue de .bouton-cloche (cloche-commune), pour la cloche "Général" 🔔.
-.cloche-generale .badge-cloche {
-  background: #2563eb;
-}
-
-// Même icône 🔔 pour les deux cloches : médaillon coloré derrière pour les distinguer au premier
-// coup d'œil (jaune = Restaurants, bleu = Général). Badges et panneau : inchangés (voir ci-dessus).
-.cloche-restaurant .icone-cloche,
-.cloche-generale .icone-cloche {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-}
-
+// Icône (SVG, voir le gabarit) colorée via currentColor : jaune pour Restaurants, bleue pour Général.
 .cloche-restaurant .icone-cloche {
-  background: #fef3c7;
+  color: #eabd08;
 }
 
 .cloche-generale .icone-cloche {
-  background: #dbeafe;
+  color: #0098f0;
+}
+
+// Badge de la cloche Général : jaune (demandé explicitement), pas bleu comme l'icône.
+.cloche-generale .badge-cloche {
+  background: #f8c304;
 }
 
 // Panneau ancré à droite de la cloche (elle est dans la zone utilisateur, à droite de l'en-tête).
