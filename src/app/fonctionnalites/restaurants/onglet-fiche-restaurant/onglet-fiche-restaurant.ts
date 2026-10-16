@@ -89,7 +89,6 @@ export class OngletFicheRestaurant implements OnInit {
       next: (fiche) => {
         this.chargementEnCours.set(false);
         this.appliquerFiche(fiche);
-        this.telephones.set(fiche.telephones);
       },
       error: (erreur: unknown) => {
         this.chargementEnCours.set(false);
@@ -98,16 +97,35 @@ export class OngletFicheRestaurant implements OnInit {
     });
   }
 
+  /**
+   * Applique une fiche complète (GET fiche/, PATCH fiche/) : tous les champs, y compris les
+   * horaires et téléphones imbriqués. Défensif sur chaque champ — une fiche partielle/inattendue
+   * ne doit jamais faire planter l'écran (aucune lecture directe sur un champ potentiellement
+   * undefined).
+   */
   private appliquerFiche(fiche: FicheRestaurant): void {
     this.fiche.set(fiche);
-    this.horaires.set(this.joursHoraire.map((j) => fiche.horaires.find((h) => h.jour_semaine === j.valeur) ?? horaireVide(j.valeur)));
-    this.services.set(new Set(fiche.services));
-    this.delaiPreparation.set(fiche.delai_preparation_min !== null ? String(fiche.delai_preparation_min) : '');
+    this.appliquerHoraires(fiche.horaires ?? []);
+    this.telephones.set(fiche.telephones ?? []);
+    this.services.set(new Set(fiche.services ?? []));
+    this.delaiPreparation.set(
+      fiche.delai_preparation_min !== null && fiche.delai_preparation_min !== undefined
+        ? String(fiche.delai_preparation_min)
+        : '',
+    );
     this.adresseReperes.set(fiche.adresse_reperes ?? '');
     this.facebook.set(fiche.facebook ?? '');
     this.instagram.set(fiche.instagram ?? '');
     this.tiktok.set(fiche.tiktok ?? '');
-    this.specialites.set([...fiche.specialites]);
+    this.specialites.set([...(fiche.specialites ?? [])]);
+  }
+
+  /** Complète une liste d'horaires (potentiellement partielle) avec les 7 jours, dans l'ordre. */
+  private appliquerHoraires(horaires: HoraireJour[]): void {
+    this.horaires.set(this.joursHoraire.map((j) => horaires.find((h) => h.jour_semaine === j.valeur) ?? horaireVide(j.valeur)));
+    // Garde la fiche en cache cohérente avec les horaires affichés (pas de modifie_le à jour ici :
+    // PUT horaires/ ne renvoie que les horaires, pas la fiche — voir enregistrerHoraires).
+    this.fiche.update((f) => (f ? { ...f, horaires } : f));
   }
 
   // ---- Horaires ----
@@ -128,9 +146,11 @@ export class OngletFicheRestaurant implements OnInit {
     this.erreurHoraires.set(null);
 
     this.service.modifierHoraires(this.prefixe(), { horaires: this.horaires() }).subscribe({
-      next: (fiche) => {
+      next: (horaires) => {
         this.enregistrementHorairesEnCours.set(false);
-        this.appliquerFiche(fiche);
+        // PUT horaires/ renvoie la liste brute des horaires (même forme que GET), pas la fiche
+        // complète : ne JAMAIS passer cette réponse à appliquerFiche.
+        this.appliquerHoraires(horaires);
         this.afficherSucces('Horaires enregistrés.');
       },
       error: (erreur: unknown) => {

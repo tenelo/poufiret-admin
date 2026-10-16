@@ -5,6 +5,7 @@ import { EMPTY, Observable, expand, map, reduce } from 'rxjs';
 import { ConfigurationService } from '../../noyau/config/configuration.service';
 import {
   FicheRestaurant,
+  HoraireJour,
   RequeteFiche,
   RequeteHoraires,
   RequeteTelephone,
@@ -121,8 +122,11 @@ export class RestaurantService {
     return this.http.patch<FicheRestaurant>(`${this.base(prefixe)}fiche/`, donnees);
   }
 
-  modifierHoraires(prefixe: PrefixeRestaurant, donnees: RequeteHoraires): Observable<FicheRestaurant> {
-    return this.http.put<FicheRestaurant>(`${this.base(prefixe)}horaires/`, donnees);
+  // Renvoie la liste brute des horaires (même forme que GET horaires/), PAS la fiche complète —
+  // vérifié en production (le typage précédent, Observable<FicheRestaurant>, causait un plantage
+  // au composant appelant qui lisait .horaires sur cette réponse).
+  modifierHoraires(prefixe: PrefixeRestaurant, donnees: RequeteHoraires): Observable<HoraireJour[]> {
+    return this.http.put<HoraireJour[]>(`${this.base(prefixe)}horaires/`, donnees);
   }
 
   // ---- Téléphones ----
