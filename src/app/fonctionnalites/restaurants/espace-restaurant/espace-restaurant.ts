@@ -8,7 +8,7 @@ import { OngletFicheRestaurant } from '../onglet-fiche-restaurant/onglet-fiche-r
 import { OngletCarteRestaurant } from '../onglet-carte-restaurant/onglet-carte-restaurant';
 import { OngletMenusRestaurant } from '../onglet-menus-restaurant/onglet-menus-restaurant';
 import { OngletCommandesRestaurant } from '../onglet-commandes-restaurant/onglet-commandes-restaurant';
-import { PREFIXE_MON_RESTAURANT, PrefixeRestaurant, prefixeAdmin } from '../restaurant.service';
+import { PREFIXE_MON_RESTAURANT, PrefixeRestaurant, RestaurantService, prefixeAdmin } from '../restaurant.service';
 
 export type OngletRestaurant = 'apercu' | 'fiche' | 'carte' | 'menus' | 'commandes';
 
@@ -28,9 +28,9 @@ const ONGLETS: { valeur: OngletRestaurant; libelle: string }[] = [
  *
  * Côté admin, l'onglet actif est reflété dans l'URL (?onglet=...) : un rechargement ou un lien
  * partagé rouvre le bon onglet. Le nom du restaurant est transmis par la liste admin (navigation
- * state) ; en accès direct par URL (lien partagé, rechargement), il n'est pas disponible — c'est
- * un repli neutre ("Restaurant"), sans second appel réseau pour le récupérer (l'API carte/fiche
- * n'expose pas le nom du restaurant lui-même).
+ * state) quand disponible ; sinon (accès direct par URL, lien partagé, rechargement), il est
+ * rechargé via la liste admin des restaurants (l'API carte/fiche n'expose pas le nom du
+ * restaurant lui-même) — affiché ensuite dans l'en-tête, le bandeau et tous les onglets.
  */
 @Component({
   selector: 'app-espace-restaurant',
@@ -50,6 +50,7 @@ export class EspaceRestaurant implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly profilPartenaireContexte = inject(ProfilPartenaireContexteService);
+  private readonly service = inject(RestaurantService);
 
   readonly onglets = ONGLETS;
 
@@ -73,9 +74,22 @@ export class EspaceRestaurant implements OnInit {
       const id = Number(idParam);
       this.partenaireId.set(id);
       this.prefixe.set(prefixeAdmin(id));
-      // Le nom est transmis depuis la liste admin (navigation) ; repli neutre sinon.
+
+      // Le nom est transmis depuis la liste admin (navigation) ; sinon (accès direct par URL,
+      // lien partagé, rechargement de page) on le recharge depuis la liste admin des restaurants.
       const nomTransmis = (window.history.state as { nom?: string } | null)?.nom;
-      this.nomRestaurant.set(nomTransmis ?? null);
+      if (nomTransmis) {
+        this.nomRestaurant.set(nomTransmis);
+      } else {
+        this.chargementNomEnCours.set(true);
+        this.service.listerRestaurantsAdmin().subscribe({
+          next: (restaurants) => {
+            this.chargementNomEnCours.set(false);
+            this.nomRestaurant.set(restaurants.find((r) => r.id === id)?.nom ?? null);
+          },
+          error: () => this.chargementNomEnCours.set(false),
+        });
+      }
     } else {
       this.prefixe.set(PREFIXE_MON_RESTAURANT);
       this.chargementNomEnCours.set(true);
