@@ -76,8 +76,9 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./fonctionnalites/partenaire/publicites/publicites').then((m) => m.Publicites),
       },
-      // Espace restaurant (partenaire de type restaurateur) : un seul composant hôte à onglets
-      // (voir fonctionnalites/restaurants/espace-restaurant), 3 entrées de menu pointant vers son
+      // Espace établissement (ex-espace restaurant : restaurateur, fast-food, boulanger, pharmacien,
+      // mode, libraire — selon le gabarit) : un seul composant hôte à onglets (voir
+      // fonctionnalites/restaurants/espace-restaurant), 3 entrées de menu pointant vers son
       // onglet de départ. Accessible même si le partenaire n'est pas restaurateur (le backend
       // renverra une erreur sur la fiche) : aucun intérêt à dupliquer le guard de rôle ici.
       {
@@ -244,7 +245,8 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'administration/restaurants',
+        // Établissements (ex-Restaurants) : tous les gabarits (restaurant, boulangerie, pharmacie…).
+        path: 'administration/etablissements',
         canActivate: [roleGuard(['admin']), capaciteGuard],
         data: { capacite: 'gerer_restaurants' },
         loadComponent: () =>
@@ -253,8 +255,8 @@ export const routes: Routes = [
           ),
       },
       {
-        // Même composant hôte que côté restaurateur, préfixe admin/<id> (voir EspaceRestaurant.ngOnInit).
-        path: 'administration/restaurants/:id',
+        // Même composant hôte que côté partenaire, préfixe admin/<id> (voir EspaceRestaurant.ngOnInit).
+        path: 'administration/etablissements/:id',
         canActivate: [roleGuard(['admin']), capaciteGuard],
         data: { capacite: 'gerer_restaurants' },
         loadComponent: () =>
@@ -262,6 +264,9 @@ export const routes: Routes = [
             (m) => m.EspaceRestaurant,
           ),
       },
+      // Anciennes adresses (liens enregistrés) : redirigées, paramètres de requête conservés.
+      { path: 'administration/restaurants', redirectTo: 'administration/etablissements', pathMatch: 'full' },
+      { path: 'administration/restaurants/:id', redirectTo: 'administration/etablissements/:id' },
       {
         path: 'administration/locations',
         canActivate: [roleGuard(['admin']), capaciteGuard],

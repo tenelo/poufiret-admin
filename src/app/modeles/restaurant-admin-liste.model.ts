@@ -1,5 +1,5 @@
 /**
- * Reflète GET /api/v1/restaurants/admin/ : liste admin des restaurants.
+ * Reflète GET /api/v1/restaurants/admin/ : liste admin des établissements (ex-restaurants).
  * URL et format vérifiés en production (réponse réelle observée) : {"resultats": [...]}, sans
  * pagination, avec exactement ces champs.
  */
@@ -14,6 +14,8 @@ export interface RestaurantAdminListe {
   ouvert: boolean;
   menu_du_jour_publie: boolean;
   commandes_du_jour: number;
+  /** restaurant | boulangerie | pharmacie | mode | librairie | generique (voir Gabarit). */
+  gabarit?: string | null;
 }
 
 /** Corps exact de GET /api/v1/restaurants/admin/ : pas de pagination, pas de forme alternative. */

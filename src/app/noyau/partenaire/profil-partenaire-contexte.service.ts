@@ -10,6 +10,9 @@ import { ProfilPartenaire } from '../../modeles/profil-partenaire.model';
  * place de « Mes produits »/« Mes catégories »), sans rappeler l'API à chaque navigation.
  * Pendant du `PermissionsService` côté admin.
  */
+const TYPES_RESTAURATION = ['restaurateur', 'fast_food'];
+const TYPES_ETABLISSEMENT = ['boulanger', 'pharmacien', 'boutique_mode', 'libraire'];
+
 @Injectable({ providedIn: 'root' })
 export class ProfilPartenaireContexteService {
   private readonly service = inject(ProfilPartenaireService);
@@ -18,7 +21,14 @@ export class ProfilPartenaireContexteService {
   private requeteEnCours$: Observable<ProfilPartenaire> | null = null;
 
   readonly profil = this.profilInterne.asReadonly();
-  readonly estRestaurateur = computed(() => this.profilInterne()?.type_partenaire === 'restaurateur');
+  /** Restauration (restaurateur, fast-food) : espace établissement avec carte et menus. */
+  readonly estRestaurateur = computed(() =>
+    TYPES_RESTAURATION.includes(this.profilInterne()?.type_partenaire ?? ''),
+  );
+  /** Autres gabarits de l'espace établissement (boulangerie, pharmacie, mode, librairie). */
+  readonly estEtablissement = computed(() =>
+    TYPES_ETABLISSEMENT.includes(this.profilInterne()?.type_partenaire ?? ''),
+  );
   readonly estLoueur = computed(() => this.profilInterne()?.type_partenaire === 'loueur_maison');
   readonly estLoueurVoiture = computed(() => this.profilInterne()?.type_partenaire === 'loueur_voiture');
   readonly estHotelier = computed(() => this.profilInterne()?.type_partenaire === 'hotelier');

@@ -14,6 +14,8 @@ export type TypePartenaireCreation =
   | 'macon'
   | 'coiffeur'
   | 'libraire'
+  | 'fast_food'
+  | 'boutique_mode'
   | 'hotelier'
   | 'mecanicien'
   | 'loueur_maison'
@@ -25,6 +27,7 @@ export const OPTIONS_TYPE_PARTENAIRE_CREATION: { valeur: TypePartenaireCreation;
   { valeur: 'pharmacien', libelle: 'Pharmacien' },
   { valeur: 'boulanger', libelle: 'Boulanger' },
   { valeur: 'restaurateur', libelle: 'Restaurateur' },
+  { valeur: 'fast_food', libelle: 'Fast-food' },
   { valeur: 'couturier', libelle: 'Couturier' },
   { valeur: 'menuisier', libelle: 'Menuisier' },
   { valeur: 'plombier', libelle: 'Plombier' },
@@ -32,6 +35,7 @@ export const OPTIONS_TYPE_PARTENAIRE_CREATION: { valeur: TypePartenaireCreation;
   { valeur: 'macon', libelle: 'Maçon' },
   { valeur: 'coiffeur', libelle: 'Coiffeur' },
   { valeur: 'libraire', libelle: 'Libraire' },
+  { valeur: 'boutique_mode', libelle: 'Vendeur de chaussures / Mode' },
   { valeur: 'hotelier', libelle: 'Hôtelier' },
   { valeur: 'mecanicien', libelle: 'Mécanicien' },
   { valeur: 'loueur_maison', libelle: 'Loueur de maison' },

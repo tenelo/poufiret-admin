@@ -87,10 +87,12 @@ export type RequeteMiseAJourProfilPartenaire = Partial<
 // une valeur absente d'ici, elle est tout de même ajoutée dynamiquement à la liste affichée.
 export const OPTIONS_TYPE_PARTENAIRE: { valeur: string; libelle: string }[] = [
   { valeur: 'restaurateur', libelle: 'Restaurateur' },
+  { valeur: 'fast_food', libelle: 'Fast-food' },
   { valeur: 'pharmacien', libelle: 'Pharmacien' },
   { valeur: 'boulanger', libelle: 'Boulanger' },
   { valeur: 'commercant', libelle: 'Commerçant' },
   { valeur: 'libraire', libelle: 'Libraire' },
+  { valeur: 'boutique_mode', libelle: 'Vendeur de chaussures / Mode' },
   { valeur: 'couturier', libelle: 'Couturier' },
   { valeur: 'coiffeur', libelle: 'Coiffeur' },
   { valeur: 'electricien', libelle: 'Électricien' },

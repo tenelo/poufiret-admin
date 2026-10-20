@@ -11,8 +11,18 @@ import {
   ServiceRestaurant,
   TelephoneRestaurant,
 } from '../../../modeles/restaurant.model';
+import { GABARIT_RESTAURANT_PAR_DEFAUT, Gabarit } from '../../../modeles/gabarit.model';
 
 const DUREE_MESSAGE_MS = 6000;
+
+/** ISO (UTC) → valeur d'un champ datetime-local, à l'heure locale ("AAAA-MM-JJTHH:MM"). */
+function versDateHeureLocale(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const deux = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${deux(date.getMonth() + 1)}-${deux(date.getDate())}T${deux(date.getHours())}:${deux(date.getMinutes())}`;
+}
 
 function horaireVide(jour: number): HoraireJour {
   return {
@@ -28,7 +38,8 @@ function horaireVide(jour: number): HoraireJour {
 
 /**
  * Fiche & horaires : les 7 jours d'ouverture, les téléphones, les services proposés, le délai de
- * préparation, les repères d'adresse, les réseaux sociaux et les spécialités.
+ * préparation, les repères d'adresse, les réseaux sociaux et les spécialités ; pour une pharmacie
+ * (gabarit "pharmacie"), la garde en cours (« De garde jusqu'au », effaçable).
  */
 @Component({
   selector: 'app-onglet-fiche-restaurant',
@@ -41,6 +52,7 @@ export class OngletFicheRestaurant implements OnInit {
 
   readonly prefixe = input.required<PrefixeRestaurant>();
   readonly estAdmin = input(false);
+  readonly gabarit = input<Gabarit>(GABARIT_RESTAURANT_PAR_DEFAUT);
 
   readonly joursHoraire = JOURS_HORAIRE;
   readonly optionsService = OPTIONS_SERVICE_RESTAURANT;
@@ -76,6 +88,11 @@ export class OngletFicheRestaurant implements OnInit {
   readonly nouvelleSpecialite = signal('');
   readonly enregistrementInfosEnCours = signal(false);
   readonly erreurInfos = signal<string | null>(null);
+
+  // ---- Garde (pharmacie) ----
+  readonly deGardeJusquAu = signal('');
+  readonly enregistrementGardeEnCours = signal(false);
+  readonly erreurGarde = signal<string | null>(null);
 
   ngOnInit(): void {
     this.charger();
@@ -118,6 +135,7 @@ export class OngletFicheRestaurant implements OnInit {
     this.instagram.set(fiche.instagram ?? '');
     this.tiktok.set(fiche.tiktok ?? '');
     this.specialites.set([...(fiche.specialites ?? [])]);
+    this.deGardeJusquAu.set(versDateHeureLocale(fiche.de_garde_jusqu_au));
   }
 
   /** Complète une liste d'horaires (potentiellement partielle) avec les 7 jours, dans l'ordre. */
@@ -255,6 +273,32 @@ export class OngletFicheRestaurant implements OnInit {
           this.erreurInfos.set(extraireMessageErreur(erreur));
         },
       });
+  }
+
+  // ---- Garde (pharmacie) ----
+
+  /** Enregistre la fin de garde saisie, ou null pour l'effacer. */
+  enregistrerGarde(effacer = false): void {
+    if (this.enregistrementGardeEnCours()) return;
+    const saisie = effacer ? '' : this.deGardeJusquAu();
+    const date = saisie ? new Date(saisie) : null;
+    if (date && Number.isNaN(date.getTime())) {
+      this.erreurGarde.set('Date et heure invalides.');
+      return;
+    }
+    this.enregistrementGardeEnCours.set(true);
+    this.erreurGarde.set(null);
+    this.service.modifierFiche(this.prefixe(), { de_garde_jusqu_au: date ? date.toISOString() : null }).subscribe({
+      next: (fiche) => {
+        this.enregistrementGardeEnCours.set(false);
+        this.appliquerFiche(fiche);
+        this.afficherSucces(date ? 'Garde enregistrée.' : 'Garde effacée.');
+      },
+      error: (erreur: unknown) => {
+        this.enregistrementGardeEnCours.set(false);
+        this.erreurGarde.set(extraireMessageErreur(erreur));
+      },
+    });
   }
 
   private afficherSucces(message: string): void {

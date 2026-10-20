@@ -1,10 +1,10 @@
 <div class="voile-modale" (click)="ferme.emit()">
   <div class="modale" (click)="$event.stopPropagation()">
-    <h2>{{ platCourant() ? 'Modifier « ' + platCourant()!.nom + ' »' : 'Nouveau plat' }}</h2>
+    <h2>{{ platCourant() ? 'Modifier « ' + platCourant()!.nom + ' »' : 'Ajouter — ' + gabarit().libelle_produit }}</h2>
 
     @if (platCourant()?.modifie_le) {
       <p class="tracabilite">
-        Dernière modification {{ platCourant()!.modifie_par_role === 'admin' ? "par l'administration" : 'par le restaurateur' }}
+        Dernière modification {{ platCourant()!.modifie_par_role === 'admin' ? "par l'administration" : 'par le partenaire' }}
         @if (platCourant()!.modifie_par_nom) { ({{ platCourant()!.modifie_par_nom }}) }
       </p>
     }
@@ -17,14 +17,18 @@
         Photos
       </button>
       <button type="button" class="onglet" [disabled]="!platCourant()" [class.onglet-actif]="ongletActif() === 'variantes'" (click)="changerOnglet('variantes')">
-        Variantes
+        {{ gabarit().libelle_variantes }}
       </button>
-      <button type="button" class="onglet" [disabled]="!platCourant()" [class.onglet-actif]="ongletActif() === 'options'" (click)="changerOnglet('options')">
-        Groupes d'options
-      </button>
+      @if (gabarit().options_actives) {
+        <button type="button" class="onglet" [disabled]="!platCourant()" [class.onglet-actif]="ongletActif() === 'options'" (click)="changerOnglet('options')">
+          Groupes d'options
+        </button>
+      }
     </nav>
     @if (!platCourant()) {
-      <p class="aide">Enregistrez le plat pour gérer ses photos, variantes et groupes d'options.</p>
+      <p class="aide">
+        Enregistrez d'abord pour gérer les photos, les {{ gabarit().libelle_variantes.toLowerCase() }}@if (gabarit().options_actives) { et les groupes d'options}.
+      </p>
     }
 
     @switch (ongletActif()) {
@@ -48,7 +52,7 @@
               }
             </div>
             <div>
-              <label for="dp-section">Section</label>
+              <label for="dp-section">{{ gabarit().libelle_section }}</label>
               <select id="dp-section" (change)="section.set($any($event.target).value === '' ? '' : +$any($event.target).value)">
                 <option value="" [selected]="section() === ''">— Aucune —</option>
                 @for (s of sections(); track s.id) {
@@ -60,20 +64,64 @@
 
           <label class="ligne-case">
             <input type="checkbox" [checked]="estActif()" (change)="estActif.set($any($event.target).checked)" />
-            Actif (visible sur la carte)
+            Actif (visible)
           </label>
           <label class="ligne-case">
             <input type="checkbox" [checked]="estDisponible()" (change)="estDisponible.set($any($event.target).checked)" />
             Disponible (peut être commandé)
           </label>
-          <label class="ligne-case">
-            <input type="checkbox" [checked]="estReserveAuxMenus()" (change)="estReserveAuxMenus.set($any($event.target).checked)" />
-            Réservé aux menus (non vendu à la carte seule)
-          </label>
+          @if (gabarit().menus_actifs) {
+            <label class="ligne-case">
+              <input type="checkbox" [checked]="estReserveAuxMenus()" (change)="estReserveAuxMenus.set($any($event.target).checked)" />
+              Réservé aux menus (non vendu à la carte seule)
+            </label>
+          }
+
+          @if (champsFiche().length > 0) {
+            <fieldset class="bloc-details">
+              <legend>Détails {{ gabarit().libelle_produit.toLowerCase() }}</legend>
+              @for (champ of champsFiche(); track champ.cle) {
+                @if (champ.type === 'booleen') {
+                  <label class="ligne-case">
+                    <input
+                      type="checkbox"
+                      [checked]="valeurFiche(champ)"
+                      (change)="changerValeurFiche(champ.cle, $any($event.target).checked)"
+                    />
+                    {{ champ.libelle }}@if (champ.obligatoire) { <span class="obligatoire">*</span> }
+                  </label>
+                } @else {
+                  <label [for]="'dp-fiche-' + champ.cle">
+                    {{ champ.libelle }}@if (champ.obligatoire) { <span class="obligatoire">*</span> }
+                  </label>
+                  @if (champ.type === 'choix') {
+                    <select [id]="'dp-fiche-' + champ.cle" (change)="changerValeurFiche(champ.cle, $any($event.target).value)">
+                      <option value="" [selected]="valeurFiche(champ) === ''">— Choisir —</option>
+                      @for (choix of champ.choix ?? []; track choix.valeur) {
+                        <option [value]="choix.valeur" [selected]="choix.valeur === valeurFiche(champ)">{{ choix.libelle }}</option>
+                      }
+                    </select>
+                  } @else {
+                    <input
+                      [id]="'dp-fiche-' + champ.cle"
+                      [type]="champ.type === 'entier' ? 'number' : 'text'"
+                      [attr.step]="champ.type === 'entier' ? 1 : null"
+                      [value]="valeurFiche(champ)"
+                      (input)="changerValeurFiche(champ.cle, $any($event.target).value)"
+                    />
+                  }
+                }
+                @if (erreursFiche()[champ.cle]) {
+                  <p class="erreur-champ">{{ erreursFiche()[champ.cle] }}</p>
+                }
+              }
+              <p class="aide">* obligatoire</p>
+            </fieldset>
+          }
 
           @if (platCourant(); as plat) {
             <p class="etat-epuise">
-              État épuisé : <strong>{{ plat.est_epuise ? 'Oui' : 'Non' }}</strong> — se gère depuis la carte, bouton dédié.
+              État épuisé : <strong>{{ plat.est_epuise ? 'Oui' : 'Non' }}</strong> — se gère depuis la liste, bouton dédié.
             </p>
           }
 
@@ -91,6 +139,9 @@
       }
 
       @case ('images') {
+        @if (gabarit().code === 'mode') {
+          <p class="aide">2 à 4 photos sous plusieurs angles.</p>
+        }
         @if (platCourant(); as plat) {
           <app-carte-images [prefixe]="prefixe()" [platId]="plat.id" />
         }
@@ -98,8 +149,8 @@
 
       @case ('variantes') {
         <p class="aide">
-          Saisissez le prix final de chaque variante (ex. « Entier » 6000, « Demi » 3500). Le prix de
-          base du plat est le prix de la variante par défaut.
+          Saisissez le prix final de chaque variante. Le prix de base est celui de la variante par
+          défaut. Stock vide = illimité.
         </p>
         @if (platCourant(); as plat) {
           <ul class="liste-variantes">
@@ -122,16 +173,35 @@
                   }
                   <button type="button" class="lien-par-defaut" (click)="demanderVarianteParDefaut(variante)">Définir par défaut</button>
                 }
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  class="champ-stock"
+                  placeholder="Stock"
+                  title="Stock (vide = illimité)"
+                  [value]="variante.stock ?? ''"
+                  (change)="enregistrerStock(variante, $any($event.target).value)"
+                />
+                <label class="case-epuise">
+                  <input
+                    type="checkbox"
+                    [checked]="variante.est_epuise"
+                    (change)="basculerEpuiseVariante(variante, $any($event.target).checked)"
+                  />
+                  Épuisé
+                </label>
                 <button type="button" class="bouton-icone" (click)="supprimerVariante(variante)" aria-label="Supprimer">🗑</button>
               </li>
             } @empty {
-              <li class="vide">Aucune variante.</li>
+              <li class="vide">Aucune entrée.</li>
             }
           </ul>
         }
         <div class="ligne-ajout">
-          <input type="text" placeholder="Nom (ex. Entier)" [value]="nouvelleVarianteNom()" (input)="nouvelleVarianteNom.set($any($event.target).value)" />
+          <input type="text" placeholder="Nom" [value]="nouvelleVarianteNom()" (input)="nouvelleVarianteNom.set($any($event.target).value)" />
           <input type="number" min="0" placeholder="Prix final" [value]="nouvelleVariantePrixFinal()" (input)="nouvelleVariantePrixFinal.set($any($event.target).value)" />
+          <input type="number" min="0" step="1" placeholder="Stock (vide = illimité)" [value]="nouvelleVarianteStock()" (input)="nouvelleVarianteStock.set($any($event.target).value)" />
           <button type="button" class="bouton-secondaire" (click)="ajouterVariante()">+ Ajouter</button>
         </div>
         @if (erreurVariantes()) {

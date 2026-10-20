@@ -59,40 +59,44 @@
     }
   </section>
 
-  <!-- Menu du jour -->
-  <section class="carte">
-    <h2>Menu en vigueur aujourd'hui</h2>
-    <div class="grille-services">
-      @for (option of optionsService; track option.valeur) {
-        <div class="bloc-service">
-          <h3>{{ option.libelle }}</h3>
-          @if (menuDuService(option.valeur); as menu) {
-            <p class="titre-menu">{{ menu.titre || 'Menu' }}</p>
-            <ul class="liste-plats">
-              @for (ligne of menu.lignes; track ligne.id) {
-                <li [class.epuise]="ligne.est_epuise">
-                  <span>{{ ligne.plat_nom }}</span>
-                  <span class="prix">{{ ligne.prix_effectif }} FCFA</span>
-                  @if (ligne.stock_restant !== null) {
-                    <span class="stock">{{ ligne.est_epuise ? 'Épuisé' : ligne.stock_restant + ' restant(s)' }}</span>
-                  }
-                </li>
-              } @empty {
-                <li class="vide">Aucun plat.</li>
-              }
-            </ul>
-          } @else {
-            <p class="vide">Aucun menu publié pour ce service aujourd'hui.</p>
-          }
-        </div>
-      }
-    </div>
-  </section>
+  <!-- Menu du jour (gabarits avec menus) -->
+  @if (gabarit().menus_actifs) {
+    <section class="carte">
+      <h2>Menu en vigueur aujourd'hui</h2>
+      <div class="grille-services">
+        @for (option of optionsService; track option.valeur) {
+          <div class="bloc-service">
+            <h3>{{ option.libelle }}</h3>
+            @if (menuDuService(option.valeur); as menu) {
+              <p class="titre-menu">{{ menu.titre || 'Menu' }}</p>
+              <ul class="liste-plats">
+                @for (ligne of menu.lignes; track ligne.id) {
+                  <li [class.epuise]="ligne.est_epuise">
+                    <span>{{ ligne.plat_nom }}</span>
+                    <span class="prix">{{ ligne.prix_effectif }} FCFA</span>
+                    @if (ligne.stock_restant !== null) {
+                      <span class="stock">{{ ligne.est_epuise ? 'Épuisé' : ligne.stock_restant + ' restant(s)' }}</span>
+                    }
+                  </li>
+                } @empty {
+                  <li class="vide">Aucun plat.</li>
+                }
+              </ul>
+            } @else {
+              <p class="vide">Aucun menu publié pour ce service aujourd'hui.</p>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  }
 
   <!-- Raccourcis -->
   <section class="raccourcis">
-    <button type="button" class="bouton-raccourci" (click)="allerA.emit('menus')">📅 Gérer les menus</button>
-    <button type="button" class="bouton-raccourci" (click)="allerA.emit('carte')">📋 Gérer la carte</button>
-    <button type="button" class="bouton-raccourci" (click)="allerA.emit('commandes')">🧾 Commandes du restaurant</button>
+    @if (gabarit().menus_actifs) {
+      <button type="button" class="bouton-raccourci" (click)="allerA.emit('menus')">📅 Gérer les menus</button>
+    }
+    <button type="button" class="bouton-raccourci" (click)="allerA.emit('carte')">📋 Gérer les {{ libelleCatalogue() }}</button>
+    <button type="button" class="bouton-raccourci" (click)="allerA.emit('commandes')">🧾 Commandes</button>
   </section>
 }

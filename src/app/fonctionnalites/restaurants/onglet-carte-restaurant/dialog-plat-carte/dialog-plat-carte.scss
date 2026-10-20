@@ -358,3 +358,37 @@ textarea {
   gap: 0.6rem;
   margin-top: 0.75rem;
 }
+
+// ---- Détails (fiche spécifique au gabarit) ----
+
+.bloc-details {
+  margin: 0.75rem 0;
+  padding: 0.5rem 0.9rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+
+  legend {
+    padding: 0 0.3rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #374151;
+  }
+}
+
+.obligatoire {
+  color: #b91c1c;
+}
+
+// ---- Variantes : stock et épuisé ----
+
+.champ-stock {
+  width: 5.5rem;
+}
+
+.case-epuise {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}

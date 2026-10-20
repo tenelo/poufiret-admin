@@ -124,10 +124,10 @@ export const GROUPES_CAPACITES: GroupeCapacites[] = [
     ],
   },
   {
-    titre: 'Restaurants',
+    titre: 'Établissements',
     capacites: [
       // Privilégiée : seul un super-admin peut la modifier (case verrouillée pour les autres).
-      { nom: 'gerer_restaurants', libelle: 'Gérer les restaurants', privilegiee: true },
+      { nom: 'gerer_restaurants', libelle: 'Gérer les établissements', privilegiee: true },
     ],
   },
   {

@@ -12,7 +12,9 @@ interface EntreeMenuPartenaire {
   lien?: string;
 }
 
-// Commun à tous les partenaires. Pour un restaurateur, "Ma carte"/"Mes menus" remplacent
+// EntreeMenuAdmin et ENTREES_ADMIN vivent désormais dans noyau/permissions/entrees-admin.ts
+// (partagé avec tableauDeBordAdminGuard) — plus de définition locale ici.
+// Commun à tous les partenaires. Pour un restaurateur (ou fast-food), "Ma carte"/"Mes menus" remplacent
 // "Mes catégories"/"Mes produits" (voir ENTREES_PARTENAIRE_RESTAURATEUR) — même donnée, interface
 // restaurant dédiée (espace restaurant, voir fonctionnalites/restaurants/).
 const ENTREES_PARTENAIRE_STANDARD: EntreeMenuPartenaire[] = [
@@ -27,9 +29,22 @@ const ENTREES_PARTENAIRE_STANDARD: EntreeMenuPartenaire[] = [
 const ENTREES_PARTENAIRE_RESTAURATEUR: EntreeMenuPartenaire[] = [
   { libelle: 'Tableau de bord', lien: '/tableau-de-bord' },
   { libelle: 'Mon profil', lien: '/mon-profil' },
-  { libelle: 'Mon restaurant', lien: '/mon-restaurant' },
+  { libelle: 'Mon établissement', lien: '/mon-restaurant' },
   { libelle: 'Ma carte', lien: '/ma-carte' },
   { libelle: 'Mes menus', lien: '/mes-menus' },
+  { libelle: 'Mes commandes', lien: '/mes-commandes' },
+  { libelle: 'Publicités', lien: '/publicites' },
+];
+
+// Boulangerie, pharmacie, mode, librairie : même espace établissement, sans menus (son onglet
+// catalogue porte les libellés du gabarit) ; « Mes catégories » / « Mes produits » (catalogue
+// général) restent dans le menu.
+const ENTREES_PARTENAIRE_ETABLISSEMENT: EntreeMenuPartenaire[] = [
+  { libelle: 'Tableau de bord', lien: '/tableau-de-bord' },
+  { libelle: 'Mon profil', lien: '/mon-profil' },
+  { libelle: 'Mon établissement', lien: '/mon-restaurant' },
+  { libelle: 'Mes catégories', lien: '/mes-categories' },
+  { libelle: 'Mes produits', lien: '/mes-produits' },
   { libelle: 'Mes commandes', lien: '/mes-commandes' },
   { libelle: 'Publicités', lien: '/publicites' },
 ];
@@ -81,6 +96,7 @@ export class BarreLaterale {
 
   readonly entreesPartenaire = computed<EntreeMenuPartenaire[]>(() => {
     if (this.profilPartenaireContexte.estRestaurateur()) return ENTREES_PARTENAIRE_RESTAURATEUR;
+    if (this.profilPartenaireContexte.estEtablissement()) return ENTREES_PARTENAIRE_ETABLISSEMENT;
     if (this.profilPartenaireContexte.estLoueur()) return ENTREES_PARTENAIRE_LOUEUR;
     if (this.profilPartenaireContexte.estLoueurVoiture()) return ENTREES_PARTENAIRE_LOUEUR_VOITURE;
     if (this.profilPartenaireContexte.estHotelier()) return ENTREES_PARTENAIRE_HOTELIER;

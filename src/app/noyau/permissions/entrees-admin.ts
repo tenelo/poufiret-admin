@@ -35,10 +35,12 @@ export const ENTREES_ADMIN: EntreeMenuAdmin[] = [
     capacite: 'gerer_commandes',
   },
   {
-    // Super-admin (toutes capacités à true côté backend) OU capacité gerer_restaurants.
-    libelle: 'Restaurants',
-    lien: '/administration/restaurants',
-    icone: '🍽️',
+    // Super-admin (toutes capacités à true côté backend) OU capacité gerer_restaurants. Renommé
+    // "Établissements" (branche mathi) : couvre désormais aussi boulangerie/pharmacie/mode/
+    // librairie/fast-food (gabarits), pas seulement les restaurants — même écran/capacité.
+    libelle: 'Établissements',
+    lien: '/administration/etablissements',
+    icone: '🏪',
     capacite: 'gerer_restaurants',
   },
   {

@@ -6,12 +6,15 @@ import { RestaurantService } from '../../restaurants/restaurant.service';
 import { RestaurantsListeEtatService } from './restaurants-liste-etat.service';
 import { extraireMessageErreur } from '../tableau-de-bord-admin/extraire-message-erreur';
 import { RestaurantAdminListe } from '../../../modeles/restaurant-admin-liste.model';
+import { GabaritsService } from '../../restaurants/gabarits.service';
+import { Gabarit, OPTIONS_FILTRE_GABARIT } from '../../../modeles/gabarit.model';
 
 /**
- * Liste admin des restaurants (capacité gerer_restaurants) : ouvert/fermé, fiche à compléter ou
- * non, menu du jour publié ou non, commandes du jour. Recherche et filtre par département
+ * Liste admin des établissements (ex-restaurants, capacité gerer_restaurants), filtrable par
+ * gabarit : ouvert/fermé, fiche à compléter ou non, menu du jour publié ou non (gabarits avec
+ * menus seulement), commandes du jour. Recherche et filtre par département
  * entièrement côté client (GET /restaurants/admin/ renvoie la liste complète, sans pagination ni
- * recherche serveur). Clic sur un restaurant : l'espace restaurant en tant qu'admin
+ * recherche serveur). Clic sur un établissement : l'espace établissement en tant qu'admin
  * (préfixe admin/<id>). La recherche et le département filtré sont conservés dans
  * RestaurantsListeEtatService pour réapparaître tels quels au retour depuis cet espace.
  */
@@ -25,6 +28,10 @@ export class RestaurantsListe implements OnInit {
   private readonly service = inject(RestaurantService);
   private readonly router = inject(Router);
   private readonly etat = inject(RestaurantsListeEtatService);
+  private readonly gabaritsService = inject(GabaritsService);
+
+  readonly optionsGabarit = OPTIONS_FILTRE_GABARIT;
+  readonly gabarits = signal<Record<string, Gabarit>>({});
 
   readonly chargementEnCours = signal(true);
   readonly erreurChargement = signal<string | null>(null);
@@ -32,6 +39,7 @@ export class RestaurantsListe implements OnInit {
 
   readonly recherche = this.etat.recherche;
   readonly departementFiltre = this.etat.departementFiltre;
+  readonly gabaritFiltre = this.etat.gabaritFiltre;
 
   /** Départements présents dans la liste, pour peupler le filtre (pas d'endpoint dédié ici). */
   readonly departements = computed(() =>
@@ -43,7 +51,9 @@ export class RestaurantsListe implements OnInit {
   readonly restaurantsFiltres = computed(() => {
     const texte = this.recherche().trim().toLowerCase();
     const departement = this.departementFiltre();
+    const gabarit = this.gabaritFiltre();
     return this.restaurants().filter((r) => {
+      if (gabarit && (r.gabarit ?? 'restaurant') !== gabarit) return false;
       if (departement && r.departement_nom !== departement) return false;
       if (!texte) return true;
       return r.nom.toLowerCase().includes(texte) || r.departement_nom?.toLowerCase().includes(texte);
@@ -52,6 +62,23 @@ export class RestaurantsListe implements OnInit {
 
   ngOnInit(): void {
     this.charger();
+    this.gabaritsService.lister().subscribe((gabarits) => this.gabarits.set(gabarits));
+  }
+
+  /** Libellé du gabarit d'une ligne (meta), « Restaurant » par défaut. */
+  libelleGabarit(r: RestaurantAdminListe): string {
+    const code = r.gabarit ?? 'restaurant';
+    return this.gabarits()[code]?.libelle ?? (code === 'restaurant' ? 'Restaurant' : code);
+  }
+
+  /** Indicateur « menu du jour » seulement pour les gabarits avec menus (restaurant par défaut). */
+  aDesMenus(r: RestaurantAdminListe): boolean {
+    const code = r.gabarit ?? 'restaurant';
+    return this.gabarits()[code]?.menus_actifs ?? code === 'restaurant';
+  }
+
+  changerGabarit(valeur: string): void {
+    this.gabaritFiltre.set(valeur);
   }
 
   charger(): void {
@@ -76,7 +103,7 @@ export class RestaurantsListe implements OnInit {
   }
 
   ouvrir(restaurant: RestaurantAdminListe): void {
-    this.router.navigate(['/administration/restaurants', restaurant.id], {
+    this.router.navigate(['/administration/etablissements', restaurant.id], {
       state: { nom: restaurant.nom },
     });
   }

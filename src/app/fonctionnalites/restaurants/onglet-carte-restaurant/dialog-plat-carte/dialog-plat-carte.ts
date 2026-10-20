@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, input, output, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { Observable, forkJoin, of } from 'rxjs';
 
 import { RestaurantService, PrefixeRestaurant } from '../../restaurant.service';
 import { CarteImages } from '../carte-images/carte-images';
-import { extraireMessageErreur } from '../../extraire-message-erreur';
+import { erreurChamp, extraireMessageErreur } from '../../extraire-message-erreur';
+import { ChampGabarit, GABARIT_RESTAURANT_PAR_DEFAUT, Gabarit } from '../../../../modeles/gabarit.model';
 import {
   GroupeOptionCarte,
   OptionCarte,
@@ -13,6 +14,9 @@ import {
   SectionCarte,
   VarianteCarte,
 } from '../../../../modeles/carte-restaurant.model';
+
+/** Valeur saisie d'un champ de fiche spécifique : texte brut, ou case à cocher pour un booléen. */
+type ValeurChampFiche = string | boolean;
 
 type OngletDialogPlat = 'infos' | 'images' | 'variantes' | 'options';
 
@@ -43,6 +47,11 @@ interface ContextePrix {
  * (prix final − prix du plat). Changer le prix de base du plat, ou désigner une nouvelle variante
  * par défaut (qui doit avoir un supplément nul), proposent de conserver les prix finaux actuels des
  * autres variantes en recalculant leurs suppléments.
+ *
+ * Gabarit (voir gabarit.model.ts) : libellés produit/section/variantes, bloc « Détails » généré
+ * depuis gabarit.champs (envoyé dans fiche_specifique, erreurs 400 "fiche_specifique.<cle>" sous
+ * chaque champ), groupes d'options masqués si options_actives est faux, « Réservé aux menus »
+ * seulement si menus_actifs. Variantes : stock (vide = illimité) et case Épuisé.
  */
 @Component({
   selector: 'app-dialog-plat-carte',
@@ -59,6 +68,9 @@ export class DialogPlatCarte implements OnInit {
   readonly sectionParDefaut = input<number | null>(null);
   /** Ordre proposé à la création (ex. nombre de plats déjà présents dans la section ciblée). */
   readonly ordreParDefaut = input(0);
+  readonly gabarit = input<Gabarit>(GABARIT_RESTAURANT_PAR_DEFAUT);
+
+  readonly champsFiche = computed(() => this.gabarit().champs);
 
   readonly ferme = output<void>();
   /** Émis après chaque création/modification réussie, pour que le parent rafraîchisse sa liste. */
@@ -77,6 +89,10 @@ export class DialogPlatCarte implements OnInit {
   readonly estDisponible = signal(true);
   readonly estReserveAuxMenus = signal(false);
 
+  // ---- Fiche spécifique au gabarit (clé = ChampGabarit.cle) ----
+  readonly valeursFiche = signal<Record<string, ValeurChampFiche>>({});
+  readonly erreursFiche = signal<Record<string, string>>({});
+
   readonly enregistrementEnCours = signal(false);
   readonly messageErreur = signal<string | null>(null);
   readonly erreursChamps = signal<Record<string, string>>({});
@@ -87,6 +103,7 @@ export class DialogPlatCarte implements OnInit {
   // ---- Variantes ----
   readonly nouvelleVarianteNom = signal('');
   readonly nouvelleVariantePrixFinal = signal('');
+  readonly nouvelleVarianteStock = signal('');
   readonly erreurVariantes = signal<string | null>(null);
   // Saisie en cours du prix final d'une variante existante (clé = id de la variante).
   readonly prixFinalSaisi = signal<Record<number, string>>({});
@@ -125,10 +142,19 @@ export class DialogPlatCarte implements OnInit {
     this.estActif.set(plat.est_actif);
     this.estDisponible.set(plat.est_disponible);
     this.estReserveAuxMenus.set(plat.est_reserve_aux_menus);
+
+    const fiche = plat.fiche_specifique ?? {};
+    const valeurs: Record<string, ValeurChampFiche> = {};
+    for (const champ of this.champsFiche()) {
+      const brute = fiche[champ.cle];
+      valeurs[champ.cle] = champ.type === 'booleen' ? !!brute : brute === null || brute === undefined ? '' : String(brute);
+    }
+    this.valeursFiche.set(valeurs);
   }
 
   changerOnglet(onglet: OngletDialogPlat): void {
     if (onglet !== 'infos' && !this.platCourant()) return;
+    if (onglet === 'options' && !this.gabarit().options_actives) return;
     this.ongletActif.set(onglet);
   }
 
@@ -142,7 +168,9 @@ export class DialogPlatCarte implements OnInit {
       erreurs['prix'] = 'Le prix doit être un nombre positif ou nul.';
     }
     this.erreursChamps.set(erreurs);
-    if (Object.keys(erreurs).length > 0) return;
+    const erreursFiche = this.validerFiche();
+    this.erreursFiche.set(erreursFiche);
+    if (Object.keys(erreurs).length > 0 || Object.keys(erreursFiche).length > 0) return;
 
     const donnees: RequetePlatCarte = {
       nom: this.nom().trim(),
@@ -154,6 +182,13 @@ export class DialogPlatCarte implements OnInit {
       est_reserve_aux_menus: this.estReserveAuxMenus(),
       ordre: this.platCourant()?.ordre ?? this.ordreParDefaut(),
     };
+    if (this.champsFiche().length > 0) {
+      donnees.fiche_specifique = this.construireFiche();
+    }
+    if (!this.gabarit().menus_actifs) {
+      // Sans menus, la case est masquée : on conserve la valeur existante sans la proposer.
+      donnees.est_reserve_aux_menus = this.platCourant()?.est_reserve_aux_menus ?? false;
+    }
 
     const courant = this.platCourant();
     if (courant && courant.variantes.length > 0 && prix !== courant.prix) {
@@ -191,9 +226,74 @@ export class DialogPlatCarte implements OnInit {
       },
       error: (erreur: unknown) => {
         this.enregistrementEnCours.set(false);
+        this.appliquerErreursFiche(erreur);
         this.messageErreur.set(extraireMessageErreur(erreur));
       },
     });
+  }
+
+  // ---- Fiche spécifique au gabarit ----
+
+  valeurFiche(champ: ChampGabarit): ValeurChampFiche {
+    return this.valeursFiche()[champ.cle] ?? (champ.type === 'booleen' ? false : '');
+  }
+
+  changerValeurFiche(cle: string, valeur: ValeurChampFiche): void {
+    this.valeursFiche.update((v) => ({ ...v, [cle]: valeur }));
+  }
+
+  /** Champs obligatoires vides et entiers invalides, avant tout envoi. */
+  private validerFiche(): Record<string, string> {
+    const erreurs: Record<string, string> = {};
+    for (const champ of this.champsFiche()) {
+      if (champ.type === 'booleen') continue;
+      const texte = String(this.valeurFiche(champ)).trim();
+      if (!texte) {
+        if (champ.obligatoire) erreurs[champ.cle] = 'Ce champ est obligatoire.';
+      } else if (champ.type === 'entier' && !Number.isInteger(Number(texte))) {
+        erreurs[champ.cle] = 'Nombre entier attendu.';
+      }
+    }
+    return erreurs;
+  }
+
+  /** fiche_specifique typée selon les champs : entier → nombre, vide → null, booléen → bool. */
+  private construireFiche(): Record<string, unknown> {
+    const fiche: Record<string, unknown> = {};
+    for (const champ of this.champsFiche()) {
+      const valeur = this.valeurFiche(champ);
+      if (champ.type === 'booleen') {
+        fiche[champ.cle] = !!valeur;
+        continue;
+      }
+      const texte = String(valeur).trim();
+      fiche[champ.cle] = texte === '' ? null : champ.type === 'entier' ? Number(texte) : texte;
+    }
+    return fiche;
+  }
+
+  /** Erreurs 400 du serveur, clés "fiche_specifique.<cle>" (ou objet fiche_specifique imbriqué). */
+  private appliquerErreursFiche(erreur: unknown): void {
+    const imbriquee = erreurChamp(erreur, 'fiche_specifique');
+    const erreurs: Record<string, string> = {};
+    for (const champ of this.champsFiche()) {
+      const message = erreurChamp(erreur, `fiche_specifique.${champ.cle}`) ?? this.erreurImbriquee(erreur, champ.cle);
+      if (message) erreurs[champ.cle] = message;
+    }
+    if (imbriquee && Object.keys(erreurs).length === 0) {
+      this.messageErreur.set(imbriquee);
+    }
+    this.erreursFiche.set(erreurs);
+  }
+
+  private erreurImbriquee(erreur: unknown, cle: string): string | null {
+    const corps = (erreur as { error?: { details?: Record<string, unknown> } & Record<string, unknown> })?.error;
+    const source = (corps?.details ?? corps) as Record<string, unknown> | undefined;
+    const fiche = source?.['fiche_specifique'] as Record<string, unknown> | undefined;
+    const valeur = fiche && typeof fiche === 'object' && !Array.isArray(fiche) ? fiche[cle] : undefined;
+    if (typeof valeur === 'string') return valeur;
+    if (Array.isArray(valeur) && typeof valeur[0] === 'string') return valeur[0];
+    return null;
   }
 
   // ---- Variantes ----
@@ -240,6 +340,11 @@ export class DialogPlatCarte implements OnInit {
     const nom = this.nouvelleVarianteNom().trim();
     const prixFinalSaisi = Number(this.nouvelleVariantePrixFinal());
     if (!plat || !nom || this.nouvelleVariantePrixFinal().trim() === '' || Number.isNaN(prixFinalSaisi)) return;
+    const stock = this.stockSaisi(this.nouvelleVarianteStock());
+    if (stock === undefined) {
+      this.erreurVariantes.set('Le stock doit être un entier positif ou nul (vide = illimité).');
+      return;
+    }
 
     this.erreurVariantes.set(null);
     this.service
@@ -248,15 +353,50 @@ export class DialogPlatCarte implements OnInit {
         nom,
         prix_supplement: prixFinalSaisi - this.prixPlatActuel(),
         ordre: plat.variantes.length,
+        stock,
       })
       .subscribe({
         next: () => {
           this.nouvelleVarianteNom.set('');
           this.nouvelleVariantePrixFinal.set('');
+          this.nouvelleVarianteStock.set('');
           this.rafraichirPlat();
         },
         error: (erreur: unknown) => this.erreurVariantes.set(extraireMessageErreur(erreur)),
       });
+  }
+
+  /** Stock saisi : null si vide (illimité), entier ≥ 0, undefined si invalide. */
+  private stockSaisi(valeur: string): number | null | undefined {
+    const texte = valeur.trim();
+    if (texte === '') return null;
+    const nombre = Number(texte);
+    return Number.isInteger(nombre) && nombre >= 0 ? nombre : undefined;
+  }
+
+  enregistrerStock(variante: VarianteCarte, valeur: string): void {
+    const stock = this.stockSaisi(valeur);
+    if (stock === undefined) {
+      this.erreurVariantes.set('Le stock doit être un entier positif ou nul (vide = illimité).');
+      return;
+    }
+    if (stock === variante.stock) return;
+    this.modifierVarianteEtRafraichir(variante, { stock });
+  }
+
+  basculerEpuiseVariante(variante: VarianteCarte, epuise: boolean): void {
+    this.modifierVarianteEtRafraichir(variante, { est_epuise: epuise });
+  }
+
+  private modifierVarianteEtRafraichir(variante: VarianteCarte, champs: Partial<RequeteVarianteCarte>): void {
+    this.erreurVariantes.set(null);
+    this.service.modifierVariante(this.prefixe(), variante.id, champs).subscribe({
+      next: () => this.rafraichirPlat(),
+      error: (erreur: unknown) => {
+        this.erreurVariantes.set(extraireMessageErreur(erreur));
+        this.rafraichirPlat();
+      },
+    });
   }
 
   supprimerVariante(variante: VarianteCarte): void {
