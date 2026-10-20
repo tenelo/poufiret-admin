@@ -113,7 +113,7 @@ export const LIBELLES_CAPACITE: Record<NomCapacite, string> = {
   gerer_geographie: 'Gérer la géographie',
   gerer_formules_pub: 'Gérer les formules et paramètres pub',
   gerer_commandes: 'Gérer le centre des commandes',
-  gerer_restaurants: 'Gérer les restaurants',
+  gerer_restaurants: 'Gérer les établissements',
   modifier_identifiant_partenaire: "Modifier le numéro de connexion d'un partenaire",
   gerer_parametres: 'Gérer les paramètres',
   gerer_locations: 'Gérer les locations',

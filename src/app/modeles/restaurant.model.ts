@@ -65,6 +65,8 @@ export interface FicheRestaurant extends Tracabilite {
   instagram: string | null;
   tiktok: string | null;
   specialites: string[];
+  /** Pharmacie : date et heure de fin de garde (ISO), null si pas de garde. */
+  de_garde_jusqu_au?: string | null;
   // Lecture seule.
   est_ouvert: boolean;
   prochaine_ouverture: string | null;
@@ -87,5 +89,6 @@ export type RequeteFiche = Partial<
     | 'instagram'
     | 'tiktok'
     | 'specialites'
+    | 'de_garde_jusqu_au'
   >
 >;

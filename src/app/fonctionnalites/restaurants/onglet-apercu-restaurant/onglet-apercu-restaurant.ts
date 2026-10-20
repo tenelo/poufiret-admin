@@ -5,6 +5,7 @@ import { extraireMessageErreur } from '../extraire-message-erreur';
 import { FicheRestaurant } from '../../../modeles/restaurant.model';
 import { MenuRestaurant, OPTIONS_SERVICE_MENU, ServiceMenu } from '../../../modeles/menu-restaurant.model';
 import { OngletRestaurant } from '../espace-restaurant/espace-restaurant';
+import { GABARIT_RESTAURANT_PAR_DEFAUT, Gabarit, pluriel } from '../../../modeles/gabarit.model';
 
 const DUREE_MESSAGE_MS = 6000;
 
@@ -22,8 +23,9 @@ function dateDuJourIso(): string {
 }
 
 /**
- * Aperçu de l'espace restaurant : statut, fermeture exceptionnelle, menu en vigueur aujourd'hui
- * par service (avec le stock restant de chaque plat) et raccourcis vers les autres onglets.
+ * Aperçu de l'espace établissement : statut, fermeture exceptionnelle, menu en vigueur aujourd'hui
+ * par service (avec le stock restant de chaque plat ; seulement si le gabarit a des menus) et
+ * raccourcis vers les autres onglets.
  */
 @Component({
   selector: 'app-onglet-apercu-restaurant',
@@ -35,6 +37,9 @@ export class OngletApercuRestaurant implements OnInit {
   private readonly service = inject(RestaurantService);
 
   readonly prefixe = input.required<PrefixeRestaurant>();
+  /** Gabarit de l'établissement : masque le menu du jour sans menus, nomme le catalogue. */
+  readonly gabarit = input<Gabarit>(GABARIT_RESTAURANT_PAR_DEFAUT);
+  readonly libelleCatalogue = computed(() => pluriel(this.gabarit().libelle_produit).toLowerCase());
   readonly allerA = output<OngletRestaurant>();
 
   readonly optionsService = OPTIONS_SERVICE_MENU;

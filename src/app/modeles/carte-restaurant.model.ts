@@ -56,6 +56,8 @@ export interface PlatCarte extends Tracabilite {
   ordre: number;
   temps_preparation_min: number | null;
   details: Record<string, unknown> | null;
+  /** Champs propres au gabarit (voir Gabarit.champs), validés côté serveur. */
+  fiche_specifique?: Record<string, unknown> | null;
   // Imbriqués en lecture dans la réponse du plat (pas besoin d'un GET séparé une fois le plat chargé).
   images: ImagePlatCarte[];
   variantes: VarianteCarte[];
@@ -72,6 +74,7 @@ export interface RequetePlatCarte {
   est_disponible?: boolean;
   est_reserve_aux_menus?: boolean;
   ordre?: number;
+  fiche_specifique?: Record<string, unknown>;
 }
 
 /** POST P/carte/plats/<id>/epuise/. */
@@ -107,6 +110,9 @@ export interface VarianteCarte {
   est_par_defaut: boolean;
   ordre: number;
   est_active: boolean;
+  /** null = stock illimité. */
+  stock: number | null;
+  est_epuise: boolean;
 }
 
 export interface RequeteVarianteCarte {
@@ -116,6 +122,8 @@ export interface RequeteVarianteCarte {
   est_par_defaut?: boolean;
   ordre?: number;
   est_active?: boolean;
+  stock?: number | null;
+  est_epuise?: boolean;
 }
 
 // ---- Groupes d'options ----

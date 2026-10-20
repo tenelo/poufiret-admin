@@ -1,5 +1,5 @@
 @if (chargementEnCours()) {
-  <p class="etat">Chargement de la carte…</p>
+  <p class="etat">Chargement…</p>
 } @else if (erreurChargement()) {
   <div class="etat-erreur">
     <p>{{ erreurChargement() }}</p>
@@ -14,18 +14,20 @@
     <div class="ligne-ajout-section">
       <input
         type="text"
-        placeholder="Nouvelle section (ex. Entrées)"
+        [placeholder]="'Nom — ' + gabarit().libelle_section"
         [value]="nouvelleSectionNom()"
         (input)="nouvelleSectionNom.set($any($event.target).value)"
       />
       <button type="button" class="bouton-secondaire" [disabled]="ajoutSectionEnCours()" (click)="ajouterSection()">
-        + Section
+        + {{ gabarit().libelle_section }}
       </button>
     </div>
-    <label class="ligne-case">
-      <input type="checkbox" [checked]="filtreReserves()" (change)="basculerFiltreReserves()" />
-      Plats réservés aux menus uniquement
-    </label>
+    @if (gabarit().menus_actifs) {
+      <label class="ligne-case">
+        <input type="checkbox" [checked]="filtreReserves()" (change)="basculerFiltreReserves()" />
+        {{ pluriel(gabarit().libelle_produit) }} réservés aux menus uniquement
+      </label>
+    }
   </div>
 
   <div class="sections" cdkDropList (cdkDropListDropped)="surDepotSection($event)">
@@ -52,7 +54,7 @@
             }
           }
           @if (groupe.section.id !== -1) {
-            <button type="button" class="bouton-ajout-plat" (click)="ouvrirCreationPlat(groupe.section.id)">+ Plat</button>
+            <button type="button" class="bouton-ajout-plat" (click)="ouvrirCreationPlat(groupe.section.id)">+ {{ gabarit().libelle_produit }}</button>
           }
         </div>
 
@@ -99,12 +101,12 @@
               </div>
             </div>
           } @empty {
-            <p class="vide">Aucun plat dans cette section.</p>
+            <p class="vide">Aucun élément.</p>
           }
         </div>
       </section>
     } @empty {
-      <p class="vide">Aucune section. Créez-en une pour organiser votre carte.</p>
+      <p class="vide">Aucun élément. Utilisez « + {{ gabarit().libelle_section }} » pour commencer.</p>
     }
   </div>
 }
@@ -113,6 +115,7 @@
   <app-dialog-plat-carte
     [prefixe]="prefixe()"
     [plat]="platEnEdition()"
+    [gabarit]="gabarit()"
     [sections]="sectionsOrdonnees()"
     [sectionParDefaut]="sectionPourNouveauPlat()"
     [ordreParDefaut]="ordrePourNouveauPlat()"
@@ -124,7 +127,7 @@
 @if (sectionASupprimer(); as section) {
   <div class="voile-confirmation" (click)="annulerSuppressionSection()">
     <div class="boite-confirmation" (click)="$event.stopPropagation()">
-      <p>Supprimer la section « <strong>{{ section.nom }}</strong> » ?</p>
+      <p>Supprimer « <strong>{{ section.nom }}</strong> » ({{ libelles().section }}) ?</p>
       @if (erreurSuppressionSection()) {
         <p class="erreur-generale">{{ erreurSuppressionSection() }}</p>
       }
@@ -141,7 +144,7 @@
 @if (platASupprimer(); as plat) {
   <div class="voile-confirmation" (click)="annulerSuppressionPlat()">
     <div class="boite-confirmation" (click)="$event.stopPropagation()">
-      <p>Supprimer le plat « <strong>{{ plat.nom }}</strong> » ?</p>
+      <p>Supprimer « <strong>{{ plat.nom }}</strong> » ?</p>
       @if (erreurSuppressionPlat()) {
         <p class="erreur-generale">{{ erreurSuppressionPlat() }}</p>
       }

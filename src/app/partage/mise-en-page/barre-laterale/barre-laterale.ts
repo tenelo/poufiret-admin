@@ -29,7 +29,7 @@ interface EntreeMenuAdmin {
   toujoursVisible?: boolean;
 }
 
-// Commun à tous les partenaires. Pour un restaurateur, "Ma carte"/"Mes menus" remplacent
+// Commun à tous les partenaires. Pour un restaurateur (ou fast-food), "Ma carte"/"Mes menus" remplacent
 // "Mes catégories"/"Mes produits" (voir ENTREES_PARTENAIRE_RESTAURATEUR) — même donnée, interface
 // restaurant dédiée (espace restaurant, voir fonctionnalites/restaurants/).
 const ENTREES_PARTENAIRE_STANDARD: EntreeMenuPartenaire[] = [
@@ -44,9 +44,20 @@ const ENTREES_PARTENAIRE_STANDARD: EntreeMenuPartenaire[] = [
 const ENTREES_PARTENAIRE_RESTAURATEUR: EntreeMenuPartenaire[] = [
   { libelle: 'Tableau de bord', lien: '/tableau-de-bord' },
   { libelle: 'Mon profil', lien: '/mon-profil' },
-  { libelle: 'Mon restaurant', lien: '/mon-restaurant' },
+  { libelle: 'Mon établissement', lien: '/mon-restaurant' },
   { libelle: 'Ma carte', lien: '/ma-carte' },
   { libelle: 'Mes menus', lien: '/mes-menus' },
+  { libelle: 'Mes commandes', lien: '/mes-commandes' },
+  { libelle: 'Publicités', lien: '/publicites' },
+];
+
+// Boulangerie, pharmacie, mode, librairie : même espace établissement, sans menus ; le catalogue
+// porte les libellés du gabarit une fois dans l'espace.
+const ENTREES_PARTENAIRE_ETABLISSEMENT: EntreeMenuPartenaire[] = [
+  { libelle: 'Tableau de bord', lien: '/tableau-de-bord' },
+  { libelle: 'Mon profil', lien: '/mon-profil' },
+  { libelle: 'Mon établissement', lien: '/mon-restaurant' },
+  { libelle: 'Mon catalogue', lien: '/ma-carte' },
   { libelle: 'Mes commandes', lien: '/mes-commandes' },
   { libelle: 'Publicités', lien: '/publicites' },
 ];
@@ -163,9 +174,9 @@ const ENTREES_ADMIN: EntreeMenuAdmin[] = [
   },
   {
     // Super-admin (toutes capacités à true côté backend) OU capacité gerer_restaurants.
-    libelle: 'Restaurants',
-    lien: '/administration/restaurants',
-    icone: '🍽️',
+    libelle: 'Établissements',
+    lien: '/administration/etablissements',
+    icone: '🏪',
     capacite: 'gerer_restaurants',
   },
   {
@@ -235,6 +246,7 @@ export class BarreLaterale {
 
   readonly entreesPartenaire = computed<EntreeMenuPartenaire[]>(() => {
     if (this.profilPartenaireContexte.estRestaurateur()) return ENTREES_PARTENAIRE_RESTAURATEUR;
+    if (this.profilPartenaireContexte.estEtablissement()) return ENTREES_PARTENAIRE_ETABLISSEMENT;
     if (this.profilPartenaireContexte.estLoueur()) return ENTREES_PARTENAIRE_LOUEUR;
     if (this.profilPartenaireContexte.estLoueurVoiture()) return ENTREES_PARTENAIRE_LOUEUR_VOITURE;
     if (this.profilPartenaireContexte.estHotelier()) return ENTREES_PARTENAIRE_HOTELIER;

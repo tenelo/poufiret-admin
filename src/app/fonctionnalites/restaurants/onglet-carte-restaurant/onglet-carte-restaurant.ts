@@ -6,6 +6,7 @@ import { RestaurantService, PrefixeRestaurant } from '../restaurant.service';
 import { DialogPlatCarte } from './dialog-plat-carte/dialog-plat-carte';
 import { extraireMessageErreur } from '../extraire-message-erreur';
 import { PlatCarte, SectionCarte } from '../../../modeles/carte-restaurant.model';
+import { GABARIT_RESTAURANT_PAR_DEFAUT, Gabarit, pluriel } from '../../../modeles/gabarit.model';
 
 interface SectionAvecPlats {
   section: SectionCarte;
@@ -15,8 +16,10 @@ interface SectionAvecPlats {
 const ID_SANS_SECTION = -1;
 
 /**
- * Carte du restaurant : sections ordonnables par glisser-déposer, plats par section (photo, nom,
- * prix, badge « Réservé aux menus », interrupteur Épuisé), dialog de création/édition d'un plat.
+ * Catalogue de l'établissement (la « carte » d'un restaurant) : sections ordonnables par
+ * glisser-déposer, produits par section (photo, nom, prix, badge « Réservé aux menus »,
+ * interrupteur Épuisé), dialog de création/édition d'un produit. Libellés (section, produit) tirés
+ * du gabarit ; le filtre « réservés aux menus » n'existe que pour les gabarits avec menus.
  */
 @Component({
   selector: 'app-onglet-carte-restaurant',
@@ -29,6 +32,11 @@ export class OngletCarteRestaurant implements OnInit {
 
   readonly prefixe = input.required<PrefixeRestaurant>();
   readonly estAdmin = input(false);
+  readonly gabarit = input<Gabarit>(GABARIT_RESTAURANT_PAR_DEFAUT);
+
+  readonly pluriel = pluriel;
+  /** Libellé de section en minuscules pour les phrases (« Sans rayon »…). */
+  readonly libelles = computed(() => ({ section: this.gabarit().libelle_section.toLowerCase() }));
 
   readonly chargementEnCours = signal(true);
   readonly erreurChargement = signal<string | null>(null);
@@ -65,7 +73,8 @@ export class OngletCarteRestaurant implements OnInit {
   readonly sectionsOrdonnees = computed(() => [...this.sections()].sort((a, b) => a.ordre - b.ordre));
 
   readonly platsParSection = computed<SectionAvecPlats[]>(() => {
-    const platsVisibles = this.filtreReserves() ? this.plats().filter((p) => p.est_reserve_aux_menus) : this.plats();
+    const filtrer = this.filtreReserves() && this.gabarit().menus_actifs;
+    const platsVisibles = filtrer ? this.plats().filter((p) => p.est_reserve_aux_menus) : this.plats();
     const tri = (liste: PlatCarte[]) => [...liste].sort((a, b) => a.ordre - b.ordre);
 
     const groupes: SectionAvecPlats[] = this.sectionsOrdonnees().map((section) => ({
@@ -79,7 +88,7 @@ export class OngletCarteRestaurant implements OnInit {
         section: {
           id: ID_SANS_SECTION,
           partenaire: 0,
-          nom: 'Sans section',
+          nom: `Sans ${this.libelles().section}`,
           description: null,
           icone: null,
           ordre: Number.MAX_SAFE_INTEGER,

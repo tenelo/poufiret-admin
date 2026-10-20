@@ -57,7 +57,12 @@ function versNombreOuNull(valeur: unknown): number | null {
 }
 
 function normaliserVariante(v: VarianteCarte): VarianteCarte {
-  return { ...v, prix_supplement: versNombre(v.prix_supplement) };
+  return {
+    ...v,
+    prix_supplement: versNombre(v.prix_supplement),
+    stock: versNombreOuNull(v.stock),
+    est_epuise: !!v.est_epuise,
+  };
 }
 
 function normaliserOption(o: OptionCarte): OptionCarte {
@@ -409,7 +414,17 @@ export class RestaurantService {
     return this.http.delete<void>(`${this.base(prefixe)}carte/options/${id}/`);
   }
 
-  // ---- Admin : liste des restaurants ----
+  /**
+   * Gabarit d'un établissement (champ "gabarit" du détail GET /restaurants/<id>/, id = partenaire) :
+   * pilote les libellés et les sections de l'espace (voir GabaritsService). null si absent.
+   */
+  obtenirGabaritEtablissement(partenaireId: number): Observable<string | null> {
+    return this.http
+      .get<{ gabarit?: string | null }>(`${this.configuration.apiUrl}/restaurants/${partenaireId}/`)
+      .pipe(map((detail) => detail.gabarit ?? null));
+  }
+
+  // ---- Admin : liste des établissements (ex-restaurants) ----
 
   /**
    * GET /restaurants/admin/ : liste complète (pas de pagination, pas de recherche serveur) — la

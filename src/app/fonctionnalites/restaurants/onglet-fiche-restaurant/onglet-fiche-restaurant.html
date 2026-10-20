@@ -12,10 +12,41 @@
 
   @if (f.modifie_le) {
     <p class="tracabilite">
-      Dernière modification {{ f.modifie_par_role === 'admin' ? "par l'administration" : 'par le restaurateur' }}
+      Dernière modification {{ f.modifie_par_role === 'admin' ? "par l'administration" : 'par le partenaire' }}
       @if (f.modifie_par_nom) { ({{ f.modifie_par_nom }}) }
       le {{ f.modifie_le | date: 'dd/MM/yyyy HH:mm' }}
     </p>
+  }
+
+  @if (gabarit().code === 'pharmacie') {
+    <!-- Garde (pharmacie) -->
+    <section class="carte">
+      <h2>Garde</h2>
+      <div class="grille-champs">
+        <div>
+          <label for="fr-garde">De garde jusqu'au</label>
+          <input
+            id="fr-garde"
+            type="datetime-local"
+            [value]="deGardeJusquAu()"
+            (input)="deGardeJusquAu.set($any($event.target).value)"
+          />
+        </div>
+      </div>
+      @if (erreurGarde()) {
+        <p class="erreur-champ">{{ erreurGarde() }}</p>
+      }
+      <div class="actions-garde">
+        <button type="button" class="bouton-principal" [disabled]="enregistrementGardeEnCours()" (click)="enregistrerGarde()">
+          {{ enregistrementGardeEnCours() ? 'Enregistrement…' : 'Enregistrer la garde' }}
+        </button>
+        @if (f.de_garde_jusqu_au || deGardeJusquAu()) {
+          <button type="button" class="bouton-secondaire" [disabled]="enregistrementGardeEnCours()" (click)="enregistrerGarde(true)">
+            Effacer
+          </button>
+        }
+      </div>
+    </section>
   }
 
   <!-- Horaires -->

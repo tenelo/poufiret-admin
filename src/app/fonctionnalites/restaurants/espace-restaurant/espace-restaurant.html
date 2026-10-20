@@ -1,25 +1,25 @@
 <section class="page-espace-restaurant">
   @if (estAdmin()) {
     <div class="barre-retour">
-      <a routerLink="/administration/restaurants" class="lien-retour">← Restaurants</a>
+      <a routerLink="/administration/etablissements" class="lien-retour">← Établissements</a>
       <nav class="fil-ariane" aria-label="Fil d'Ariane">
-        <a routerLink="/administration/restaurants">Restaurants</a>
+        <a routerLink="/administration/etablissements">Établissements</a>
         <span class="separateur">›</span>
-        <span>{{ nomRestaurant() ?? 'Restaurant' }}</span>
+        <span>{{ nomRestaurant() ?? gabarit().libelle }}</span>
         <span class="separateur">›</span>
         <span>{{ libelleOngletActif() }}</span>
       </nav>
     </div>
 
     <div class="bandeau-admin">
-      Vous gérez <strong>{{ nomRestaurant() ?? 'ce restaurant' }}</strong> en tant qu'administrateur.
+      Vous gérez <strong>{{ nomRestaurant() ?? 'cet établissement' }}</strong> en tant qu'administrateur.
     </div>
   }
 
-  <h1>{{ nomRestaurant() ?? (estAdmin() ? 'Restaurant' : 'Mon restaurant') }}</h1>
+  <h1>{{ nomRestaurant() ?? (estAdmin() ? 'Établissement' : 'Mon établissement') }}</h1>
 
   <nav class="barre-onglets" aria-label="Sections">
-    @for (onglet of onglets; track onglet.valeur) {
+    @for (onglet of onglets(); track onglet.valeur) {
       <button
         type="button"
         class="onglet"
@@ -34,13 +34,13 @@
   <div class="contenu-onglet">
     @switch (ongletActif()) {
       @case ('apercu') {
-        <app-onglet-apercu-restaurant [prefixe]="prefixe()" (allerA)="changerOnglet($event)" />
+        <app-onglet-apercu-restaurant [prefixe]="prefixe()" [gabarit]="gabarit()" (allerA)="changerOnglet($event)" />
       }
       @case ('fiche') {
-        <app-onglet-fiche-restaurant [prefixe]="prefixe()" [estAdmin]="estAdmin()" />
+        <app-onglet-fiche-restaurant [prefixe]="prefixe()" [estAdmin]="estAdmin()" [gabarit]="gabarit()" />
       }
       @case ('carte') {
-        <app-onglet-carte-restaurant [prefixe]="prefixe()" [estAdmin]="estAdmin()" />
+        <app-onglet-carte-restaurant [prefixe]="prefixe()" [estAdmin]="estAdmin()" [gabarit]="gabarit()" />
       }
       @case ('menus') {
         <app-onglet-menus-restaurant [prefixe]="prefixe()" [estAdmin]="estAdmin()" />
