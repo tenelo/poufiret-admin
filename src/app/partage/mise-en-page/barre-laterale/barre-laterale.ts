@@ -52,12 +52,15 @@ const ENTREES_PARTENAIRE_RESTAURATEUR: EntreeMenuPartenaire[] = [
 ];
 
 // Boulangerie, pharmacie, mode, librairie : même espace établissement, sans menus ; le catalogue
-// porte les libellés du gabarit une fois dans l'espace.
+// porte les libellés du gabarit une fois dans l'espace. « Mes catégories » / « Mes produits »
+// (catalogue général) restent accessibles.
 const ENTREES_PARTENAIRE_ETABLISSEMENT: EntreeMenuPartenaire[] = [
   { libelle: 'Tableau de bord', lien: '/tableau-de-bord' },
   { libelle: 'Mon profil', lien: '/mon-profil' },
   { libelle: 'Mon établissement', lien: '/mon-restaurant' },
   { libelle: 'Mon catalogue', lien: '/ma-carte' },
+  { libelle: 'Mes catégories', lien: '/mes-categories' },
+  { libelle: 'Mes produits', lien: '/mes-produits' },
   { libelle: 'Mes commandes', lien: '/mes-commandes' },
   { libelle: 'Publicités', lien: '/publicites' },
 ];
