@@ -69,7 +69,7 @@
               [class.badge-vehicules]="loueur.type_partenaire === 'loueur_voiture'"
               [class.badge-hotels]="loueur.type_partenaire === 'hotelier'"
             >
-              {{ libelleType(loueur.type_partenaire) }}
+              {{ libelleType(loueur) }}
             </span>
             @if (loueur.demandes_en_attente > 0) {
               <span class="badge badge-alerte">{{ loueur.demandes_en_attente }} à traiter</span>

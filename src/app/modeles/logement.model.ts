@@ -109,6 +109,8 @@ export interface LoueurAdminListe {
   type_partenaire: string;
   /** Sous-type d'établissement hôtelier (hotel | residence_meublee | …), null pour les autres métiers. */
   type_etablissement: string | null;
+  /** Libellé backend du sous-type (ex. « Résidence meublée »), null si non fourni. */
+  type_etablissement_libelle?: string | null;
   departement_nom: string | null;
   nb_disponibles: number;
   nb_reserves: number;

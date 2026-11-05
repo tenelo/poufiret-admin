@@ -5,13 +5,6 @@ import { LocationService } from '../../locations/location.service';
 import { extraireMessageErreur } from '../tableau-de-bord-admin/extraire-message-erreur';
 import { LoueurAdminListe } from '../../../modeles/logement.model';
 
-/** Badge de type sur chaque carte (inchangé, indépendant des pastilles « métier » ci-dessous). */
-const OPTIONS_TYPE_LOUEUR: { valeur: string; libelle: string }[] = [
-  { valeur: 'loueur_maison', libelle: 'Maisons' },
-  { valeur: 'loueur_voiture', libelle: 'Véhicules' },
-  { valeur: 'hotelier', libelle: 'Hôtels' },
-];
-
 /** Métier déduit de type_partenaire + type_etablissement, pour les pastilles du haut (?metier=). */
 export type MetierLoueur = 'hotels' | 'residences' | 'maisons' | 'voitures';
 
@@ -138,8 +131,18 @@ export class LoueursListe implements OnInit {
     });
   }
 
-  libelleType(type: string): string {
-    return OPTIONS_TYPE_LOUEUR.find((o) => o.valeur === type)?.libelle ?? type;
+  /** Badge de la carte : reflète le métier, comme les pastilles du haut. */
+  libelleType(loueur: LoueurAdminListe): string {
+    switch (metierDe(loueur)) {
+      case 'maisons':
+        return 'Maison';
+      case 'voitures':
+        return 'Véhicules';
+      case 'residences':
+        return loueur.type_etablissement_libelle || 'Résidence meublée';
+      case 'hotels':
+        return 'Hôtel';
+    }
   }
 
   ouvrir(loueur: LoueurAdminListe): void {
