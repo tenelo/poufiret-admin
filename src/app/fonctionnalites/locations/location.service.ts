@@ -28,6 +28,16 @@ export function prefixeAdminLocation(partenaireId: number | string): PrefixeLoca
 
 export const PREFIXE_MON_ESPACE_LOCATION: PrefixeLocation = 'mon-espace';
 
+/** Réponse d'une liste DRF : paginée ({count, next, previous, results}, cas des routes
+ *  imbriquées images/ et panoramas/), enveloppée ({resultats}) ou tableau brut. */
+type ReponseListe<T> = T[] | { results?: T[]; resultats?: T[] };
+
+/** Toujours un tableau (jamais undefined) : un champ manquant ne doit pas casser l'affichage. */
+function elementsDe<T>(reponse: ReponseListe<T>): T[] {
+  if (Array.isArray(reponse)) return reponse;
+  return reponse.results ?? reponse.resultats ?? [];
+}
+
 /** Ressource portant images et panoramas : mêmes routes pour tous les biens. */
 export type RessourceLocation = 'logements' | 'vehicules' | 'hebergements';
 
@@ -164,9 +174,12 @@ export class LocationService {
     objetId: number,
     ressource: RessourceLocation = 'logements',
   ): Observable<ImageLogement[]> {
+    // Page de 100 (max backend) : bien au-delà du quota de photos d'un plan, aucune perdue.
     return this.http
-      .get<{ resultats: ImageLogement[] }>(`${this.base(prefixe)}${ressource}/${objetId}/images/`)
-      .pipe(map((reponse) => reponse.resultats));
+      .get<ReponseListe<ImageLogement>>(`${this.base(prefixe)}${ressource}/${objetId}/images/`, {
+        params: { page_size: 100 },
+      })
+      .pipe(map(elementsDe));
   }
 
   ajouterImageLogement(
@@ -213,10 +226,10 @@ export class LocationService {
     ressource: RessourceLocation = 'logements',
   ): Observable<PanoramaLogement[]> {
     return this.http
-      .get<{
-        resultats: PanoramaLogement[];
-      }>(`${this.base(prefixe)}${ressource}/${objetId}/panoramas/`)
-      .pipe(map((reponse) => reponse.resultats));
+      .get<ReponseListe<PanoramaLogement>>(`${this.base(prefixe)}${ressource}/${objetId}/panoramas/`, {
+        params: { page_size: 100 },
+      })
+      .pipe(map(elementsDe));
   }
 
   ajouterPanorama(

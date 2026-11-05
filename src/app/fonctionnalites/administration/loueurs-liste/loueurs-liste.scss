@@ -34,6 +34,58 @@
   }
 }
 
+// Pastilles « métier » du haut (?metier=) : même style que .barre-categories du centre des commandes.
+.barre-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.categorie {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #c7d2fe;
+  }
+}
+
+.categorie-active {
+  background: #eef2ff;
+  border-color: #4f46e5;
+  color: #3730a3;
+}
+
+.icone-categorie {
+  font-size: 1rem;
+}
+
+.compteur {
+  min-width: 1.35rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #374151;
+  font-size: 0.7rem;
+  text-align: center;
+
+  .categorie-active & {
+    background: #c7d2fe;
+    color: #3730a3;
+  }
+}
+
 .barre-filtres {
   display: flex;
   flex-wrap: wrap;

@@ -32,12 +32,12 @@
 
 .onglets-dialog {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.25rem;
   margin-bottom: 0.75rem;
   padding: 0.25rem;
   background: #f3f4f6;
   border-radius: 8px;
-  overflow-x: auto;
 }
 
 .onglet {
@@ -48,7 +48,6 @@
   color: #6b7280;
   font-size: 0.78rem;
   font-weight: 600;
-  white-space: nowrap;
   cursor: pointer;
 
   &:disabled {

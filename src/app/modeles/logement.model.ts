@@ -107,6 +107,8 @@ export interface LoueurAdminListe {
   nom: string;
   /** loueur_maison | loueur_voiture | hotelier. */
   type_partenaire: string;
+  /** Sous-type d'établissement hôtelier (hotel | residence_meublee | …), null pour les autres métiers. */
+  type_etablissement: string | null;
   departement_nom: string | null;
   nb_disponibles: number;
   nb_reserves: number;
