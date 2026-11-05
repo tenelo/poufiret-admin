@@ -244,29 +244,34 @@ export const routes: Routes = [
             (m) => m.CommandesAdmin,
           ),
       },
-      {
-        // Établissements (ex-Restaurants) : tous les gabarits (restaurant, boulangerie, pharmacie…).
-        path: 'administration/etablissements',
-        canActivate: [roleGuard(['admin']), capaciteGuard],
-        data: { capacite: 'gerer_restaurants' },
-        loadComponent: () =>
-          import('./fonctionnalites/administration/restaurants-liste/restaurants-liste').then(
-            (m) => m.RestaurantsListe,
-          ),
-      },
-      {
-        // Même composant hôte que côté partenaire, préfixe admin/<id> (voir EspaceRestaurant.ngOnInit).
-        path: 'administration/etablissements/:id',
-        canActivate: [roleGuard(['admin']), capaciteGuard],
-        data: { capacite: 'gerer_restaurants' },
-        loadComponent: () =>
-          import('./fonctionnalites/restaurants/espace-restaurant/espace-restaurant').then(
-            (m) => m.EspaceRestaurant,
-          ),
-      },
-      // Anciennes adresses (liens enregistrés) : redirigées, paramètres de requête conservés.
-      { path: 'administration/restaurants', redirectTo: 'administration/etablissements', pathMatch: 'full' },
-      { path: 'administration/restaurants/:id', redirectTo: 'administration/etablissements/:id' },
+      // Restaurants (gabarit restaurant : restaurateurs, fast-food) et Commerces (boulangerie,
+      // pharmacie, librairie, mode) : même liste et même espace établissement, famille passée en
+      // data (voir restaurants-liste/familles-etablissements.ts), même capacité gerer_restaurants.
+      ...(['restaurants', 'commerces'] as const).flatMap((famille) => [
+        {
+          path: `administration/${famille}`,
+          canActivate: [roleGuard(['admin']), capaciteGuard],
+          data: { capacite: 'gerer_restaurants', famille },
+          loadComponent: () =>
+            import('./fonctionnalites/administration/restaurants-liste/restaurants-liste').then(
+              (m) => m.RestaurantsListe,
+            ),
+        },
+        {
+          // Même composant hôte que côté partenaire, préfixe admin/<id> (voir EspaceRestaurant.ngOnInit).
+          path: `administration/${famille}/:id`,
+          canActivate: [roleGuard(['admin']), capaciteGuard],
+          data: { capacite: 'gerer_restaurants', famille },
+          loadComponent: () =>
+            import('./fonctionnalites/restaurants/espace-restaurant/espace-restaurant').then(
+              (m) => m.EspaceRestaurant,
+            ),
+        },
+      ]),
+      // Anciennes adresses « Établissements » (liens enregistrés) : vers Restaurants, paramètres
+      // de requête conservés (l'espace ramène ensuite vers Commerces si le gabarit l'exige).
+      { path: 'administration/etablissements', redirectTo: 'administration/restaurants', pathMatch: 'full' },
+      { path: 'administration/etablissements/:id', redirectTo: 'administration/restaurants/:id' },
       {
         path: 'administration/locations',
         canActivate: [roleGuard(['admin']), capaciteGuard],

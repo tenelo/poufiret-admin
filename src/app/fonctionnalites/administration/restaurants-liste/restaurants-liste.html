@@ -1,6 +1,6 @@
 <section class="page-restaurants-liste">
   <div class="entete">
-    <h1>Établissements</h1>
+    <h1>{{ definition.titre }}</h1>
     <button type="button" class="bouton-secondaire" [disabled]="chargementEnCours()" (click)="charger()">
       {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
     </button>
@@ -10,15 +10,17 @@
     <input
       type="search"
       class="champ-recherche"
-      placeholder="Rechercher un établissement ou un département…"
+      [placeholder]="definition.placeholderRecherche"
       [value]="recherche()"
       (input)="changerRecherche($any($event.target).value)"
     />
-    <select class="champ-departement" (change)="changerGabarit($any($event.target).value)">
-      @for (option of optionsGabarit; track option.valeur) {
-        <option [value]="option.valeur" [selected]="option.valeur === gabaritFiltre()">{{ option.libelle }}</option>
-      }
-    </select>
+    @if (optionsGabarit.length > 0) {
+      <select class="champ-departement" (change)="changerGabarit($any($event.target).value)">
+        @for (option of optionsGabarit; track option.valeur) {
+          <option [value]="option.valeur" [selected]="option.valeur === gabaritFiltre()">{{ option.libelle }}</option>
+        }
+      </select>
+    }
     @if (departements().length > 0) {
       <select class="champ-departement" (change)="changerDepartement($any($event.target).value)">
         <option value="" [selected]="departementFiltre() === ''">Tous les départements</option>
@@ -30,7 +32,7 @@
   </div>
 
   @if (chargementEnCours()) {
-    <p class="etat">Chargement des établissements…</p>
+    <p class="etat">{{ definition.chargement }}</p>
   } @else if (erreurChargement()) {
     <div class="etat-erreur">
       <p>{{ erreurChargement() }}</p>
@@ -38,7 +40,7 @@
     </div>
   } @else if (restaurantsFiltres().length === 0) {
     <p class="etat">
-      {{ restaurants().length === 0 ? 'Aucun établissement.' : 'Aucun établissement ne correspond à ces critères.' }}
+      {{ restaurants().length === 0 ? definition.aucun : definition.aucunFiltre }}
     </p>
   } @else {
     <div class="grille-restaurants">

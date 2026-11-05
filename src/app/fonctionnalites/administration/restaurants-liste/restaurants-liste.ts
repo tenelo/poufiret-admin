@@ -1,5 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { RestaurantService } from '../../restaurants/restaurant.service';
@@ -7,11 +7,14 @@ import { RestaurantsListeEtatService } from './restaurants-liste-etat.service';
 import { extraireMessageErreur } from '../tableau-de-bord-admin/extraire-message-erreur';
 import { RestaurantAdminListe } from '../../../modeles/restaurant-admin-liste.model';
 import { GabaritsService } from '../../restaurants/gabarits.service';
-import { Gabarit, OPTIONS_FILTRE_GABARIT } from '../../../modeles/gabarit.model';
+import { Gabarit } from '../../../modeles/gabarit.model';
+import { FAMILLES_ETABLISSEMENTS, FamilleEtablissement } from './familles-etablissements';
 
 /**
- * Liste admin des établissements (ex-restaurants, capacité gerer_restaurants), filtrable par
- * gabarit : ouvert/fermé, fiche à compléter ou non, menu du jour publié ou non (gabarits avec
+ * Liste admin des établissements (capacité gerer_restaurants), servie sous deux routes :
+ * « Restaurants » (gabarit restaurant, filtre de gabarit masqué) et « Commerces » (boulangerie,
+ * pharmacie, librairie, mode) — famille lue dans les data de la route (familles-etablissements.ts).
+ * Indicateurs : ouvert/fermé, fiche à compléter ou non, menu du jour publié ou non (gabarits avec
  * menus seulement), commandes du jour. Recherche et filtre par département
  * entièrement côté client (GET /restaurants/admin/ renvoie la liste complète, sans pagination ni
  * recherche serveur). Clic sur un établissement : l'espace établissement en tant qu'admin
@@ -27,14 +30,20 @@ import { Gabarit, OPTIONS_FILTRE_GABARIT } from '../../../modeles/gabarit.model'
 export class RestaurantsListe implements OnInit {
   private readonly service = inject(RestaurantService);
   private readonly router = inject(Router);
-  private readonly etat = inject(RestaurantsListeEtatService);
+  private readonly route = inject(ActivatedRoute);
   private readonly gabaritsService = inject(GabaritsService);
 
-  readonly optionsGabarit = OPTIONS_FILTRE_GABARIT;
+  readonly famille: FamilleEtablissement =
+    this.route.snapshot.data['famille'] === 'commerces' ? 'commerces' : 'restaurants';
+  readonly definition = FAMILLES_ETABLISSEMENTS[this.famille];
+  private readonly etat = inject(RestaurantsListeEtatService).pour(this.famille);
+
+  readonly optionsGabarit = this.definition.optionsGabarit;
   readonly gabarits = signal<Record<string, Gabarit>>({});
 
   readonly chargementEnCours = signal(true);
   readonly erreurChargement = signal<string | null>(null);
+  /** Établissements de la famille de la liste (le reste n'y apparaît jamais). */
   readonly restaurants = signal<RestaurantAdminListe[]>([]);
 
   readonly recherche = this.etat.recherche;
@@ -89,7 +98,10 @@ export class RestaurantsListe implements OnInit {
       .listerRestaurantsAdmin()
       .pipe(finalize(() => this.chargementEnCours.set(false)))
       .subscribe({
-        next: (restaurants) => this.restaurants.set(restaurants),
+        next: (restaurants) =>
+          this.restaurants.set(
+            restaurants.filter((r) => this.definition.gabarits.includes(r.gabarit ?? 'restaurant')),
+          ),
         error: (erreur: unknown) => this.erreurChargement.set(extraireMessageErreur(erreur)),
       });
   }
@@ -103,7 +115,7 @@ export class RestaurantsListe implements OnInit {
   }
 
   ouvrir(restaurant: RestaurantAdminListe): void {
-    this.router.navigate(['/administration/etablissements', restaurant.id], {
+    this.router.navigate([this.definition.lien, restaurant.id], {
       state: { nom: restaurant.nom },
     });
   }

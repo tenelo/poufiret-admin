@@ -1,9 +1,9 @@
 <section class="page-espace-restaurant">
   @if (estAdmin()) {
     <div class="barre-retour">
-      <a routerLink="/administration/etablissements" class="lien-retour">← Établissements</a>
+      <a [routerLink]="listeRetour().lien" class="lien-retour">← {{ listeRetour().titre }}</a>
       <nav class="fil-ariane" aria-label="Fil d'Ariane">
-        <a routerLink="/administration/etablissements">Établissements</a>
+        <a [routerLink]="listeRetour().lien">{{ listeRetour().titre }}</a>
         <span class="separateur">›</span>
         <span>{{ nomRestaurant() ?? gabarit().libelle }}</span>
         <span class="separateur">›</span>

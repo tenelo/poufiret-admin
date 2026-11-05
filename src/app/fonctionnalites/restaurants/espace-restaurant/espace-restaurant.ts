@@ -12,6 +12,11 @@ import { OngletCommandesRestaurant } from '../onglet-commandes-restaurant/onglet
 import { PREFIXE_MON_RESTAURANT, PrefixeRestaurant, RestaurantService, prefixeAdmin } from '../restaurant.service';
 import { GabaritsService } from '../gabarits.service';
 import { GABARIT_RESTAURANT_PAR_DEFAUT, Gabarit, pluriel } from '../../../modeles/gabarit.model';
+import {
+  FAMILLES_ETABLISSEMENTS,
+  FamilleEtablissement,
+  familleDuGabarit,
+} from '../../administration/restaurants-liste/familles-etablissements';
 
 export type OngletRestaurant = 'apercu' | 'fiche' | 'carte' | 'menus' | 'commandes';
 
@@ -32,7 +37,7 @@ function ongletsPour(gabarit: Gabarit): { valeur: OngletRestaurant; libelle: str
 /**
  * Hôte à onglets de l'espace établissement (ex-espace restaurant), utilisé à l'identique par le
  * partenaire pour son établissement (préfixe "mon-restaurant") et par l'admin pour n'importe quel
- * établissement (préfixe "admin/<partenaire_id>", route /administration/etablissements/:id) — un
+ * établissement (préfixe "admin/<partenaire_id>", route /administration/restaurants/:id ou /administration/commerces/:id) — un
  * seul jeu de composants, paramétré par le préfixe (voir RestaurantService).
  *
  * Le gabarit de l'établissement (restaurant, boulangerie, pharmacie, mode, librairie, generique —
@@ -78,6 +83,13 @@ export class EspaceRestaurant implements OnInit {
 
   readonly ongletActif = signal<OngletRestaurant>('apercu');
 
+  /** Admin : liste de retour (fil d'Ariane, « ← … ») selon le gabarit du partenaire —
+   *  « Restaurants » ou « Commerces ». Valeur provisoire tirée de la route, corrigée dès que
+   *  le gabarit est connu (un commerce ouvert par /administration/restaurants/<id> ramène
+   *  quand même vers Commerces). */
+  readonly familleRetour = signal<FamilleEtablissement>('restaurants');
+  readonly listeRetour = computed(() => FAMILLES_ETABLISSEMENTS[this.familleRetour()]);
+
   readonly libelleOngletActif = computed(
     () => this.onglets().find((o) => o.valeur === this.ongletActif())?.libelle ?? '',
   );
@@ -90,6 +102,11 @@ export class EspaceRestaurant implements OnInit {
       const id = Number(idParam);
       this.partenaireId.set(id);
       this.prefixe.set(prefixeAdmin(id));
+      this.familleRetour.set(this.route.snapshot.data['famille'] === 'commerces' ? 'commerces' : 'restaurants');
+      this.restaurantService.obtenirGabaritEtablissement(id).subscribe({
+        next: (code) => this.familleRetour.set(familleDuGabarit(code)),
+        error: () => undefined,
+      });
 
       // Le nom est transmis depuis la liste admin (navigation) ; sinon (accès direct par URL,
       // lien partagé, rechargement de page) on le recharge depuis la liste admin des établissements.
