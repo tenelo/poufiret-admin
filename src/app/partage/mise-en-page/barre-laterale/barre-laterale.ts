@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { AuthService } from '../../../noyau/auth/auth.service';
 import { PermissionsService } from '../../../noyau/permissions/permissions.service';
@@ -91,6 +91,7 @@ export class BarreLaterale {
   private readonly authService = inject(AuthService);
   private readonly permissionsService = inject(PermissionsService);
   private readonly profilPartenaireContexte = inject(ProfilPartenaireContexteService);
+  private readonly router = inject(Router);
 
   readonly estAdmin = computed(() => this.authService.role() === 'admin');
 
@@ -111,8 +112,15 @@ export class BarreLaterale {
   // Groupes dépliants (ex. "Audit") explicitement dépliés par l'admin ; vide = tous repliés par défaut.
   private readonly groupesDeplies = signal<ReadonlySet<string>>(new Set());
 
+  /** Vrai si une de ses sous-entrées correspond à l'URL courante (même règle que routerLinkActive). */
+  estGroupeActif(groupe: EntreeMenuAdmin): boolean {
+    return !!groupe.sousEntrees?.some((sousEntree) => !!sousEntree.lien && this.router.isActive(sousEntree.lien, false));
+  }
+
+  // Un groupe contenant l'entrée active reste déplié même sans action de l'admin (y compris en
+  // arrivant directement sur son URL) ; les autres suivent uniquement `groupesDeplies`.
   estGroupeDeplie(groupe: EntreeMenuAdmin): boolean {
-    return this.groupesDeplies().has(groupe.libelle);
+    return this.groupesDeplies().has(groupe.libelle) || this.estGroupeActif(groupe);
   }
 
   basculerGroupe(groupe: EntreeMenuAdmin): void {

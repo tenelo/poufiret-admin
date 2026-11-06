@@ -11,11 +11,14 @@ import { formaterDateHeure } from '../commandes-admin/formater-commande';
 import { formaterFrancs, libelleTypeBien, nombreNuits, occupationHebergement } from '../../locations/formater-location';
 import {
   CompteursGroupeDemandes,
+  CompteursMetierDemandes,
   DemandeLocation,
   FILTRES_DEMANDES_DEFAUT,
   FiltresDemandesAdmin,
   MetaDemandes,
+  MetierDemande,
   ONGLETS_DEMANDES,
+  OPTIONS_METIER_DEMANDES,
   OngletDemandes,
 } from '../../../modeles/reservation.model';
 
@@ -57,6 +60,17 @@ export class DemandesLocationAdmin implements OnInit {
   readonly filtres = signal<FiltresDemandesAdmin>(FILTRES_DEMANDES_DEFAUT);
   readonly compteurs = signal<CompteursGroupeDemandes | null>(null);
 
+  // ---- Pastilles « métier » au-dessus des onglets de statut (?metier=) ----
+  readonly optionsMetier = OPTIONS_METIER_DEMANDES;
+  /** '' = pastille « Toutes ». */
+  readonly metierFiltre = signal<MetierDemande | ''>('');
+  readonly compteursMetier = signal<CompteursMetierDemandes | null>(null);
+  /** Pastille masquée si son compteur est à 0 (« Toutes » reste toujours visible). */
+  readonly optionsMetierVisibles = computed(() => {
+    const compteurs = this.compteursMetier();
+    return this.optionsMetier.filter((o) => (compteurs?.[o.valeur] ?? 0) > 0);
+  });
+
   readonly demandes = signal<DemandeLocation[]>([]);
   readonly total = signal(0);
   readonly page = signal(1);
@@ -77,6 +91,11 @@ export class DemandesLocationAdmin implements OnInit {
     const partenaireFixe = this.partenaireFixe();
     if (partenaireFixe) {
       this.filtres.update((f) => ({ ...f, partenaire: partenaireFixe }));
+    }
+
+    const metierParam = this.route.snapshot.queryParamMap.get('metier');
+    if (metierParam && this.optionsMetier.some((o) => o.valeur === metierParam)) {
+      this.metierFiltre.set(metierParam as MetierDemande);
     }
 
     this.service.meta().subscribe({
@@ -136,13 +155,14 @@ export class DemandesLocationAdmin implements OnInit {
 
     this.abonnementListe?.unsubscribe();
     this.abonnementListe = this.service
-      .lister(this.filtres(), this.groupeCourant(), this.page(), TAILLE_PAGE)
+      .lister(this.filtres(), this.groupeCourant(), this.metierFiltre(), this.page(), TAILLE_PAGE)
       .subscribe({
         next: (reponse) => {
           this.chargementListe.set(false);
           this.demandes.set(reponse.results);
           this.total.set(reponse.count);
           this.compteurs.set(reponse.compteurs_groupe);
+          this.compteursMetier.set(reponse.compteurs_metier);
         },
         error: (erreur: unknown) => {
           this.chargementListe.set(false);
@@ -166,6 +186,20 @@ export class DemandesLocationAdmin implements OnInit {
     this.onglet.set(onglet);
     this.page.set(1);
     this.chargerListe();
+  }
+
+  /** Pastille « métier » cliquée : filtre la liste et reflète le choix dans ?metier=. */
+  choisirMetier(metier: MetierDemande | ''): void {
+    if (this.metierFiltre() === metier) return;
+    this.metierFiltre.set(metier);
+    this.page.set(1);
+    this.chargerListe();
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { metier: metier || null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   surFiltres(filtres: FiltresDemandesAdmin): void {
@@ -204,7 +238,7 @@ export class DemandesLocationAdmin implements OnInit {
     this.exportEnCours.set(true);
     this.erreurExport.set(null);
 
-    this.service.exporterCsv(this.filtres(), this.groupeCourant()).subscribe({
+    this.service.exporterCsv(this.filtres(), this.groupeCourant(), this.metierFiltre()).subscribe({
       next: () => this.exportEnCours.set(false),
       error: (erreur: unknown) => {
         this.exportEnCours.set(false);

@@ -4,7 +4,12 @@
       @for (entree of entreesAdmin(); track entree.libelle) {
         @if (entree.sousEntrees) {
           <li class="groupe">
-            <button type="button" class="entete-groupe" (click)="basculerGroupe(entree)">
+            <button
+              type="button"
+              class="entete-groupe"
+              [class.actif]="estGroupeActif(entree)"
+              (click)="basculerGroupe(entree)"
+            >
               <span class="icone">{{ entree.icone }}</span>
               {{ entree.libelle }}
               <span class="chevron" [class.chevron-deplie]="estGroupeDeplie(entree)">›</span>

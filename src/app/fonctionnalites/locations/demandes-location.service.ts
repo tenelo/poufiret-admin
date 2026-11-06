@@ -9,6 +9,7 @@ import {
   DemandeLocationDetail,
   FiltresDemandesAdmin,
   MetaDemandes,
+  MetierDemande,
   NoteAdminDemande,
   ReponseDemandesAdmin,
 } from '../../modeles/reservation.model';
@@ -58,14 +59,15 @@ export class DemandesLocationService {
     return this.http.get<MetaDemandes>(`${this.base}admin/meta/`);
   }
 
-  /** GET admin/demandes/ : liste paginée filtrée + compteurs par groupe. */
+  /** GET admin/demandes/ : liste paginée filtrée + compteurs par groupe et par métier. */
   lister(
     filtres: FiltresDemandesAdmin,
     groupe: GroupeFiltreDemandes,
+    metier: MetierDemande | '',
     page: number,
     pageSize: number,
   ): Observable<ReponseDemandesAdmin> {
-    const params = this.paramsFiltres(filtres, groupe).set('page', page).set('page_size', pageSize);
+    const params = this.paramsFiltres(filtres, groupe, metier).set('page', page).set('page_size', pageSize);
     return this.http.get<ReponseDemandesAdmin>(`${this.base}admin/demandes/`, { params });
   }
 
@@ -89,11 +91,11 @@ export class DemandesLocationService {
   }
 
   /** GET admin/demandes/export/ (mêmes filtres que la liste) : récupère le CSV et le télécharge. */
-  exporterCsv(filtres: FiltresDemandesAdmin, groupe: GroupeFiltreDemandes): Observable<void> {
+  exporterCsv(filtres: FiltresDemandesAdmin, groupe: GroupeFiltreDemandes, metier: MetierDemande | ''): Observable<void> {
     return this.http
       .get(`${this.base}admin/demandes/export/`, {
         responseType: 'blob',
-        params: this.paramsFiltres(filtres, groupe),
+        params: this.paramsFiltres(filtres, groupe, metier),
       })
       .pipe(
         tap((blob) => declencherTelechargementFichier(blob, nomFichierHorodate('demandes-location', 'csv'))),
@@ -101,10 +103,13 @@ export class DemandesLocationService {
       );
   }
 
-  private paramsFiltres(filtres: FiltresDemandesAdmin, groupe: GroupeFiltreDemandes): HttpParams {
+  private paramsFiltres(filtres: FiltresDemandesAdmin, groupe: GroupeFiltreDemandes, metier: MetierDemande | ''): HttpParams {
     let params = new HttpParams();
     if (groupe) {
       params = params.set('groupe', groupe);
+    }
+    if (metier) {
+      params = params.set('metier', metier);
     }
     if (filtres.statut) {
       params = params.set('statut', filtres.statut);

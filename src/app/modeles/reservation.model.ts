@@ -67,6 +67,9 @@ export interface DemandeLocation {
   objet_type: string;
   partenaire: number;
   partenaire_nom: string;
+  /** hotel | residence_meublee | maison | vehicule (pastilles du centre admin). */
+  metier: string;
+  metier_libelle: string;
   client: number;
   client_nom: string;
   date_souhaitee: string | null;
@@ -100,12 +103,22 @@ export interface CompteursGroupeDemandes {
   total: number;
 }
 
+/** Compteurs des pastilles « métier » du haut, sur la liste déjà filtrée (hors metier lui-même). */
+export interface CompteursMetierDemandes {
+  hotel: number;
+  residence_meublee: number;
+  maison: number;
+  vehicule: number;
+  total: number;
+}
+
 export interface ReponseDemandesAdmin {
   count: number;
   next: string | null;
   previous: string | null;
   results: DemandeLocation[];
   compteurs_groupe: CompteursGroupeDemandes;
+  compteurs_metier: CompteursMetierDemandes;
 }
 
 export interface NoteAdminDemande {
@@ -132,6 +145,16 @@ export const ONGLETS_DEMANDES: { valeur: OngletDemandes; libelle: string }[] = [
   { valeur: 'terminees', libelle: 'Terminées' },
   { valeur: 'annulees', libelle: 'Annulées' },
   { valeur: 'toutes', libelle: 'Toutes' },
+];
+
+/** Pastilles « métier » au-dessus des onglets de statut (?metier=), valeurs fixées par le contrat. */
+export type MetierDemande = 'hotel' | 'residence_meublee' | 'maison' | 'vehicule';
+
+export const OPTIONS_METIER_DEMANDES: { valeur: MetierDemande; libelle: string; icone: string }[] = [
+  { valeur: 'hotel', libelle: 'Hôtels', icone: '🏨' },
+  { valeur: 'residence_meublee', libelle: 'Résidences meublées', icone: '🛋️' },
+  { valeur: 'maison', libelle: 'Maisons à louer', icone: '🏠' },
+  { valeur: 'vehicule', libelle: 'Location auto', icone: '🚗' },
 ];
 
 export interface FiltresDemandesAdmin {

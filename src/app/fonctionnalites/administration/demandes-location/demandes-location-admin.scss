@@ -112,6 +112,43 @@
   }
 }
 
+// Pastilles « métier » du haut (?metier=) : même style que .barre-categories de la page Locations.
+.barre-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.categorie {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #c7d2fe;
+  }
+}
+
+.categorie-active {
+  background: #eef2ff;
+  border-color: #4f46e5;
+  color: #3730a3;
+}
+
+.icone-categorie {
+  font-size: 1rem;
+}
+
 .barre-onglets {
   display: flex;
   gap: 0.25rem;
@@ -161,6 +198,11 @@
   .onglet-actif & {
     background: #e0e7ff;
     color: #4338ca;
+  }
+
+  .categorie-active & {
+    background: #c7d2fe;
+    color: #3730a3;
   }
 }
 

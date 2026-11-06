@@ -29,6 +29,29 @@
   @if (!pret()) {
     <p class="etat">Chargement du centre des demandes…</p>
   } @else {
+    <nav class="barre-categories" aria-label="Métiers">
+      <button
+        type="button"
+        class="categorie"
+        [class.categorie-active]="metierFiltre() === ''"
+        (click)="choisirMetier('')"
+      >
+        Toutes
+      </button>
+      @for (option of optionsMetierVisibles(); track option.valeur) {
+        <button
+          type="button"
+          class="categorie"
+          [class.categorie-active]="metierFiltre() === option.valeur"
+          (click)="choisirMetier(option.valeur)"
+        >
+          <span class="icone-categorie">{{ option.icone }}</span>
+          {{ option.libelle }}
+          <span class="compteur">{{ compteursMetier()?.[option.valeur] ?? 0 }}</span>
+        </button>
+      }
+    </nav>
+
     <nav class="barre-onglets" aria-label="Sections">
       @for (item of onglets; track item.valeur) {
         <button
