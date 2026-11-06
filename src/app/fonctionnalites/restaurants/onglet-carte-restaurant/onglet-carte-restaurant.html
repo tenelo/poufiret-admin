@@ -14,11 +14,18 @@
     <div class="ligne-ajout-section">
       <input
         type="text"
-        [placeholder]="'Nom — ' + gabarit().libelle_section"
+        [placeholder]="placeholderNouvelleSection()"
         [value]="nouvelleSectionNom()"
         (input)="nouvelleSectionNom.set($any($event.target).value)"
+        (keydown.enter)="ajouterSection()"
       />
-      <button type="button" class="bouton-secondaire" [disabled]="ajoutSectionEnCours()" (click)="ajouterSection()">
+      <button
+        type="button"
+        class="bouton-secondaire"
+        [disabled]="ajoutSectionEnCours() || nouvelleSectionVide()"
+        [title]="nouvelleSectionVide() ? infoBulleAjoutSection() : ''"
+        (click)="ajouterSection()"
+      >
         + {{ gabarit().libelle_section }}
       </button>
     </div>
@@ -118,7 +125,7 @@
         </div>
       </section>
     } @empty {
-      <p class="vide">Aucun élément. Utilisez « + {{ gabarit().libelle_section }} » pour commencer.</p>
+      <p class="vide">{{ messageSectionsVide() }}</p>
     }
   </div>
 }

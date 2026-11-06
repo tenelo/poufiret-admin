@@ -15,6 +15,15 @@ interface SectionAvecPlats {
 
 const ID_SANS_SECTION = -1;
 
+/** Exemple affiché dans le placeholder du champ de nouvelle section, par code de gabarit. */
+const EXEMPLES_NOM_SECTION: Record<string, string> = {
+  restaurant: 'Grillades',
+  pharmacie: 'Médicaments',
+  boulangerie: 'Viennoiseries',
+  mode: 'Chaussures',
+  librairie: 'Romans',
+};
+
 /**
  * Catalogue de l'établissement (la « carte » d'un restaurant) : sections ordonnables par
  * glisser-déposer, produits par section (photo, nom, prix, badge « Réservé aux menus »,
@@ -37,6 +46,27 @@ export class OngletCarteRestaurant implements OnInit {
   readonly pluriel = pluriel;
   /** Libellé de section en minuscules pour les phrases (« Sans rayon »…). */
   readonly libelles = computed(() => ({ section: this.gabarit().libelle_section.toLowerCase() }));
+  /** « Section » est féminin (de la/Aucune), tout le reste (Rayon…) traité au masculin (du/Aucun). */
+  private readonly genreFeminin = computed(() => this.libelles().section === 'section');
+  /** Placeholder du champ de nouvelle section, adapté au gabarit : « Nom de la section (ex. Grillades) ». */
+  readonly placeholderNouvelleSection = computed(() => {
+    const article = this.genreFeminin() ? 'de la' : 'du';
+    const exemple = EXEMPLES_NOM_SECTION[this.gabarit().code];
+    const base = `Nom ${article} ${this.libelles().section}`;
+    return exemple ? `${base} (ex. ${exemple})` : base;
+  });
+  /** Info-bulle du bouton « + Section » tant que le champ est vide. */
+  readonly infoBulleAjoutSection = computed(() => {
+    const article = this.genreFeminin() ? 'de la' : 'du';
+    return `Tapez d'abord le nom ${article} ${this.libelles().section}`;
+  });
+  /** Message d'état vide, adapté au gabarit : « Aucune section. »/« Aucun rayon. » */
+  readonly messageSectionsVide = computed(() => {
+    const aucun = this.genreFeminin() ? 'Aucune' : 'Aucun';
+    return `${aucun} ${this.libelles().section}. Tapez un nom puis cliquez sur « + ${this.gabarit().libelle_section} » pour commencer.`;
+  });
+  /** Nom de la nouvelle section vide ou uniquement composé d'espaces : bouton désactivé. */
+  readonly nouvelleSectionVide = computed(() => !this.nouvelleSectionNom().trim());
 
   readonly chargementEnCours = signal(true);
   readonly erreurChargement = signal<string | null>(null);
