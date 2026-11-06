@@ -28,6 +28,27 @@
       </p>
     }
 
+    @if (gabarit().code === 'pharmacie') {
+      <p class="ligne-garde">
+        @if (f.de_garde_jusqu_au) {
+          💊 De garde jusqu'au <strong>{{ f.de_garde_jusqu_au | date: 'dd/MM/yyyy HH:mm' }}</strong>
+        } @else {
+          Pas de garde en cours.
+        }
+      </p>
+    }
+
+    @if (!aucunHoraireRenseigne(f)) {
+      <ul class="liste-horaires">
+        @for (jour of joursHoraire; track jour.valeur) {
+          <li>
+            <span class="jour">{{ jour.libelle }}</span>
+            <span>{{ horaireDuJour(f, jour.valeur) }}</span>
+          </li>
+        }
+      </ul>
+    }
+
     <label class="ligne-case">
       <input
         type="checkbox"
@@ -87,6 +108,27 @@
             }
           </div>
         }
+      </div>
+    </section>
+  }
+
+  <!-- Gabarits sans menus : indicateurs du catalogue et des commandes -->
+  @if (!gabarit().menus_actifs) {
+    <section class="carte">
+      <h2>Aujourd'hui</h2>
+      <div class="grille-indicateurs">
+        <div class="indicateur">
+          <span class="valeur">{{ indicateurs()?.produits ?? '—' }}</span>
+          <span class="libelle">{{ libelleCatalogueMajuscule() }}</span>
+        </div>
+        <div class="indicateur">
+          <span class="valeur">{{ indicateurs()?.epuises ?? '—' }}</span>
+          <span class="libelle">Épuisés</span>
+        </div>
+        <div class="indicateur">
+          <span class="valeur">{{ indicateurs()?.commandesDuJour ?? '—' }}</span>
+          <span class="libelle">Commandes du jour</span>
+        </div>
       </div>
     </section>
   }

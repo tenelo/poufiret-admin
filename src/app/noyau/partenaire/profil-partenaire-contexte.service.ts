@@ -11,7 +11,7 @@ import { ProfilPartenaire } from '../../modeles/profil-partenaire.model';
  * Pendant du `PermissionsService` côté admin.
  */
 const TYPES_RESTAURATION = ['restaurateur', 'fast_food'];
-const TYPES_ETABLISSEMENT = ['boulanger', 'pharmacien', 'boutique_mode', 'libraire'];
+const TYPES_ETABLISSEMENT = ['boulanger', 'pharmacien', 'boutique_mode', 'libraire', 'eleveur'];
 
 @Injectable({ providedIn: 'root' })
 export class ProfilPartenaireContexteService {
@@ -25,7 +25,7 @@ export class ProfilPartenaireContexteService {
   readonly estRestaurateur = computed(() =>
     TYPES_RESTAURATION.includes(this.profilInterne()?.type_partenaire ?? ''),
   );
-  /** Autres gabarits de l'espace établissement (boulangerie, pharmacie, mode, librairie). */
+  /** Autres gabarits de l'espace établissement (boulangerie, pharmacie, mode, librairie, élevage). */
   readonly estEtablissement = computed(() =>
     TYPES_ETABLISSEMENT.includes(this.profilInterne()?.type_partenaire ?? ''),
   );

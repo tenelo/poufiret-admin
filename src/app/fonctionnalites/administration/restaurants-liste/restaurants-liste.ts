@@ -6,8 +6,8 @@ import { RestaurantService } from '../../restaurants/restaurant.service';
 import { RestaurantsListeEtatService } from './restaurants-liste-etat.service';
 import { extraireMessageErreur } from '../tableau-de-bord-admin/extraire-message-erreur';
 import { RestaurantAdminListe } from '../../../modeles/restaurant-admin-liste.model';
-import { GabaritsService } from '../../restaurants/gabarits.service';
-import { Gabarit } from '../../../modeles/gabarit.model';
+import { GabaritsService, resoudreGabarit } from '../../restaurants/gabarits.service';
+import { Gabarit, LIBELLES_GABARIT } from '../../../modeles/gabarit.model';
 import { FAMILLES_ETABLISSEMENTS, FamilleEtablissement } from './familles-etablissements';
 
 /**
@@ -74,16 +74,16 @@ export class RestaurantsListe implements OnInit {
     this.gabaritsService.lister().subscribe((gabarits) => this.gabarits.set(gabarits));
   }
 
-  /** Libellé du gabarit d'une ligne (meta), « Restaurant » par défaut. */
+  /** Libellé du gabarit d'une ligne (meta, sinon repli : « Élevage »…), « Restaurant » par défaut. */
   libelleGabarit(r: RestaurantAdminListe): string {
     const code = r.gabarit ?? 'restaurant';
-    return this.gabarits()[code]?.libelle ?? (code === 'restaurant' ? 'Restaurant' : code);
+    return this.gabarits()[code]?.libelle ?? LIBELLES_GABARIT[code] ?? code;
   }
 
   /** Indicateur « menu du jour » seulement pour les gabarits avec menus (restaurant par défaut). */
   aDesMenus(r: RestaurantAdminListe): boolean {
     const code = r.gabarit ?? 'restaurant';
-    return this.gabarits()[code]?.menus_actifs ?? code === 'restaurant';
+    return resoudreGabarit(this.gabarits(), code).menus_actifs;
   }
 
   changerGabarit(valeur: string): void {

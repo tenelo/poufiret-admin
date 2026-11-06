@@ -102,5 +102,6 @@ export const OPTIONS_TYPE_PARTENAIRE: { valeur: string; libelle: string }[] = [
   { valeur: 'hotelier', libelle: 'Hôtelier' },
   { valeur: 'loueur_maison', libelle: 'Loueur de maison' },
   { valeur: 'loueur_voiture', libelle: 'Loueur de voiture' },
+  { valeur: 'eleveur', libelle: 'Éleveur / Vente à la ferme' },
   { valeur: 'plombier', libelle: 'Plombier' },
 ];

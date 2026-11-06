@@ -250,3 +250,55 @@
     background: #e0e7ff;
   }
 }
+
+// ---- Horaires, garde, indicateurs (tous gabarits) ----
+
+.ligne-garde {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: #065f46;
+}
+
+.liste-horaires {
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+  color: #374151;
+
+  li {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.15rem 0;
+  }
+
+  .jour {
+    min-width: 6rem;
+    font-weight: 600;
+  }
+}
+
+.grille-indicateurs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.indicateur {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 8px;
+
+  .valeur {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  .libelle {
+    font-size: 0.78rem;
+    color: #6b7280;
+  }
+}

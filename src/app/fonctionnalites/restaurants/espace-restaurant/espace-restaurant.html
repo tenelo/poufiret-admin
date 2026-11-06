@@ -34,7 +34,13 @@
   <div class="contenu-onglet">
     @switch (ongletActif()) {
       @case ('apercu') {
-        <app-onglet-apercu-restaurant [prefixe]="prefixe()" [gabarit]="gabarit()" (allerA)="changerOnglet($event)" />
+        <app-onglet-apercu-restaurant
+          [prefixe]="prefixe()"
+          [gabarit]="gabarit()"
+          [estAdmin]="estAdmin()"
+          [partenaireId]="partenaireId()"
+          (allerA)="changerOnglet($event)"
+        />
       }
       @case ('fiche') {
         <app-onglet-fiche-restaurant [prefixe]="prefixe()" [estAdmin]="estAdmin()" [gabarit]="gabarit()" />
@@ -43,7 +49,9 @@
         <app-onglet-carte-restaurant [prefixe]="prefixe()" [estAdmin]="estAdmin()" [gabarit]="gabarit()" />
       }
       @case ('menus') {
-        <app-onglet-menus-restaurant [prefixe]="prefixe()" [estAdmin]="estAdmin()" />
+        @if (gabarit().menus_actifs) {
+          <app-onglet-menus-restaurant [prefixe]="prefixe()" [estAdmin]="estAdmin()" />
+        }
       }
       @case ('commandes') {
         <app-onglet-commandes-restaurant

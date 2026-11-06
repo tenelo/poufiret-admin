@@ -1,6 +1,6 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { switchMap } from 'rxjs';
+import { Observable, catchError, map, of, shareReplay, switchMap } from 'rxjs';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { ProfilPartenaireContexteService } from '../../../noyau/partenaire/profil-partenaire-contexte.service';
@@ -11,7 +11,13 @@ import { OngletMenusRestaurant } from '../onglet-menus-restaurant/onglet-menus-r
 import { OngletCommandesRestaurant } from '../onglet-commandes-restaurant/onglet-commandes-restaurant';
 import { PREFIXE_MON_RESTAURANT, PrefixeRestaurant, RestaurantService, prefixeAdmin } from '../restaurant.service';
 import { GabaritsService } from '../gabarits.service';
-import { GABARIT_RESTAURANT_PAR_DEFAUT, Gabarit, pluriel } from '../../../modeles/gabarit.model';
+import {
+  GABARIT_RESTAURANT_PAR_DEFAUT,
+  Gabarit,
+  gabaritCommerceParDefaut,
+  gabaritDuTypePartenaire,
+  pluriel,
+} from '../../../modeles/gabarit.model';
 import {
   FAMILLES_ETABLISSEMENTS,
   FamilleEtablissement,
@@ -19,6 +25,8 @@ import {
 } from '../../administration/restaurants-liste/familles-etablissements';
 
 export type OngletRestaurant = 'apercu' | 'fiche' | 'carte' | 'menus' | 'commandes';
+
+const TOUS_ONGLETS: OngletRestaurant[] = ['apercu', 'fiche', 'carte', 'menus', 'commandes'];
 
 /** Onglets selon le gabarit : libellé du catalogue tiré de la meta, Menus seulement si menus_actifs. */
 function ongletsPour(gabarit: Gabarit): { valeur: OngletRestaurant; libelle: string }[] {
@@ -102,27 +110,29 @@ export class EspaceRestaurant implements OnInit {
       const id = Number(idParam);
       this.partenaireId.set(id);
       this.prefixe.set(prefixeAdmin(id));
-      this.familleRetour.set(this.route.snapshot.data['famille'] === 'commerces' ? 'commerces' : 'restaurants');
-      this.restaurantService.obtenirGabaritEtablissement(id).subscribe({
-        next: (code) => this.familleRetour.set(familleDuGabarit(code)),
-        error: () => undefined,
-      });
+      const famille = this.route.snapshot.data['famille'] === 'commerces' ? 'commerces' : 'restaurants';
+      this.familleRetour.set(famille);
+      // Commerce ouvert depuis « Commerces » : pas de menus affichés même avant la meta.
+      if (famille === 'commerces') this.gabarit.set(gabaritCommerceParDefaut('generique'));
 
       // Le nom est transmis depuis la liste admin (navigation) ; sinon (accès direct par URL,
       // lien partagé, rechargement de page) on le recharge depuis la liste admin des établissements.
       const nomTransmis = (window.history.state as { nom?: string } | null)?.nom;
-      if (nomTransmis) {
-        this.nomRestaurant.set(nomTransmis);
-      } else {
-        this.chargementNomEnCours.set(true);
-        this.restaurantService.listerRestaurantsAdmin().subscribe({
-          next: (etablissements) => {
-            this.chargementNomEnCours.set(false);
-            this.nomRestaurant.set(etablissements.find((e) => e.id === id)?.nom ?? null);
-          },
-          error: () => this.chargementNomEnCours.set(false),
-        });
-      }
+      if (nomTransmis) this.nomRestaurant.set(nomTransmis);
+      else this.chargementNomEnCours.set(true);
+
+      // Gabarit : détail GET /restaurants/<id>/, sinon la ligne de la liste admin (qui donne aussi
+      // le nom en accès direct).
+      const ligneAdmin$ = this.restaurantService.listerRestaurantsAdmin().pipe(
+        map((etablissements) => etablissements.find((e) => e.id === id) ?? null),
+        catchError(() => of(null)),
+        shareReplay(1),
+      );
+      ligneAdmin$.subscribe((ligne) => {
+        this.chargementNomEnCours.set(false);
+        if (!this.nomRestaurant()) this.nomRestaurant.set(ligne?.nom ?? null);
+      });
+      this.chargerGabarit(id, ligneAdmin$.pipe(map((ligne) => ligne?.gabarit ?? null)));
     } else {
       this.prefixe.set(PREFIXE_MON_RESTAURANT);
       this.chargementNomEnCours.set(true);
@@ -133,7 +143,10 @@ export class EspaceRestaurant implements OnInit {
           this.chargementNomEnCours.set(false);
           this.partenaireId.set(profil.id);
           this.nomRestaurant.set(profil.nom_commerce);
-          this.chargerGabarit(profil.id);
+          const codeDuType = gabaritDuTypePartenaire(profil.type_partenaire);
+          // Commerce reconnu à son type : pas de menus affichés même avant la meta.
+          if (codeDuType && codeDuType !== 'restaurant') this.gabarit.set(gabaritCommerceParDefaut(codeDuType));
+          this.chargerGabarit(profil.id, of(codeDuType));
         },
         error: () => this.chargementNomEnCours.set(false),
       });
@@ -143,8 +156,9 @@ export class EspaceRestaurant implements OnInit {
     // navigateur le rouvre directement, sans perdre l'onglet en cours de navigation.
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const onglet = params.get('onglet') as OngletRestaurant | null;
-      if (onglet && ongletsPour(GABARIT_RESTAURANT_PAR_DEFAUT).some((o) => o.valeur === onglet)) {
+      if (onglet && TOUS_ONGLETS.includes(onglet)) {
         this.ongletActif.set(onglet);
+        this.ramenerSurOngletValide();
       }
     });
 
@@ -156,19 +170,36 @@ export class EspaceRestaurant implements OnInit {
     }
   }
 
-  /** Gabarit de l'établissement puis sa meta ; repli restaurant en cas d'échec (rien de bloquant). */
-  private chargerGabarit(partenaireId: number): void {
+  /**
+   * Gabarit de l'établissement puis sa meta : champ "gabarit" du détail GET /restaurants/<id>/,
+   * sinon `repli$` (ligne de la liste admin, ou type du partenaire). Fixe aussi la liste de retour
+   * admin (Restaurants / Commerces). Sans aucune source : restaurant (rien de bloquant).
+   */
+  private chargerGabarit(partenaireId: number, repli$: Observable<string | null>): void {
     this.restaurantService
       .obtenirGabaritEtablissement(partenaireId)
-      .pipe(switchMap((code) => this.gabaritsService.gabarit(code)))
+      .pipe(
+        catchError(() => of(null)),
+        switchMap((code) => (code ? of(code) : repli$)),
+        switchMap((code) => {
+          if (this.estAdmin() && code) this.familleRetour.set(familleDuGabarit(code));
+          // Aucune source : un commerce ouvert depuis « Commerces » reste un commerce (sans menus).
+          const codeEffectif = code ?? (this.familleRetour() === 'commerces' ? 'generique' : null);
+          return this.gabaritsService.gabarit(codeEffectif);
+        }),
+      )
       .subscribe({
         next: (gabarit) => {
           this.gabarit.set(gabarit);
-          // Ex. ?onglet=menus pour un établissement sans menus : retour à l'Aperçu.
-          if (!this.onglets().some((o) => o.valeur === this.ongletActif())) this.changerOnglet('apercu');
+          this.ramenerSurOngletValide();
         },
         error: () => undefined,
       });
+  }
+
+  /** Ex. ?onglet=menus pour un établissement sans menus : retour à l'Aperçu. */
+  private ramenerSurOngletValide(): void {
+    if (!this.onglets().some((o) => o.valeur === this.ongletActif())) this.changerOnglet('apercu');
   }
 
   changerOnglet(onglet: OngletRestaurant): void {

@@ -1,8 +1,11 @@
-import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { catchError, map, of } from 'rxjs';
 
 import { RestaurantService, PrefixeRestaurant } from '../restaurant.service';
 import { extraireMessageErreur } from '../extraire-message-erreur';
-import { FicheRestaurant } from '../../../modeles/restaurant.model';
+import { FicheRestaurant, HoraireJour, JOURS_HORAIRE } from '../../../modeles/restaurant.model';
+import { MesCommandesService } from '../../partenaire/mes-commandes/mes-commandes.service';
 import { MenuRestaurant, OPTIONS_SERVICE_MENU, ServiceMenu } from '../../../modeles/menu-restaurant.model';
 import { OngletRestaurant } from '../espace-restaurant/espace-restaurant';
 import { GABARIT_RESTAURANT_PAR_DEFAUT, Gabarit, pluriel } from '../../../modeles/gabarit.model';
@@ -22,24 +25,41 @@ function dateDuJourIso(): string {
   return `${date.getFullYear()}-${mois}-${jour}`;
 }
 
+/** Indicateurs du jour des gabarits sans menus (null = non disponible). */
+interface IndicateursCatalogue {
+  produits: number | null;
+  epuises: number | null;
+  commandesDuJour: number | null;
+}
+
 /**
- * Aperçu de l'espace établissement : statut, fermeture exceptionnelle, menu en vigueur aujourd'hui
- * par service (avec le stock restant de chaque plat ; seulement si le gabarit a des menus) et
- * raccourcis vers les autres onglets.
+ * Aperçu de l'espace établissement, selon le gabarit : statut ouvert/fermé et horaires de la
+ * semaine pour tous ; pharmacie : « De garde jusqu'au … » ; gabarit avec menus : menu en vigueur
+ * aujourd'hui par service ; sans menus : nombre de produits, de produits épuisés et de commandes
+ * du jour. Raccourcis vers les autres onglets (« Gérer les menus » seulement avec menus).
  */
 @Component({
   selector: 'app-onglet-apercu-restaurant',
-  imports: [],
+  imports: [DatePipe],
   templateUrl: './onglet-apercu-restaurant.html',
   styleUrl: './onglet-apercu-restaurant.scss',
 })
 export class OngletApercuRestaurant implements OnInit {
   private readonly service = inject(RestaurantService);
+  private readonly mesCommandesService = inject(MesCommandesService);
 
   readonly prefixe = input.required<PrefixeRestaurant>();
   /** Gabarit de l'établissement : masque le menu du jour sans menus, nomme le catalogue. */
   readonly gabarit = input<Gabarit>(GABARIT_RESTAURANT_PAR_DEFAUT);
+  readonly estAdmin = input(false);
+  /** Admin : id du partenaire, pour lire ses commandes du jour dans la liste admin. */
+  readonly partenaireId = input<number | null>(null);
   readonly libelleCatalogue = computed(() => pluriel(this.gabarit().libelle_produit).toLowerCase());
+  readonly libelleCatalogueMajuscule = computed(() => pluriel(this.gabarit().libelle_produit));
+
+  readonly joursHoraire = JOURS_HORAIRE;
+  readonly indicateurs = signal<IndicateursCatalogue | null>(null);
+  private readonly ficheChargee = signal(false);
   readonly allerA = output<OngletRestaurant>();
 
   readonly optionsService = OPTIONS_SERVICE_MENU;
@@ -58,6 +78,15 @@ export class OngletApercuRestaurant implements OnInit {
   readonly messageSucces = signal<string | null>(null);
   private timerMessage: ReturnType<typeof setTimeout> | undefined;
 
+  constructor() {
+    // Menu du jour ou indicateurs selon le gabarit, relancés si le gabarit arrive après la fiche.
+    effect(() => {
+      const avecMenus = this.gabarit().menus_actifs;
+      if (!this.ficheChargee()) return;
+      untracked(() => (avecMenus ? this.chargerMenusDuJour() : this.chargerIndicateurs()));
+    });
+  }
+
   ngOnInit(): void {
     this.charger();
   }
@@ -70,7 +99,7 @@ export class OngletApercuRestaurant implements OnInit {
       next: (fiche) => {
         this.chargementEnCours.set(false);
         this.appliquerFiche(fiche);
-        this.chargerMenusDuJour();
+        this.ficheChargee.set(true);
       },
       error: (erreur: unknown) => {
         this.chargementEnCours.set(false);
@@ -90,6 +119,38 @@ export class OngletApercuRestaurant implements OnInit {
       next: (menus) => this.menusDuJour.set(menus),
       error: () => undefined,
     });
+  }
+
+  /** Produits, produits épuisés (catalogue) et commandes du jour (liste admin, ou résumé partenaire). */
+  private chargerIndicateurs(): void {
+    this.indicateurs.set({ produits: null, epuises: null, commandesDuJour: null });
+    this.service.listerPlats(this.prefixe()).subscribe({
+      next: (plats) =>
+        this.indicateurs.update((i) => ({
+          commandesDuJour: i?.commandesDuJour ?? null,
+          produits: plats.length,
+          epuises: plats.filter((p) => p.est_epuise).length,
+        })),
+      error: () => undefined,
+    });
+
+    const commandes$ = this.estAdmin()
+      ? this.service.listerRestaurantsAdmin().pipe(
+          map((liste) => liste.find((e) => e.id === this.partenaireId())?.commandes_du_jour ?? null),
+        )
+      : this.mesCommandesService.resume().pipe(map((resume) => resume.total_aujourdhui));
+    commandes$.pipe(catchError(() => of(null))).subscribe((nombre) =>
+      this.indicateurs.update((i) => ({ produits: i?.produits ?? null, epuises: i?.epuises ?? null, commandesDuJour: nombre })),
+    );
+  }
+
+  /** « 08:00 – 18:00 (pause 12:00 – 14:00) », ou « Fermé ». */
+  horaireDuJour(fiche: FicheRestaurant, jour: number): string {
+    const h: HoraireJour | undefined = fiche.horaires.find((x) => x.jour_semaine === jour);
+    if (!h || !h.ouvert) return 'Fermé';
+    const heure = (t: string | null) => (t ?? '').slice(0, 5) || '?';
+    const plage = `${heure(h.heure_ouverture)} – ${heure(h.heure_fermeture)}`;
+    return h.pause_debut && h.pause_fin ? `${plage} (pause ${heure(h.pause_debut)} – ${heure(h.pause_fin)})` : plage;
   }
 
   /** Faux si message_statut ne fait que répéter le libellé du badge (ex. "Fermé" / "Fermé"). */
@@ -140,7 +201,7 @@ export class OngletApercuRestaurant implements OnInit {
         next: (fiche) => {
           this.enregistrementFermetureEnCours.set(false);
           this.appliquerFiche(fiche);
-          this.afficherSucces(valeur ? 'Restaurant marqué fermé exceptionnellement.' : 'Fermeture exceptionnelle levée.');
+          this.afficherSucces(valeur ? 'Établissement marqué fermé exceptionnellement.' : 'Fermeture exceptionnelle levée.');
         },
         error: (erreur: unknown) => {
           this.enregistrementFermetureEnCours.set(false);

@@ -22,7 +22,11 @@ const EXEMPLES_NOM_SECTION: Record<string, string> = {
   boulangerie: 'Viennoiseries',
   mode: 'Chaussures',
   librairie: 'Romans',
+  elevage: 'Volailles',
 };
+
+/** Libellés de section féminins connus (de la / Aucune) ; les autres sont traités au masculin. */
+const SECTIONS_FEMININES = ['section', 'catégorie', 'famille', 'gamme', 'collection'];
 
 /**
  * Catalogue de l'établissement (la « carte » d'un restaurant) : sections ordonnables par
@@ -46,8 +50,8 @@ export class OngletCarteRestaurant implements OnInit {
   readonly pluriel = pluriel;
   /** Libellé de section en minuscules pour les phrases (« Sans rayon »…). */
   readonly libelles = computed(() => ({ section: this.gabarit().libelle_section.toLowerCase() }));
-  /** « Section » est féminin (de la/Aucune), tout le reste (Rayon…) traité au masculin (du/Aucun). */
-  private readonly genreFeminin = computed(() => this.libelles().section === 'section');
+  /** « Section », « Catégorie »… sont féminins (de la/Aucune) ; le reste (Rayon…) au masculin (du/Aucun). */
+  private readonly genreFeminin = computed(() => SECTIONS_FEMININES.includes(this.libelles().section));
   /** Placeholder du champ de nouvelle section, adapté au gabarit : « Nom de la section (ex. Grillades) ». */
   readonly placeholderNouvelleSection = computed(() => {
     const article = this.genreFeminin() ? 'de la' : 'du';

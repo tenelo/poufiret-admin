@@ -20,6 +20,7 @@ export type TypePartenaireCreation =
   | 'mecanicien'
   | 'loueur_maison'
   | 'loueur_voiture'
+  | 'eleveur'
   | 'autre';
 
 export const OPTIONS_TYPE_PARTENAIRE_CREATION: { valeur: TypePartenaireCreation; libelle: string }[] = [
@@ -40,6 +41,7 @@ export const OPTIONS_TYPE_PARTENAIRE_CREATION: { valeur: TypePartenaireCreation;
   { valeur: 'mecanicien', libelle: 'Mécanicien' },
   { valeur: 'loueur_maison', libelle: 'Loueur de maison' },
   { valeur: 'loueur_voiture', libelle: 'Loueur de voiture' },
+  { valeur: 'eleveur', libelle: 'Éleveur / Vente à la ferme' },
   { valeur: 'autre', libelle: 'Autre' },
 ];
 

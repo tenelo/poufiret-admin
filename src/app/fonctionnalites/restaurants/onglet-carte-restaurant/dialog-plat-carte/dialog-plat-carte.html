@@ -244,7 +244,7 @@
         }
 
         <div class="ligne-ajout-groupe">
-          <input type="text" placeholder="Libellé du groupe (ex. Garniture)" [value]="nouveauGroupeLibelle()" (input)="nouveauGroupeLibelle.set($any($event.target).value)" />
+          <input type="text" placeholder="Libellé du groupe" [value]="nouveauGroupeLibelle()" (input)="nouveauGroupeLibelle.set($any($event.target).value)" />
           <input type="number" min="0" placeholder="Min" [value]="nouveauGroupeMin()" (input)="nouveauGroupeMin.set($any($event.target).value)" />
           <input type="number" min="0" placeholder="Max" [value]="nouveauGroupeMax()" (input)="nouveauGroupeMax.set($any($event.target).value)" />
           <button type="button" class="bouton-secondaire" (click)="ajouterGroupe()">+ Groupe</button>
