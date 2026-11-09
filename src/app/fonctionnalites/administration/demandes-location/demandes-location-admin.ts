@@ -71,6 +71,14 @@ export class DemandesLocationAdmin implements OnInit {
     return this.optionsMetier.filter((o) => (compteurs?.[o.valeur] ?? 0) > 0);
   });
 
+  /**
+   * Pastille « Achat » (annonces à vendre, nature=achat) : additive, à côté des pastilles métier —
+   * pas un metier (?metier=achat n'existe pas côté backend), donc filtre via filtres().nature.
+   * Combinable avec une pastille métier (les deux filtres s'appliquent ensemble côté backend).
+   */
+  readonly achatActif = computed(() => this.filtres().nature === 'achat');
+  readonly achatVisible = computed(() => (this.compteursMetier()?.achat ?? 0) > 0);
+
   readonly demandes = signal<DemandeLocation[]>([]);
   readonly total = signal(0);
   readonly page = signal(1);
@@ -200,6 +208,11 @@ export class DemandesLocationAdmin implements OnInit {
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });
+  }
+
+  /** Pastille « Achat » cliquée : bascule le filtre nature=achat (additif, voir achatActif). */
+  basculerAchat(): void {
+    this.surFiltres({ ...this.filtres(), nature: this.achatActif() ? '' : 'achat' });
   }
 
   surFiltres(filtres: FiltresDemandesAdmin): void {

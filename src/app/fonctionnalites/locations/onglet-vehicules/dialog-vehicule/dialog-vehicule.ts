@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 
 import { RessourceBien } from '../../location.service';
 import { DialogBienBase } from '../../partage-biens/dialog-bien-base';
@@ -9,12 +9,15 @@ import { LogementImages } from '../../onglet-logements/logement-images/logement-
 import { LogementPanoramas } from '../../onglet-logements/logement-panoramas/logement-panoramas';
 import { LocalisationLocation } from '../../localisation-location/localisation-location';
 import { CoordonneesGps } from '../../../../partage/position-gps/position-gps';
+import { estAVendre } from '../../formater-location';
+import { erreurChamp } from '../../../administration/tableau-de-bord-admin/extraire-message-erreur';
 import { RequeteVehicule, Vehicule } from '../../../../modeles/vehicule.model';
 
 type OngletDialogVehicule =
   | 'infos'
   | 'caracteristiques'
   | 'tarifs'
+  | 'vente'
   | 'equipements'
   | 'disponibilite'
   | 'localisation'
@@ -25,6 +28,7 @@ const ONGLETS: { valeur: OngletDialogVehicule; libelle: string }[] = [
   { valeur: 'infos', libelle: 'Infos' },
   { valeur: 'caracteristiques', libelle: 'Caractéristiques' },
   { valeur: 'tarifs', libelle: 'Tarifs & conditions' },
+  { valeur: 'vente', libelle: 'Vente' },
   { valeur: 'equipements', libelle: 'Équipements' },
   { valeur: 'disponibilite', libelle: 'Disponibilité' },
   { valeur: 'localisation', libelle: 'Point de prise en charge' },
@@ -57,6 +61,7 @@ export class DialogVehicule extends DialogBienBase<Vehicule, OngletDialogVehicul
     nom: 'infos',
     prix: 'tarifs',
     prix_jour_avec_chauffeur: 'tarifs',
+    prix_vente: 'vente',
   };
 
   readonly onglets = ONGLETS;
@@ -85,6 +90,20 @@ export class DialogVehicule extends DialogBienBase<Vehicule, OngletDialogVehicul
   readonly carburantInclus = signal(false);
   readonly dureeMinJours = signal('');
   readonly zoneCirculation = signal('');
+
+  // ---- Vente (apps.locations.vente) ----
+  readonly mode = signal('location');
+  readonly estEnVente = computed(() => estAVendre({ mode: this.mode() }));
+  readonly estEnLocation = computed(() => this.mode() === 'location' || this.mode() === 'location_vente');
+  readonly prixVente = signal('');
+  readonly prixNegociable = signal(true);
+  readonly etat = signal('');
+  readonly kilometrage = signal('');
+  readonly dedouane = signal(false);
+  readonly carteGrise = signal(false);
+  readonly visiteTechniqueValideJusquAu = signal('');
+  readonly assuranceValideJusquAu = signal('');
+  readonly nbProprietaires = signal('');
 
   // ---- Point de prise en charge (voir LocalisationLocation) ----
   readonly departementChoisi = signal('');
@@ -118,6 +137,17 @@ export class DialogVehicule extends DialogBienBase<Vehicule, OngletDialogVehicul
 
     this.equipementsSelectionnes.set(new Set(v.equipements));
 
+    this.mode.set(v.mode || 'location');
+    this.prixVente.set(this.texte(v.prix_vente));
+    this.prixNegociable.set(v.prix_negociable);
+    this.etat.set(v.etat ?? '');
+    this.kilometrage.set(this.texte(v.kilometrage));
+    this.dedouane.set(!!v.dedouane);
+    this.carteGrise.set(!!v.carte_grise);
+    this.visiteTechniqueValideJusquAu.set(v.visite_technique_valide_jusqu_au ?? '');
+    this.assuranceValideJusquAu.set(v.assurance_valide_jusqu_au ?? '');
+    this.nbProprietaires.set(this.texte(v.nb_proprietaires));
+
     this.departementChoisi.set(this.texte(v.departement_id));
     this.localiteId.set(this.texte(v.localite_id));
     this.quartierId.set(this.texte(v.quartier_id));
@@ -135,10 +165,29 @@ export class DialogVehicule extends DialogBienBase<Vehicule, OngletDialogVehicul
   }
 
   protected override validerChamps(): Record<string, string> {
+    const erreurs: Record<string, string> = {};
     if (this.chauffeurDisponible() && this.prixJourAvecChauffeur().trim() === '') {
-      return { prix_jour_avec_chauffeur: 'Indiquez le prix par jour avec chauffeur.' };
+      erreurs['prix_jour_avec_chauffeur'] = 'Indiquez le prix par jour avec chauffeur.';
     }
-    return {};
+    if (this.estEnVente() && this.prixVente().trim() === '') {
+      erreurs['prix_vente'] = 'Le prix de vente est requis pour une annonce à vendre.';
+    }
+    return erreurs;
+  }
+
+  /** Prix de location (onglet Tarifs) facultatif pour une annonce uniquement à vendre. */
+  protected override prixRequis(): boolean {
+    return this.estEnLocation();
+  }
+
+  protected override mapperErreurChamps(erreur: unknown): Record<string, string> | null {
+    const erreurPrix = erreurChamp(erreur, 'prix');
+    const erreurPrixVente = erreurChamp(erreur, 'prix_vente');
+    if (!erreurPrix && !erreurPrixVente) return null;
+    const champs: Record<string, string> = {};
+    if (erreurPrix) champs['prix'] = erreurPrix;
+    if (erreurPrixVente) champs['prix_vente'] = erreurPrixVente;
+    return champs;
   }
 
   protected construireRequete(): RequeteVehicule {
@@ -166,6 +215,16 @@ export class DialogVehicule extends DialogBienBase<Vehicule, OngletDialogVehicul
       quartier_id: this.quartierId() ? Number(this.quartierId()) : null,
       secteur: this.secteur().trim(),
       adresse_reperes: this.adresseReperes().trim(),
+      mode: this.mode() || undefined,
+      prix_vente: this.nombreOuNull(this.prixVente()),
+      prix_negociable: this.prixNegociable(),
+      etat: this.etat() || null,
+      kilometrage: this.nombreOuNull(this.kilometrage()),
+      dedouane: this.dedouane(),
+      carte_grise: this.carteGrise(),
+      visite_technique_valide_jusqu_au: this.visiteTechniqueValideJusquAu() || null,
+      assurance_valide_jusqu_au: this.assuranceValideJusquAu() || null,
+      nb_proprietaires: this.nombreOuNull(this.nbProprietaires()),
     };
     if (this.positionChoisie()) {
       donnees.latitude = this.positionChoisie()!.latitude;

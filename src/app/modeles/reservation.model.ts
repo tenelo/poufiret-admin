@@ -103,13 +103,18 @@ export interface CompteursGroupeDemandes {
   total: number;
 }
 
-/** Compteurs des pastilles « métier » du haut, sur la liste déjà filtrée (hors metier lui-même). */
+/**
+ * Compteurs des pastilles « métier » du haut, sur la liste déjà filtrée (hors metier lui-même).
+ * `achat` : demandes en vue d'achat (nature=achat, logements/véhicules à vendre), hors total — pastille
+ * additive, combinable avec un métier (filtre côté nature, pas côté metier : achat n'en est pas un).
+ */
 export interface CompteursMetierDemandes {
   hotel: number;
   residence_meublee: number;
   maison: number;
   vehicule: number;
   total: number;
+  achat: number;
 }
 
 export interface ReponseDemandesAdmin {

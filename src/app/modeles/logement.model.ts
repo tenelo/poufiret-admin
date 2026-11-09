@@ -63,12 +63,24 @@ export interface Logement {
   modifie_par_nom: string | null;
   modifie_le: string | null;
   cree_le: string;
+  // ---- Vente (apps.locations.vente) : location (défaut), vente ou location_vente ----
+  mode: string;
+  mode_libelle: string;
+  prix_vente: number | null;
+  prix_negociable: boolean;
+  vendu: boolean;
+  vendu_le: string | null;
+  type_document: string | null;
+  type_document_libelle: string | null;
+  surface_terrain_m2: number | null;
+  est_lotie: boolean | null;
 }
 
 // Corps de POST/PATCH P/logements/ : seuls nom et prix sont requis à la création.
 export interface RequeteLogement {
   nom?: string;
-  prix?: number;
+  /** null autorisé : prix de location facultatif pour une annonce uniquement à vendre. */
+  prix?: number | null;
   type_logement?: string;
   description?: string;
   est_actif?: boolean;
@@ -90,6 +102,13 @@ export interface RequeteLogement {
   adresse_reperes?: string;
   latitude?: number | null;
   longitude?: number | null;
+  // ---- Vente ----
+  mode?: string;
+  prix_vente?: number | null;
+  prix_negociable?: boolean;
+  type_document?: string | null;
+  surface_terrain_m2?: number | null;
+  est_lotie?: boolean | null;
 }
 
 export interface RequeteDisponibiliteLogement {
@@ -116,6 +135,9 @@ export interface LoueurAdminListe {
   nb_reserves: number;
   nb_loues: number;
   demandes_en_attente: number;
+  /** Vente (logements, véhicules) : annonces à vendre (vente/location_vente, non vendues) et vendues. */
+  nb_a_vendre: number;
+  nb_vendus: number;
 }
 
 export interface ReponseLoueursAdmin {

@@ -6,6 +6,18 @@
         <option [value]="option.valeur">{{ option.libelle }}</option>
       }
     </select>
+    <select class="filtre" [value]="filtreMode()" (change)="changerFiltreMode($any($event.target).value)">
+      <option value="">Tous types d'annonce</option>
+      @for (option of meta()?.modes ?? []; track option.valeur) {
+        <option [value]="option.valeur">{{ option.libelle }}</option>
+      }
+    </select>
+    <select class="filtre" [value]="filtreVendu()" (change)="changerFiltreVendu($any($event.target).value)">
+      <option value="">Vendus et non vendus</option>
+      @for (option of optionsVendu; track option.valeur) {
+        <option [value]="option.valeur">{{ option.libelle }}</option>
+      }
+    </select>
     <button type="button" class="bouton-principal" (click)="ouvrirCreation()">+ Ajouter un véhicule</button>
   </div>
 
@@ -46,6 +58,14 @@
               @if (vehicule.chauffeur_disponible) {
                 <span class="localisation-logement">Avec chauffeur</span>
               }
+              @if (estAVendre(vehicule)) {
+                <span>
+                  <span class="badge-vente">{{ vehicule.mode_libelle }}</span>
+                  @if (vehicule.vendu) {
+                    <span class="badge-vendu">Vendu</span>
+                  }
+                </span>
+              }
             </div>
           </button>
 
@@ -70,6 +90,24 @@
               Actif
             </label>
           </div>
+
+          @if (estAVendre(vehicule)) {
+            <div class="ligne-vente">
+              <button type="button" class="bouton-vente" (click)="demanderVente(vehicule)">
+                {{ vehicule.vendu ? 'Remettre en vente' : 'Marquer vendu' }}
+              </button>
+            </div>
+          }
+
+          @if (bienAConfirmerVente()?.id === vehicule.id) {
+            <app-confirmation-vente
+              [nom]="vehicule.nom"
+              [vendu]="vehicule.vendu"
+              [enCours]="venteEnCoursId() === vehicule.id"
+              (annuler)="annulerVente()"
+              (confirmer)="confirmerVente()"
+            />
+          }
         </div>
       }
     </div>

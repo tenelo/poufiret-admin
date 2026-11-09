@@ -112,6 +112,9 @@
         @if (erreursChamps()['prix']) {
           <p class="erreur-champ">{{ erreursChamps()['prix'] }}</p>
         }
+        @if (!estEnLocation()) {
+          <p class="indice">Facultatif : annonce uniquement à vendre (voir l'onglet Vente).</p>
+        }
 
         <label class="ligne-case">
           <input type="checkbox" [checked]="chauffeurDisponible()" (change)="changerChauffeurDisponible($any($event.target).checked)" />
@@ -173,6 +176,71 @@
           [value]="zoneCirculation()"
           (input)="zoneCirculation.set($any($event.target).value)"
         />
+      }
+
+      @if (ongletActif() === 'vente') {
+        <label for="dv-mode">Type d'annonce</label>
+        <select id="dv-mode" [value]="mode()" (change)="mode.set($any($event.target).value)">
+          @for (option of metaInterne()?.modes ?? []; track option.valeur) {
+            <option [value]="option.valeur" [selected]="option.valeur === mode()">{{ option.libelle }}</option>
+          }
+        </select>
+
+        @if (estEnVente()) {
+          <label for="dv-prix-vente">Prix de vente (FCFA)</label>
+          <input
+            id="dv-prix-vente"
+            type="number"
+            min="0"
+            [value]="prixVente()"
+            (input)="prixVente.set($any($event.target).value)"
+          />
+          @if (erreursChamps()['prix_vente']) {
+            <p class="erreur-champ">{{ erreursChamps()['prix_vente'] }}</p>
+          }
+
+          <label class="ligne-case">
+            <input type="checkbox" [checked]="prixNegociable()" (change)="prixNegociable.set($any($event.target).checked)" />
+            Prix négociable
+          </label>
+
+          <div class="grille-champs">
+            <div>
+              <label for="dv-etat">État</label>
+              <select id="dv-etat" [value]="etat()" (change)="etat.set($any($event.target).value)">
+                <option value="">— Choisir —</option>
+                @for (option of metaInterne()?.etats_vehicule ?? []; track option.valeur) {
+                  <option [value]="option.valeur" [selected]="option.valeur === etat()">{{ option.libelle }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label for="dv-kilometrage">Kilométrage</label>
+              <input id="dv-kilometrage" type="number" min="0" [value]="kilometrage()" (input)="kilometrage.set($any($event.target).value)" />
+            </div>
+            <div>
+              <label for="dv-proprietaires">Propriétaires précédents</label>
+              <input id="dv-proprietaires" type="number" min="0" [value]="nbProprietaires()" (input)="nbProprietaires.set($any($event.target).value)" />
+            </div>
+            <div>
+              <label for="dv-visite-technique">Visite technique valide jusqu'au</label>
+              <input id="dv-visite-technique" type="date" [value]="visiteTechniqueValideJusquAu()" (input)="visiteTechniqueValideJusquAu.set($any($event.target).value)" />
+            </div>
+            <div>
+              <label for="dv-assurance">Assurance valide jusqu'au</label>
+              <input id="dv-assurance" type="date" [value]="assuranceValideJusquAu()" (input)="assuranceValideJusquAu.set($any($event.target).value)" />
+            </div>
+          </div>
+
+          <label class="ligne-case">
+            <input type="checkbox" [checked]="dedouane()" (change)="dedouane.set($any($event.target).checked)" />
+            Dédouané
+          </label>
+          <label class="ligne-case">
+            <input type="checkbox" [checked]="carteGrise()" (change)="carteGrise.set($any($event.target).checked)" />
+            Carte grise disponible
+          </label>
+        }
       }
 
       @if (ongletActif() === 'equipements') {

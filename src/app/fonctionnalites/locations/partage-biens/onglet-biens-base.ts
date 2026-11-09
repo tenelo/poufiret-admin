@@ -1,7 +1,7 @@
 import { Directive, OnInit, inject, input, signal } from '@angular/core';
 
 import { LocationService, PrefixeLocation, RessourceBien } from '../location.service';
-import { formaterFrancs } from '../formater-location';
+import { OPTIONS_VENDU, estAVendre, formaterFrancs } from '../formater-location';
 import { extraireMessageErreur } from '../../administration/tableau-de-bord-admin/extraire-message-erreur';
 import { OptionLocationMeta, ReponseLocationMeta } from '../../../modeles/location-meta.model';
 import { BienLocation, OPTIONS_DISPONIBILITE_BIEN } from '../../../modeles/bien-location.model';
@@ -28,6 +28,12 @@ export abstract class OngletBiensBase<T extends BienLocation> implements OnInit 
   readonly meta = signal<ReponseLocationMeta | null>(null);
 
   readonly filtreDisponibilite = signal('');
+  // ---- Vente (apps.locations.vente) : renseignés seulement par l'onglet Véhicules (le seul biens
+  // de ce socle qui vend) — restent '' côté hébergements, donc sans effet sur leur backend. ----
+  readonly filtreMode = signal('');
+  readonly filtreVendu = signal('');
+  readonly optionsVendu = OPTIONS_VENDU;
+  readonly estAVendre = estAVendre;
 
   readonly messageErreur = signal<string | null>(null);
 
@@ -36,6 +42,10 @@ export abstract class OngletBiensBase<T extends BienLocation> implements OnInit 
 
   readonly disponibiliteEnCoursId = signal<number | null>(null);
   readonly actifEnCoursId = signal<number | null>(null);
+
+  // ---- Marquer vendu / remettre en vente (confirmation) ----
+  readonly bienAConfirmerVente = signal<T | null>(null);
+  readonly venteEnCoursId = signal<number | null>(null);
 
   ngOnInit(): void {
     this.charger();
@@ -49,20 +59,38 @@ export abstract class OngletBiensBase<T extends BienLocation> implements OnInit 
     this.chargementEnCours.set(true);
     this.erreurChargement.set(null);
 
-    this.service.listerBiens<T>(this.prefixe(), this.ressource, this.filtreDisponibilite() || undefined).subscribe({
-      next: (biens) => {
-        this.chargementEnCours.set(false);
-        this.biens.set(biens);
-      },
-      error: (erreur: unknown) => {
-        this.chargementEnCours.set(false);
-        this.erreurChargement.set(extraireMessageErreur(erreur));
-      },
-    });
+    this.service
+      .listerBiens<T>(
+        this.prefixe(),
+        this.ressource,
+        this.filtreDisponibilite() || undefined,
+        this.filtreMode() || undefined,
+        this.filtreVendu() === '' ? undefined : this.filtreVendu() === '1',
+      )
+      .subscribe({
+        next: (biens) => {
+          this.chargementEnCours.set(false);
+          this.biens.set(biens);
+        },
+        error: (erreur: unknown) => {
+          this.chargementEnCours.set(false);
+          this.erreurChargement.set(extraireMessageErreur(erreur));
+        },
+      });
   }
 
   changerFiltreDisponibilite(valeur: string): void {
     this.filtreDisponibilite.set(valeur);
+    this.charger();
+  }
+
+  changerFiltreMode(valeur: string): void {
+    this.filtreMode.set(valeur);
+    this.charger();
+  }
+
+  changerFiltreVendu(valeur: string): void {
+    this.filtreVendu.set(valeur);
     this.charger();
   }
 
@@ -131,5 +159,38 @@ export abstract class OngletBiensBase<T extends BienLocation> implements OnInit 
 
   private remplacer(bienMaj: T): void {
     this.biens.update((liste) => liste.map((b) => (b.id === bienMaj.id ? bienMaj : b)));
+  }
+
+  // ---- Marquer vendu / remettre en vente (véhicules uniquement : ressource 'vehicules') ----
+
+  demanderVente(bien: T): void {
+    this.messageErreur.set(null);
+    this.bienAConfirmerVente.set(bien);
+  }
+
+  annulerVente(): void {
+    if (this.venteEnCoursId()) return;
+    this.bienAConfirmerVente.set(null);
+  }
+
+  confirmerVente(): void {
+    const bien = this.bienAConfirmerVente() as (T & { vendu?: boolean }) | null;
+    if (!bien || this.venteEnCoursId()) return;
+    this.venteEnCoursId.set(bien.id);
+
+    this.service
+      .marquerVendu<T>(this.prefixe(), this.ressource as unknown as 'logements' | 'vehicules', bien.id, !bien.vendu)
+      .subscribe({
+        next: (bienMaj) => {
+          this.venteEnCoursId.set(null);
+          this.bienAConfirmerVente.set(null);
+          this.remplacer(bienMaj);
+        },
+        error: (erreur: unknown) => {
+          this.venteEnCoursId.set(null);
+          this.bienAConfirmerVente.set(null);
+          this.messageErreur.set(extraireMessageErreur(erreur));
+        },
+      });
   }
 }

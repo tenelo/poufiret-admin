@@ -2,7 +2,9 @@ import { Component, OnInit, inject, input, signal } from '@angular/core';
 
 import { LocationService, PrefixeLocation } from '../location.service';
 import { DialogLogement } from './dialog-logement/dialog-logement';
+import { ConfirmationVente } from '../partage-biens/confirmation-vente';
 import { extraireMessageErreur } from '../../administration/tableau-de-bord-admin/extraire-message-erreur';
+import { OPTIONS_VENDU, estAVendre } from '../formater-location';
 import { ReponseLocationMeta } from '../../../modeles/location-meta.model';
 import { Logement } from '../../../modeles/logement.model';
 
@@ -13,7 +15,7 @@ import { Logement } from '../../../modeles/logement.model';
  */
 @Component({
   selector: 'app-onglet-logements',
-  imports: [DialogLogement],
+  imports: [DialogLogement, ConfirmationVente],
   templateUrl: './onglet-logements.html',
   styleUrl: './onglet-logements.scss',
 })
@@ -28,6 +30,11 @@ export class OngletLogements implements OnInit {
   readonly meta = signal<ReponseLocationMeta | null>(null);
 
   readonly filtreDisponibilite = signal('');
+  // ---- Vente (apps.locations.vente) ----
+  readonly filtreMode = signal('');
+  readonly filtreVendu = signal('');
+  readonly optionsVendu = OPTIONS_VENDU;
+  readonly estAVendre = estAVendre;
 
   readonly messageErreur = signal<string | null>(null);
 
@@ -37,6 +44,10 @@ export class OngletLogements implements OnInit {
 
   readonly disponibiliteEnCoursId = signal<number | null>(null);
   readonly actifEnCoursId = signal<number | null>(null);
+
+  // ---- Marquer vendu / remettre en vente (confirmation) ----
+  readonly logementAConfirmerVente = signal<Logement | null>(null);
+  readonly venteEnCoursId = signal<number | null>(null);
 
   ngOnInit(): void {
     this.charger();
@@ -50,20 +61,37 @@ export class OngletLogements implements OnInit {
     this.chargementEnCours.set(true);
     this.erreurChargement.set(null);
 
-    this.service.listerLogements(this.prefixe(), this.filtreDisponibilite() || undefined).subscribe({
-      next: (logements) => {
-        this.chargementEnCours.set(false);
-        this.logements.set(logements);
-      },
-      error: (erreur: unknown) => {
-        this.chargementEnCours.set(false);
-        this.erreurChargement.set(extraireMessageErreur(erreur));
-      },
-    });
+    this.service
+      .listerLogements(
+        this.prefixe(),
+        this.filtreDisponibilite() || undefined,
+        this.filtreMode() || undefined,
+        this.filtreVendu() === '' ? undefined : this.filtreVendu() === '1',
+      )
+      .subscribe({
+        next: (logements) => {
+          this.chargementEnCours.set(false);
+          this.logements.set(logements);
+        },
+        error: (erreur: unknown) => {
+          this.chargementEnCours.set(false);
+          this.erreurChargement.set(extraireMessageErreur(erreur));
+        },
+      });
   }
 
   changerFiltreDisponibilite(valeur: string): void {
     this.filtreDisponibilite.set(valeur);
+    this.charger();
+  }
+
+  changerFiltreMode(valeur: string): void {
+    this.filtreMode.set(valeur);
+    this.charger();
+  }
+
+  changerFiltreVendu(valeur: string): void {
+    this.filtreVendu.set(valeur);
     this.charger();
   }
 
@@ -127,5 +155,36 @@ export class OngletLogements implements OnInit {
 
   imagePrincipale(logement: Logement): string | null {
     return logement.images.find((i) => i.est_principale)?.image ?? logement.images[0]?.image ?? null;
+  }
+
+  // ---- Marquer vendu / remettre en vente ----
+
+  demanderVente(logement: Logement): void {
+    this.messageErreur.set(null);
+    this.logementAConfirmerVente.set(logement);
+  }
+
+  annulerVente(): void {
+    if (this.venteEnCoursId()) return;
+    this.logementAConfirmerVente.set(null);
+  }
+
+  confirmerVente(): void {
+    const logement = this.logementAConfirmerVente();
+    if (!logement || this.venteEnCoursId()) return;
+    this.venteEnCoursId.set(logement.id);
+
+    this.service.marquerVendu<Logement>(this.prefixe(), 'logements', logement.id, !logement.vendu).subscribe({
+      next: (logementMaj) => {
+        this.venteEnCoursId.set(null);
+        this.logementAConfirmerVente.set(null);
+        this.logements.update((liste) => liste.map((l) => (l.id === logementMaj.id ? logementMaj : l)));
+      },
+      error: (erreur: unknown) => {
+        this.venteEnCoursId.set(null);
+        this.logementAConfirmerVente.set(null);
+        this.messageErreur.set(extraireMessageErreur(erreur));
+      },
+    });
   }
 }

@@ -56,6 +56,15 @@ export abstract class DialogBienBase<T extends BienLocation, S extends string> i
   protected validerChamps(): Record<string, string> {
     return {};
   }
+  /** Faux pour un véhicule à vendre uniquement (mode = vente) : le prix de location est alors facultatif. */
+  protected prixRequis(): boolean {
+    return true;
+  }
+  /** Erreurs backend par champ (ex. prix_vente), en plus de celles déjà gérées par le socle (nom, prix) ;
+   *  null si l'erreur ne correspond à aucun champ connu (message générique affiché à la place). */
+  protected mapperErreurChamps(_erreur: unknown): Record<string, string> | null {
+    return null;
+  }
 
   ngOnInit(): void {
     const meta = this.meta();
@@ -92,10 +101,13 @@ export abstract class DialogBienBase<T extends BienLocation, S extends string> i
   }
 
   soumettre(libellePrix: string): void {
-    const prix = Number(this.prix());
+    const prixTexte = this.prix().trim();
+    const prix = prixTexte === '' ? null : Number(prixTexte);
     const erreurs: Record<string, string> = {};
     if (!this.nom().trim()) erreurs['nom'] = 'Le titre est requis.';
-    if (this.prix().trim() === '' || Number.isNaN(prix) || prix < 0) {
+    if (this.prixRequis() && (prix === null || Number.isNaN(prix) || prix < 0)) {
+      erreurs['prix'] = `${libellePrix} doit être un nombre positif ou nul.`;
+    } else if (prix !== null && (Number.isNaN(prix) || prix < 0)) {
       erreurs['prix'] = `${libellePrix} doit être un nombre positif ou nul.`;
     }
     Object.assign(erreurs, this.validerChamps());
@@ -131,6 +143,13 @@ export abstract class DialogBienBase<T extends BienLocation, S extends string> i
       },
       error: (erreur: unknown) => {
         this.enregistrementEnCours.set(false);
+        const champs = this.mapperErreurChamps(erreur);
+        if (champs) {
+          this.erreursChamps.set(champs);
+          const onglet = this.ongletParChamp[Object.keys(champs)[0]];
+          if (onglet) this.ongletActif.set(onglet);
+          return;
+        }
         this.messageErreur.set(extraireMessageErreur(erreur));
       },
     });

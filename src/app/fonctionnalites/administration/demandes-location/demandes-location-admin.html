@@ -50,6 +50,13 @@
           <span class="compteur">{{ compteursMetier()?.[option.valeur] ?? 0 }}</span>
         </button>
       }
+      @if (achatVisible()) {
+        <button type="button" class="categorie" [class.categorie-active]="achatActif()" (click)="basculerAchat()">
+          <span class="icone-categorie">🏷️</span>
+          Achat
+          <span class="compteur">{{ compteursMetier()?.achat ?? 0 }}</span>
+        </button>
+      }
     </nav>
 
     <nav class="barre-onglets" aria-label="Sections">

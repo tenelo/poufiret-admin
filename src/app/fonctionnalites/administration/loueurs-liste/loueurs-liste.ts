@@ -24,7 +24,8 @@ function metierDe(loueur: LoueurAdminListe): MetierLoueur {
 
 /**
  * Liste admin des loueurs (capacité gerer_locations), maisons, véhicules et hôtels (badge par
- * carte) : indicateurs biens disponibles / réservés / loués et demandes en attente (alerte si > 0).
+ * carte) : indicateurs biens disponibles / réservés / loués, à vendre / vendus (apps.locations.vente,
+ * masqués si à 0) et demandes en attente (alerte si > 0).
  * En haut, pastilles « Toutes / Hôtels / Résidences meublées / Maisons à louer / Location auto »
  * (même style que les catégories du centre des commandes), ?metier= dans l'URL, compteurs tenant
  * compte de la recherche et du département ; une pastille sans loueur est masquée. Recherche

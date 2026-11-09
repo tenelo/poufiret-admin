@@ -17,6 +17,20 @@ export function nombreNuits(debut: string | null | undefined, fin: string | null
   return Number.isNaN(nuits) || nuits < 0 ? null : nuits;
 }
 
+/** Modes de transaction incluant la vente (apps.locations.vente.MODES_VENTE, backend). */
+export const MODES_VENTE = ['vente', 'location_vente'];
+
+/** Vrai si l'annonce (logement ou véhicule) est à vendre (vente ou location_vente). */
+export function estAVendre(bien: { mode?: string | null }): boolean {
+  return !!bien.mode && MODES_VENTE.includes(bien.mode);
+}
+
+/** « Vendues »/« En vente » : valeurs fixées par le contrat (POST .../vendu/ {vendu: true|false}). */
+export const OPTIONS_VENDU: { valeur: string; libelle: string }[] = [
+  { valeur: '0', libelle: 'En vente' },
+  { valeur: '1', libelle: 'Vendues' },
+];
+
 /** Occupation d'une demande d'hébergement : « 2 adultes · 1 enfant · 1 unité » (vide si rien). */
 export function occupationHebergement(d: {
   nb_adultes?: number | null;

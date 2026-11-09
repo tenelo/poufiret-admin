@@ -6,6 +6,18 @@
         <option [value]="option.valeur">{{ option.libelle }}</option>
       }
     </select>
+    <select class="filtre" [value]="filtreMode()" (change)="changerFiltreMode($any($event.target).value)">
+      <option value="">Tous types d'annonce</option>
+      @for (option of meta()?.modes ?? []; track option.valeur) {
+        <option [value]="option.valeur">{{ option.libelle }}</option>
+      }
+    </select>
+    <select class="filtre" [value]="filtreVendu()" (change)="changerFiltreVendu($any($event.target).value)">
+      <option value="">Vendues et non vendues</option>
+      @for (option of optionsVendu; track option.valeur) {
+        <option [value]="option.valeur">{{ option.libelle }}</option>
+      }
+    </select>
     <button type="button" class="bouton-principal" (click)="ouvrirCreation()">+ Ajouter un logement</button>
   </div>
 
@@ -47,6 +59,14 @@
               <span class="caracteristiques-logement">
                 {{ logement.nb_chambres ?? '—' }} ch. · {{ logement.nb_salles_de_bain ?? '—' }} SdB
               </span>
+              @if (estAVendre(logement)) {
+                <span>
+                  <span class="badge-vente">{{ logement.mode_libelle }}</span>
+                  @if (logement.vendu) {
+                    <span class="badge-vendu">Vendu</span>
+                  }
+                </span>
+              }
             </div>
           </button>
 
@@ -71,6 +91,24 @@
               Actif
             </label>
           </div>
+
+          @if (estAVendre(logement)) {
+            <div class="ligne-vente">
+              <button type="button" class="bouton-vente" (click)="demanderVente(logement)">
+                {{ logement.vendu ? 'Remettre en vente' : 'Marquer vendu' }}
+              </button>
+            </div>
+          }
+
+          @if (logementAConfirmerVente()?.id === logement.id) {
+            <app-confirmation-vente
+              [nom]="logement.nom"
+              [vendu]="logement.vendu"
+              [enCours]="venteEnCoursId() === logement.id"
+              (annuler)="annulerVente()"
+              (confirmer)="confirmerVente()"
+            />
+          }
         </div>
       }
     </div>

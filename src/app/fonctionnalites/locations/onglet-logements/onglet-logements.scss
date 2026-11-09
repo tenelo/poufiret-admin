@@ -170,3 +170,98 @@
     width: auto;
   }
 }
+
+// ---- Vente (apps.locations.vente) : badge Type/Vendu sur la carte, filtres et confirmation ----
+
+.badge-vente {
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: 0.15rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.badge-vendu {
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: 0.15rem;
+  margin-left: 0.3rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.ligne-vente {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0.85rem 0.6rem;
+}
+
+.bouton-vente {
+  padding: 0.3rem 0.65rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    background: #f9fafb;
+  }
+}
+
+.boite-confirmation-vente {
+  margin: 0 0.85rem 0.85rem;
+  padding: 0.75rem 0.9rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: #374151;
+
+  p {
+    margin: 0 0 0.6rem;
+  }
+}
+
+.actions-confirmation-vente {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+
+  .bouton-secondaire {
+    padding: 0.4rem 0.8rem;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+
+    &:hover {
+      background: #f3f4f6;
+    }
+  }
+
+  .bouton-principal {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.78rem;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}

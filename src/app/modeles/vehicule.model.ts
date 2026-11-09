@@ -40,12 +40,28 @@ export interface Vehicule extends BienLocation {
   adresse_reperes: string;
   latitude: number | null;
   longitude: number | null;
+  // ---- Vente (apps.locations.vente) : location (défaut), vente ou location_vente ----
+  mode: string;
+  mode_libelle: string;
+  prix_vente: number | null;
+  prix_negociable: boolean;
+  vendu: boolean;
+  vendu_le: string | null;
+  etat: string | null;
+  etat_libelle: string | null;
+  dedouane: boolean | null;
+  carte_grise: boolean | null;
+  visite_technique_valide_jusqu_au: string | null;
+  assurance_valide_jusqu_au: string | null;
+  nb_proprietaires: number | null;
+  kilometrage: number | null;
 }
 
 // Corps de POST/PATCH P/vehicules/ : seuls nom et prix sont requis à la création.
 export interface RequeteVehicule {
   nom?: string;
-  prix?: number;
+  /** null autorisé : prix de location facultatif pour une annonce uniquement à vendre. */
+  prix?: number | null;
   description?: string;
   est_actif?: boolean;
   categorie_vehicule?: string;
@@ -74,4 +90,15 @@ export interface RequeteVehicule {
   adresse_reperes?: string;
   latitude?: number | null;
   longitude?: number | null;
+  // ---- Vente ----
+  mode?: string;
+  prix_vente?: number | null;
+  prix_negociable?: boolean;
+  etat?: string | null;
+  dedouane?: boolean | null;
+  carte_grise?: boolean | null;
+  visite_technique_valide_jusqu_au?: string | null;
+  assurance_valide_jusqu_au?: string | null;
+  nb_proprietaires?: number | null;
+  kilometrage?: number | null;
 }

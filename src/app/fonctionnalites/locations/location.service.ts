@@ -72,10 +72,21 @@ export class LocationService {
 
   // ---- Logements ----
 
-  listerLogements(prefixe: PrefixeLocation, disponibilite?: string): Observable<Logement[]> {
+  listerLogements(
+    prefixe: PrefixeLocation,
+    disponibilite?: string,
+    mode?: string,
+    vendu?: boolean,
+  ): Observable<Logement[]> {
     let params = new HttpParams();
     if (disponibilite) {
       params = params.set('disponibilite', disponibilite);
+    }
+    if (mode) {
+      params = params.set('mode', mode);
+    }
+    if (vendu !== undefined) {
+      params = params.set('vendu', vendu ? '1' : '0');
     }
     return this.http
       .get<ReponseLogements>(`${this.base(prefixe)}logements/`, { params })
@@ -114,10 +125,20 @@ export class LocationService {
     prefixe: PrefixeLocation,
     ressource: RessourceBien,
     disponibilite?: string,
+    // mode/vendu : ignorés par le backend pour les hébergements (pas de vente), seul l'onglet
+    // Véhicules les renseigne.
+    mode?: string,
+    vendu?: boolean,
   ): Observable<T[]> {
     let params = new HttpParams();
     if (disponibilite) {
       params = params.set('disponibilite', disponibilite);
+    }
+    if (mode) {
+      params = params.set('mode', mode);
+    }
+    if (vendu !== undefined) {
+      params = params.set('vendu', vendu ? '1' : '0');
     }
     return this.http
       .get<{ resultats: T[] }>(`${this.base(prefixe)}${ressource}/`, { params })
@@ -267,6 +288,18 @@ export class LocationService {
     ressource: RessourceLocation = 'logements',
   ): Observable<void> {
     return this.http.delete<void>(`${this.base(prefixe)}${ressource}/${objetId}/panoramas/${panoramaId}/`);
+  }
+
+  // ---- Vente (apps.locations.vente) : logements et véhicules uniquement (pas les hébergements) ----
+
+  /** POST P/<ressource>/<id>/vendu/ {vendu} — marque l'annonce vendue ou la remet en vente. */
+  marquerVendu<T>(
+    prefixe: PrefixeLocation,
+    ressource: 'logements' | 'vehicules',
+    id: number,
+    vendu: boolean,
+  ): Observable<T> {
+    return this.http.post<T>(`${this.base(prefixe)}${ressource}/${id}/vendu/`, { vendu });
   }
 
   // ---- Admin : liste des loueurs ----

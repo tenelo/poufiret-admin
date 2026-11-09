@@ -82,6 +82,12 @@
             <span class="indicateur indicateur-disponible">{{ loueur.nb_disponibles }} disponible(s)</span>
             <span class="indicateur indicateur-reserve">{{ loueur.nb_reserves }} réservé(s)</span>
             <span class="indicateur indicateur-loue">{{ loueur.nb_loues }} loué(s)</span>
+            @if (loueur.nb_a_vendre > 0) {
+              <span class="indicateur indicateur-a-vendre">{{ loueur.nb_a_vendre }} à vendre</span>
+            }
+            @if (loueur.nb_vendus > 0) {
+              <span class="indicateur indicateur-vendu">{{ loueur.nb_vendus }} vendu(s)</span>
+            }
           </div>
         </button>
       }

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, input, output, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 
 import { LocationService, PrefixeLocation } from '../../location.service';
 import { LogementImages } from '../logement-images/logement-images';
@@ -6,7 +6,8 @@ import { LogementPanoramas } from '../logement-panoramas/logement-panoramas';
 import { LocalisationLocation } from '../../localisation-location/localisation-location';
 import { PucesOptions, basculerDansEnsemble } from '../../partage-biens/puces-options';
 import { CoordonneesGps } from '../../../../partage/position-gps/position-gps';
-import { extraireMessageErreur } from '../../../administration/tableau-de-bord-admin/extraire-message-erreur';
+import { estAVendre } from '../../formater-location';
+import { erreurChamp, extraireMessageErreur } from '../../../administration/tableau-de-bord-admin/extraire-message-erreur';
 import { ReponseLocationMeta } from '../../../../modeles/location-meta.model';
 import { Logement, RequeteLogement } from '../../../../modeles/logement.model';
 
@@ -14,6 +15,7 @@ type OngletDialogLogement =
   | 'infos'
   | 'caracteristiques'
   | 'conditions'
+  | 'vente'
   | 'equipements'
   | 'disponibilite'
   | 'localisation'
@@ -24,12 +26,19 @@ const ONGLETS: { valeur: OngletDialogLogement; libelle: string }[] = [
   { valeur: 'infos', libelle: 'Infos' },
   { valeur: 'caracteristiques', libelle: 'Caractéristiques' },
   { valeur: 'conditions', libelle: 'Conditions' },
+  { valeur: 'vente', libelle: 'Vente' },
   { valeur: 'equipements', libelle: 'Équipements' },
   { valeur: 'disponibilite', libelle: 'Disponibilité' },
   { valeur: 'localisation', libelle: 'Localisation' },
   { valeur: 'photos', libelle: 'Photos' },
   { valeur: 'visite', libelle: 'Visite immersive' },
 ];
+
+/** Champs backend → onglet où les afficher (erreurs de validation). */
+const ONGLET_PAR_CHAMP: Partial<Record<keyof RequeteLogement, OngletDialogLogement>> = {
+  prix: 'conditions',
+  prix_vente: 'vente',
+};
 
 /**
  * Dialog de création/édition d'un logement, en sections (voir ONGLETS) : la section
@@ -79,6 +88,16 @@ export class DialogLogement implements OnInit {
   readonly fraisAgence = signal('');
   readonly compteurEauIndividuel = signal(false);
   readonly compteurElectriciteIndividuel = signal(false);
+
+  // ---- Vente (apps.locations.vente) ----
+  readonly mode = signal('location');
+  readonly estEnVente = computed(() => estAVendre({ mode: this.mode() }));
+  readonly estEnLocation = computed(() => this.mode() === 'location' || this.mode() === 'location_vente');
+  readonly prixVente = signal('');
+  readonly prixNegociable = signal(true);
+  readonly typeDocument = signal('');
+  readonly surfaceTerrainM2 = signal('');
+  readonly estLotie = signal(false);
 
   // ---- Équipements ----
   readonly equipementsSelectionnes = signal<Set<string>>(new Set());
@@ -136,6 +155,13 @@ export class DialogLogement implements OnInit {
     this.compteurEauIndividuel.set(logement.compteur_eau_individuel);
     this.compteurElectriciteIndividuel.set(logement.compteur_electricite_individuel);
 
+    this.mode.set(logement.mode || 'location');
+    this.prixVente.set(logement.prix_vente !== null ? String(logement.prix_vente) : '');
+    this.prixNegociable.set(logement.prix_negociable);
+    this.typeDocument.set(logement.type_document ?? '');
+    this.surfaceTerrainM2.set(logement.surface_terrain_m2 !== null ? String(logement.surface_terrain_m2) : '');
+    this.estLotie.set(!!logement.est_lotie);
+
     this.equipementsSelectionnes.set(new Set(logement.equipements));
 
     this.disponibilite.set(logement.disponibilite);
@@ -168,14 +194,26 @@ export class DialogLogement implements OnInit {
   // ---- Enregistrement ----
 
   soumettre(): void {
-    const prix = Number(this.prix());
+    const prixTexte = this.prix().trim();
+    const prix = prixTexte === '' ? null : Number(prixTexte);
     const erreurs: Record<string, string> = {};
     if (!this.nom().trim()) erreurs['nom'] = 'Le nom est requis.';
-    if (this.prix().trim() === '' || Number.isNaN(prix) || prix < 0) {
+    // Prix de location obligatoire seulement si l'annonce est (aussi) en location (voir estEnLocation).
+    if (this.estEnLocation() && (prix === null || Number.isNaN(prix) || prix < 0)) {
+      erreurs['prix'] = 'Le loyer mensuel doit être un nombre positif ou nul.';
+    } else if (prix !== null && (Number.isNaN(prix) || prix < 0)) {
       erreurs['prix'] = 'Le loyer mensuel doit être un nombre positif ou nul.';
     }
+    if (this.estEnVente() && this.prixVente().trim() === '') {
+      erreurs['prix_vente'] = 'Le prix de vente est requis pour une annonce à vendre.';
+    }
     this.erreursChamps.set(erreurs);
-    if (Object.keys(erreurs).length > 0) return;
+    const premierChamp = Object.keys(erreurs)[0] as keyof RequeteLogement | undefined;
+    if (premierChamp) {
+      const onglet = ONGLET_PAR_CHAMP[premierChamp];
+      if (onglet) this.ongletActif.set(onglet);
+      return;
+    }
 
     const donnees: RequeteLogement = {
       nom: this.nom().trim(),
@@ -199,6 +237,12 @@ export class DialogLogement implements OnInit {
       quartier_id: this.quartierId() ? Number(this.quartierId()) : null,
       secteur: this.secteur().trim(),
       adresse_reperes: this.adresseReperes().trim(),
+      mode: this.mode() || undefined,
+      prix_vente: this.nombreOuNull(this.prixVente()),
+      prix_negociable: this.prixNegociable(),
+      type_document: this.typeDocument() || null,
+      surface_terrain_m2: this.nombreOuNull(this.surfaceTerrainM2()),
+      est_lotie: this.estLotie(),
     };
     if (this.disponibilite()) {
       // La disponibilité initiale suit le même champ que la mise à jour rapide côté liste.
@@ -224,6 +268,16 @@ export class DialogLogement implements OnInit {
       },
       error: (erreur: unknown) => {
         this.enregistrementEnCours.set(false);
+        const erreurPrix = erreurChamp(erreur, 'prix');
+        const erreurPrixVente = erreurChamp(erreur, 'prix_vente');
+        if (erreurPrix || erreurPrixVente) {
+          const champs: Record<string, string> = {};
+          if (erreurPrix) champs['prix'] = erreurPrix;
+          if (erreurPrixVente) champs['prix_vente'] = erreurPrixVente;
+          this.erreursChamps.set(champs);
+          this.ongletActif.set(erreurPrixVente ? 'vente' : 'conditions');
+          return;
+        }
         this.messageErreur.set(extraireMessageErreur(erreur));
       },
     });

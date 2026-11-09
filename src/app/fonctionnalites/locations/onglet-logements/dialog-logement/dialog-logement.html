@@ -14,6 +14,7 @@
         { valeur: 'infos', libelle: 'Infos' },
         { valeur: 'caracteristiques', libelle: 'Caractéristiques' },
         { valeur: 'conditions', libelle: 'Conditions' },
+        { valeur: 'vente', libelle: 'Vente' },
         { valeur: 'equipements', libelle: 'Équipements' },
         { valeur: 'disponibilite', libelle: 'Disponibilité' },
         { valeur: 'localisation', libelle: 'Localisation' },
@@ -96,6 +97,9 @@
         @if (erreursChamps()['prix']) {
           <p class="erreur-champ">{{ erreursChamps()['prix'] }}</p>
         }
+        @if (!estEnLocation()) {
+          <p class="indice">Facultatif : annonce uniquement à vendre (voir l'onglet Vente).</p>
+        }
 
         <div class="grille-champs">
           <div>
@@ -119,6 +123,56 @@
           <input type="checkbox" [checked]="compteurElectriciteIndividuel()" (change)="compteurElectriciteIndividuel.set($any($event.target).checked)" />
           Compteur d'électricité individuel
         </label>
+      }
+
+      @if (ongletActif() === 'vente') {
+        <label for="dl-mode">Type d'annonce</label>
+        <select id="dl-mode" [value]="mode()" (change)="mode.set($any($event.target).value)">
+          @for (option of metaInterne()?.modes ?? []; track option.valeur) {
+            <option [value]="option.valeur" [selected]="option.valeur === mode()">{{ option.libelle }}</option>
+          }
+        </select>
+
+        @if (estEnVente()) {
+          <label for="dl-prix-vente">Prix de vente (FCFA)</label>
+          <input
+            id="dl-prix-vente"
+            type="number"
+            min="0"
+            [value]="prixVente()"
+            (input)="prixVente.set($any($event.target).value)"
+          />
+          @if (erreursChamps()['prix_vente']) {
+            <p class="erreur-champ">{{ erreursChamps()['prix_vente'] }}</p>
+          }
+
+          <label class="ligne-case">
+            <input type="checkbox" [checked]="prixNegociable()" (change)="prixNegociable.set($any($event.target).checked)" />
+            Prix négociable
+          </label>
+
+          <label for="dl-type-document">Document de propriété</label>
+          <select id="dl-type-document" [value]="typeDocument()" (change)="typeDocument.set($any($event.target).value)">
+            <option value="">— Choisir —</option>
+            @for (option of metaInterne()?.types_document ?? []; track option.valeur) {
+              <option [value]="option.valeur" [selected]="option.valeur === typeDocument()">{{ option.libelle }}</option>
+            }
+          </select>
+
+          <label for="dl-surface-terrain">Surface du terrain (m²)</label>
+          <input
+            id="dl-surface-terrain"
+            type="number"
+            min="0"
+            [value]="surfaceTerrainM2()"
+            (input)="surfaceTerrainM2.set($any($event.target).value)"
+          />
+
+          <label class="ligne-case">
+            <input type="checkbox" [checked]="estLotie()" (change)="estLotie.set($any($event.target).checked)" />
+            Parcelle lotie
+          </label>
+        }
       }
 
       @if (ongletActif() === 'equipements') {
@@ -161,7 +215,7 @@
         />
       }
 
-      @if (ongletActif() === 'infos' || ongletActif() === 'caracteristiques' || ongletActif() === 'conditions' || ongletActif() === 'equipements' || ongletActif() === 'disponibilite' || ongletActif() === 'localisation') {
+      @if (ongletActif() === 'infos' || ongletActif() === 'caracteristiques' || ongletActif() === 'conditions' || ongletActif() === 'vente' || ongletActif() === 'equipements' || ongletActif() === 'disponibilite' || ongletActif() === 'localisation') {
         <div class="actions-modale">
           <button type="button" class="bouton-secondaire" (click)="ferme.emit()">Fermer</button>
           <button type="submit" class="bouton-principal" [disabled]="enregistrementEnCours()">
