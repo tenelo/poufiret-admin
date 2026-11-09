@@ -1,0 +1,176 @@
+<section class="page-avis-admin">
+  <div class="entete">
+    <h1>Avis</h1>
+    <button type="button" class="bouton-secondaire" [disabled]="chargementEnCours()" (click)="rafraichir()">
+      ↻ Rafraîchir
+    </button>
+  </div>
+
+  @if (erreurAction()) {
+    <p class="erreur-generale">{{ erreurAction() }}</p>
+  }
+
+  <app-filtres-avis [filtres]="filtres()" [optionsObjetType]="optionsObjetType()" (filtresChange)="surFiltres($event)" />
+
+  @if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (chargementEnCours() && avis().length === 0) {
+    <p class="etat">Chargement des avis…</p>
+  } @else if (avis().length === 0) {
+    <p class="etat">Aucun avis ne correspond à ces critères.</p>
+  } @else {
+    <p class="total">{{ total() }} avis</p>
+
+    <!-- Grand écran : tableau -->
+    <div class="conteneur-tableau">
+      <table class="tableau">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Auteur</th>
+            <th>Partenaire / livreur</th>
+            <th>Objet</th>
+            <th>Note</th>
+            <th>Commentaire</th>
+            <th>Réponse du partenaire</th>
+            <th>Statut</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ligne of avis(); track ligne.id) {
+            <tr [class.ligne-masquee]="!ligne.est_visible">
+              <td>{{ formaterDate(ligne.cree_le) }}</td>
+              <td>{{ ligne.auteur_nom }}</td>
+              <td>{{ partenaireOuLivreur(ligne) }}</td>
+              <td><span class="type-objet">{{ ligne.objet_type }}</span> #{{ ligne.objet_id }}</td>
+              <td class="etoiles" [title]="ligne.note + ' / 5'">{{ etoiles(ligne.note) }}</td>
+              <td class="commentaire">
+                <button
+                  type="button"
+                  class="bouton-commentaire"
+                  [class.commentaire-complet]="commentaireDeplieId() === ligne.id"
+                  [title]="ligne.commentaire"
+                  (click)="basculerCommentaire(ligne)"
+                >
+                  {{ ligne.commentaire || '—' }}
+                </button>
+              </td>
+              <td>{{ ligne.reponse_partenaire || '—' }}</td>
+              <td>
+                @if (ligne.est_visible) {
+                  <span class="badge badge-visible">Visible</span>
+                } @else {
+                  <span class="badge badge-masque">Masqué</span>
+                }
+              </td>
+              <td>
+                @if (ligne.est_visible) {
+                  <button type="button" class="bouton-danger" (click)="demanderMasquage(ligne)">Masquer</button>
+                } @else {
+                  <button
+                    type="button"
+                    class="bouton-secondaire"
+                    [disabled]="reaffichageEnCoursId() === ligne.id"
+                    (click)="reafficher(ligne)"
+                  >
+                    {{ reaffichageEnCoursId() === ligne.id ? 'Réaffichage…' : 'Réafficher' }}
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile : cartes -->
+    <div class="cartes">
+      @for (ligne of avis(); track ligne.id) {
+        <div class="carte" [class.carte-masquee]="!ligne.est_visible">
+          <div class="carte-entete">
+            <span class="etoiles" [title]="ligne.note + ' / 5'">{{ etoiles(ligne.note) }}</span>
+            @if (ligne.est_visible) {
+              <span class="badge badge-visible">Visible</span>
+            } @else {
+              <span class="badge badge-masque">Masqué</span>
+            }
+          </div>
+          <span class="carte-ligne">{{ ligne.auteur_nom }} · {{ partenaireOuLivreur(ligne) }}</span>
+          <span class="carte-ligne"><span class="type-objet">{{ ligne.objet_type }}</span> #{{ ligne.objet_id }}</span>
+          <button
+            type="button"
+            class="bouton-commentaire"
+            [class.commentaire-complet]="commentaireDeplieId() === ligne.id"
+            (click)="basculerCommentaire(ligne)"
+          >
+            {{ ligne.commentaire || '—' }}
+          </button>
+          @if (ligne.reponse_partenaire) {
+            <span class="carte-ligne">Réponse : {{ ligne.reponse_partenaire }}</span>
+          }
+          <span class="carte-ligne">{{ formaterDate(ligne.cree_le) }}</span>
+          <div class="carte-actions">
+            @if (ligne.est_visible) {
+              <button type="button" class="bouton-danger" (click)="demanderMasquage(ligne)">Masquer</button>
+            } @else {
+              <button
+                type="button"
+                class="bouton-secondaire"
+                [disabled]="reaffichageEnCoursId() === ligne.id"
+                (click)="reafficher(ligne)"
+              >
+                {{ reaffichageEnCoursId() === ligne.id ? 'Réaffichage…' : 'Réafficher' }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (nombrePages() > 1) {
+      <div class="pagination">
+        <button type="button" [disabled]="page() === 1" (click)="changerPage(page() - 1)">← Précédent</button>
+        <span>Page {{ page() }} / {{ nombrePages() }}</span>
+        <button type="button" [disabled]="page() >= nombrePages()" (click)="changerPage(page() + 1)">
+          Suivant →
+        </button>
+      </div>
+    }
+  }
+</section>
+
+@if (avisAMasquer(); as avis) {
+  <div class="voile-confirmation" (click)="annulerMasquage()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>Masquer l'avis de « <strong>{{ avis.auteur_nom }}</strong> » ?</p>
+      <label for="am-motif">Motif (obligatoire)</label>
+      <textarea
+        id="am-motif"
+        rows="3"
+        placeholder="Ex. propos injurieux, hors sujet…"
+        [value]="motifMasquage()"
+        (input)="motifMasquage.set($any($event.target).value)"
+      ></textarea>
+      @if (erreurMasquage()) {
+        <p class="erreur-generale">{{ erreurMasquage() }}</p>
+      }
+      <div class="actions-confirmation">
+        <button type="button" class="bouton-secondaire" [disabled]="masquageEnCours()" (click)="annulerMasquage()">
+          Annuler
+        </button>
+        <button
+          type="button"
+          class="bouton-danger"
+          [disabled]="motifInvalide() || masquageEnCours()"
+          (click)="confirmerMasquage()"
+        >
+          {{ masquageEnCours() ? 'Masquage…' : 'Masquer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

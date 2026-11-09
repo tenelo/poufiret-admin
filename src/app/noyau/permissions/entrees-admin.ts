@@ -35,6 +35,13 @@ export const ENTREES_ADMIN: EntreeMenuAdmin[] = [
     capacite: 'gerer_commandes',
   },
   {
+    // Super-admin (toutes capacités à true côté backend) OU capacité gerer_avis.
+    libelle: 'Avis',
+    lien: '/administration/avis',
+    icone: '⭐',
+    capacite: 'gerer_avis',
+  },
+  {
     // Super-admin (toutes capacités à true côté backend) OU capacité gerer_restaurants.
     // Restaurants (restaurateurs, fast-food) et Commerces (boulangerie, pharmacie, librairie,
     // mode) : même liste et même espace établissement, filtrés par gabarit.

@@ -244,6 +244,13 @@ export const routes: Routes = [
             (m) => m.CommandesAdmin,
           ),
       },
+      {
+        path: 'administration/avis',
+        canActivate: [roleGuard(['admin']), capaciteGuard],
+        data: { capacite: 'gerer_avis' },
+        loadComponent: () =>
+          import('./fonctionnalites/administration/avis/avis-admin').then((m) => m.AvisAdminComponent),
+      },
       // Restaurants (gabarit restaurant : restaurateurs, fast-food) et Commerces (boulangerie,
       // pharmacie, librairie, mode) : même liste et même espace établissement, famille passée en
       // data (voir restaurants-liste/familles-etablissements.ts), même capacité gerer_restaurants.

@@ -1,0 +1,66 @@
+<div class="filtres">
+  <!-- Recherche texte libre (commentaire, auteur…) -->
+  <div class="champ champ-large">
+    <label for="fa-recherche">Recherche</label>
+    <input
+      id="fa-recherche"
+      type="search"
+      placeholder="Commentaire, auteur…"
+      [value]="rechercheAffichee()"
+      (input)="saisirRecherche($any($event.target).value)"
+    />
+  </div>
+
+  <div class="champ">
+    <label for="fa-note">Note</label>
+    <select id="fa-note" (change)="changerNote($any($event.target).value)">
+      <option value="" [selected]="filtres().note === ''">Toutes</option>
+      @for (note of optionsNote; track note) {
+        <option [value]="note" [selected]="note.toString() === filtres().note">{{ note }} ★</option>
+      }
+    </select>
+  </div>
+
+  <div class="champ">
+    <label for="fa-visible">Statut</label>
+    <select id="fa-visible" (change)="changerVisible($any($event.target).value)">
+      <option value="" [selected]="filtres().visible === ''">Tous</option>
+      @for (option of optionsVisibilite; track option.valeur) {
+        <option [value]="option.valeur" [selected]="option.valeur === filtres().visible">{{ option.libelle }}</option>
+      }
+    </select>
+  </div>
+
+  @if (optionsObjetType().length > 0) {
+    <div class="champ">
+      <label for="fa-type">Type d'objet</label>
+      <select id="fa-type" (change)="changerObjetType($any($event.target).value)">
+        <option value="" [selected]="filtres().objetType === ''">Tous</option>
+        @for (type of optionsObjetType(); track type) {
+          <option [value]="type" [selected]="type === filtres().objetType">{{ type }}</option>
+        }
+      </select>
+    </div>
+  }
+
+  <!-- Partenaire : pas d'annuaire fourni, recherche texte envoyée telle quelle (même principe qu'Artisan sur les interventions) -->
+  <div class="champ">
+    <label for="fa-partenaire">Partenaire</label>
+    <input
+      id="fa-partenaire"
+      type="search"
+      placeholder="Nom du partenaire…"
+      [value]="partenaireAffiche()"
+      (input)="saisirPartenaire($any($event.target).value)"
+    />
+  </div>
+
+  <div class="champ champ-date">
+    <label for="fa-du">Du</label>
+    <input id="fa-du" type="date" [value]="filtres().du" (change)="changerDu($any($event.target).value)" />
+  </div>
+  <div class="champ champ-date">
+    <label for="fa-au">Au</label>
+    <input id="fa-au" type="date" [value]="filtres().au" (change)="changerAu($any($event.target).value)" />
+  </div>
+</div>
