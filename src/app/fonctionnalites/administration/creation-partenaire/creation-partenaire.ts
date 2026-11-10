@@ -51,6 +51,9 @@ const CHAMPS_CONNUS_EDITION = [
  * en mode édition (si `partenaireId` est fourni) pour modifier un partenaire
  * existant via GET/PATCH /administration/partenaires/<id>/edition/ — même
  * composant, sans duplication (voir la fiche partenaire admin dans partenaires-liste).
+ * En édition uniquement : case « Afficher le WhatsApp aux clients » (whatsapp_externe_actif),
+ * désactivée si aucun numéro WhatsApp n'est renseigné ; l'erreur 400 backend (numéro non
+ * exploitable) est déjà affichée sous le champ WhatsApp via erreurChampEdition('whatsapp').
  */
 @Component({
   selector: 'app-creation-partenaire',
@@ -158,6 +161,7 @@ export class CreationPartenaire implements OnInit, OnDestroy {
     secteur: [''],
     telephone_pro: [''],
     whatsapp: [''],
+    whatsapp_externe_actif: [false],
     email_pro: ['', [Validators.email]],
   });
 
@@ -294,6 +298,7 @@ export class CreationPartenaire implements OnInit, OnDestroy {
         adresse: donnees.adresse,
         telephone_pro: donnees.telephone_pro,
         whatsapp: donnees.whatsapp,
+        whatsapp_externe_actif: donnees.whatsapp_externe_actif,
         email_pro: donnees.email_pro,
       },
       // emitEvent: false — évite que le patch de departement/localite_id ne déclenche leur
@@ -575,6 +580,7 @@ export class CreationPartenaire implements OnInit, OnDestroy {
       secteur: '',
       telephone_pro: '',
       whatsapp: '',
+      whatsapp_externe_actif: false,
       email_pro: '',
     });
   }
@@ -639,6 +645,9 @@ export class CreationPartenaire implements OnInit, OnDestroy {
     if (telephonePro !== undefined) corps.telephone_pro = telephonePro;
     const whatsapp = siTexteModifie(v.whatsapp, original.whatsapp);
     if (whatsapp !== undefined) corps.whatsapp = whatsapp;
+    if (v.whatsapp_externe_actif !== original.whatsapp_externe_actif) {
+      corps.whatsapp_externe_actif = v.whatsapp_externe_actif;
+    }
     const emailPro = siTexteModifie(v.email_pro, original.email_pro);
     if (emailPro !== undefined) corps.email_pro = emailPro;
 

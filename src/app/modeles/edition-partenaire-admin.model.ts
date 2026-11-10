@@ -28,6 +28,10 @@ export interface ReponseEditionPartenaire {
   adresse: string;
   telephone_pro: string;
   whatsapp: string;
+  /** Bouton WhatsApp externe (en plus de la messagerie interne) : affiché publiquement si actif
+   *  ET whatsapp exploitable (voir whatsapp_externe, numéro normalisé qui en résulte, sinon null). */
+  whatsapp_externe_actif: boolean;
+  whatsapp_externe: string | null;
   email_pro: string;
   logo: string | null;
   photo_couverture: string | null;
@@ -49,6 +53,7 @@ export interface RequeteEditionPartenaire {
   adresse?: string;
   telephone_pro?: string;
   whatsapp?: string;
+  whatsapp_externe_actif?: boolean;
   email_pro?: string;
   logo?: File;
   photo_couverture?: File;

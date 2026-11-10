@@ -231,6 +231,20 @@
           </div>
         </div>
 
+        @if (modeEdition()) {
+          <label class="case-categorie">
+            <input
+              type="checkbox"
+              formControlName="whatsapp_externe_actif"
+              [attr.disabled]="!formulaire.controls.whatsapp.value.trim() ? '' : null"
+            />
+            Afficher le WhatsApp aux clients
+          </label>
+          @if (!formulaire.controls.whatsapp.value.trim()) {
+            <p class="aide">Renseignez un numéro WhatsApp pour activer ce bouton.</p>
+          }
+        }
+
         <label for="email_pro">Email professionnel</label>
         <input id="email_pro" type="email" formControlName="email_pro" />
         @if (formulaire.controls.email_pro.invalid && formulaire.controls.email_pro.touched) {

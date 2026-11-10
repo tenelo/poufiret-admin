@@ -25,7 +25,10 @@ type ChampImage = 'logo' | 'photo_couverture';
  * Page "Mon profil" de l'espace partenaire : identité du compte (carte
  * partagée CarteMonCompte, GET/PATCH /auth/moi/) + consultation et
  * modification des informations de la vitrine (GET/PATCH
- * /auth/mon-profil-partenaire/).
+ * /auth/mon-profil-partenaire/). Inclut la case « Afficher le WhatsApp aux
+ * clients » (whatsapp_externe_actif), désactivée si aucun numéro WhatsApp
+ * n'est renseigné ; l'erreur 400 backend (numéro non exploitable) est
+ * affichée sous le champ WhatsApp (voir erreurWhatsapp).
  */
 @Component({
   selector: 'app-mon-profil',
@@ -45,6 +48,8 @@ export class MonProfil implements OnInit, OnDestroy {
   readonly enregistrementEnCours = signal(false);
   readonly messageErreur = signal<string | null>(null);
   readonly messageSucces = signal<string | null>(null);
+  // Erreur 400 backend sur le champ whatsapp (bouton externe actif sans numéro exploitable).
+  readonly erreurWhatsapp = signal<string | null>(null);
 
   readonly profil = signal<ProfilPartenaire | null>(null);
 
@@ -92,6 +97,7 @@ export class MonProfil implements OnInit, OnDestroy {
     description_acces: [''],
     telephone_pro: [''],
     whatsapp: [''],
+    whatsapp_externe_actif: [false],
     email_pro: ['', [Validators.email]],
   });
 
@@ -209,6 +215,7 @@ export class MonProfil implements OnInit, OnDestroy {
     this.messageSucces.set(null);
     this.messageErreurImages.set(null);
     this.messageSuccesImages.set(null);
+    this.erreurWhatsapp.set(null);
     this.modeEdition.set(false);
   }
 
@@ -223,6 +230,7 @@ export class MonProfil implements OnInit, OnDestroy {
     this.enregistrementEnCours.set(true);
     this.messageErreur.set(null);
     this.messageSucces.set(null);
+    this.erreurWhatsapp.set(null);
 
     this.profilPartenaireService.modifierProfil(donnees).subscribe({
       next: (profil) => {
@@ -233,6 +241,11 @@ export class MonProfil implements OnInit, OnDestroy {
       },
       error: (erreur: unknown) => {
         this.enregistrementEnCours.set(false);
+        const erreurWhatsapp = this.erreurChamp(erreur, 'whatsapp');
+        if (erreurWhatsapp) {
+          this.erreurWhatsapp.set(erreurWhatsapp);
+          return;
+        }
         this.messageErreur.set(this.extraireMessageErreur(erreur));
       },
     });
@@ -251,6 +264,7 @@ export class MonProfil implements OnInit, OnDestroy {
       description_acces: v.description_acces,
       telephone_pro: v.telephone_pro,
       whatsapp: v.whatsapp,
+      whatsapp_externe_actif: v.whatsapp_externe_actif,
       email_pro: v.email_pro,
     };
   }
@@ -379,6 +393,7 @@ export class MonProfil implements OnInit, OnDestroy {
         description_acces: profil.description_acces,
         telephone_pro: profil.telephone_pro,
         whatsapp: profil.whatsapp,
+        whatsapp_externe_actif: profil.whatsapp_externe_actif,
         email_pro: profil.email_pro,
       },
       // emitEvent: false — évite que le patch de localite_id ne réinitialise quartier_id
@@ -431,5 +446,18 @@ export class MonProfil implements OnInit, OnDestroy {
       }
     }
     return "Une erreur est survenue. Veuillez réessayer.";
+  }
+
+  /** Premier message DRF ({champ: ["msg"]} ou {champ: "msg"}) pour un champ donné, sinon null. */
+  private erreurChamp(erreur: unknown, champ: string): string | null {
+    if (!(erreur instanceof HttpErrorResponse) || erreur.status !== 400) {
+      return null;
+    }
+    const corps = erreur.error;
+    const source = corps?.details && typeof corps.details === 'object' ? corps.details : corps;
+    const valeur = source?.[champ];
+    if (typeof valeur === 'string') return valeur;
+    if (Array.isArray(valeur) && typeof valeur[0] === 'string') return valeur[0];
+    return null;
   }
 }

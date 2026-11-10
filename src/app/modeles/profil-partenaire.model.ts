@@ -42,6 +42,10 @@ export interface ProfilPartenaire {
   description_acces: string;
   telephone_pro: string;
   whatsapp: string;
+  /** Bouton WhatsApp externe (en plus de la messagerie interne) : affiché publiquement si actif
+   *  ET whatsapp exploitable (voir whatsapp_externe, numéro normalisé qui en résulte, sinon null). */
+  whatsapp_externe_actif: boolean;
+  whatsapp_externe: string | null;
   email_pro: string;
 
   // Champs en lecture seule : pilotés par l'administration, affichés mais non modifiables ici.
@@ -78,6 +82,7 @@ export type RequeteMiseAJourProfilPartenaire = Partial<
     | 'description_acces'
     | 'telephone_pro'
     | 'whatsapp'
+    | 'whatsapp_externe_actif'
     | 'email_pro'
   >
 >;
