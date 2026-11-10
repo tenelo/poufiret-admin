@@ -1,0 +1,42 @@
+<section class="page-statistiques-usage">
+  <h1>Statistiques d'usage</h1>
+
+  <div class="filtres">
+    <div class="champ">
+      <label for="su-periode">Période</label>
+      <select id="su-periode" (change)="changerPeriode($any($event.target).value)">
+        <option value="7j" [selected]="periodeChoix() === '7j'">7 derniers jours</option>
+        <option value="30j" [selected]="periodeChoix() === '30j'">30 derniers jours</option>
+        <option value="90j" [selected]="periodeChoix() === '90j'">90 derniers jours</option>
+        <option value="perso" [selected]="periodeChoix() === 'perso'">Personnalisée</option>
+      </select>
+    </div>
+
+    @if (periodeChoix() === 'perso') {
+      <div class="champ champ-date">
+        <label for="su-du">Du</label>
+        <input id="su-du" type="date" [value]="duPerso()" (change)="changerDuPerso($any($event.target).value)" />
+      </div>
+      <div class="champ champ-date">
+        <label for="su-au">Au</label>
+        <input id="su-au" type="date" [value]="auPerso()" (change)="changerAuPerso($any($event.target).value)" />
+      </div>
+    }
+
+    <div class="champ">
+      <label for="su-departement">Département</label>
+      <select id="su-departement" (change)="changerDepartement($any($event.target).value)">
+        <option value="" [selected]="departement() === ''">Tous</option>
+        @for (dep of departements(); track dep.id) {
+          <option [value]="dep.id" [selected]="dep.id === departement()">{{ dep.nom }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <app-resume-usage [filtres]="filtres()" />
+  <app-activite-usage [filtres]="filtres()" />
+  <app-recherches-usage [filtres]="filtres()" />
+  <app-entonnoir-usage [filtres]="filtres()" />
+  <app-partenaires-usage [filtres]="filtres()" />
+</section>

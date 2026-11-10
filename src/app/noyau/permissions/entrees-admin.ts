@@ -26,7 +26,19 @@ export interface EntreeMenuAdmin {
 }
 
 export const ENTREES_ADMIN: EntreeMenuAdmin[] = [
-  { libelle: 'Tableau de bord', lien: '/tableau-de-bord', icone: '📊', capacite: 'voir_stats' },
+  {
+    libelle: 'Tableau de bord',
+    icone: '📊',
+    sousEntrees: [
+      { libelle: "Vue d'ensemble", lien: '/tableau-de-bord', icone: '📊', capacite: 'voir_stats' },
+      {
+        libelle: "Statistiques d'usage",
+        lien: '/administration/statistiques-usage',
+        icone: '📈',
+        capacite: 'voir_stats',
+      },
+    ],
+  },
   {
     // Super-admin (toutes capacités à true côté backend) OU capacité gerer_commandes.
     libelle: 'Commandes',

@@ -1,0 +1,89 @@
+<section class="bloc">
+  <div class="entete-bloc">
+    <h2>Recherches</h2>
+    @if (peutOuvrirDictionnaire()) {
+      <a class="bouton-secondaire" [routerLink]="['/administration/parametres']" [queryParams]="{ onglet: 'recherche' }">
+        Ouvrir le dictionnaire de recherche
+      </a>
+    }
+  </div>
+
+  @if (chargementEnCours()) {
+    <p class="indice">Chargement…</p>
+  } @else if (erreur()) {
+    <p class="erreur-generale">{{ erreur() }}</p>
+  } @else if (donnees(); as d) {
+    <div class="grille-kpi">
+      <div class="carte-kpi">
+        <span class="libelle">Recherches</span>
+        <span class="valeur">{{ formaterNombre(d.totaux.nb) }}</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="libelle">Taux de clic</span>
+        <span class="valeur">{{ formaterTaux(d.totaux.taux_clic) }}</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="libelle">Sans résultat</span>
+        <span class="valeur">{{ formaterNombre(d.totaux.nb_sans_resultat) }}</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="libelle">Taux sans résultat</span>
+        <span class="valeur">{{ formaterTaux(d.totaux.taux_sans_resultat) }}</span>
+      </div>
+    </div>
+
+    <div class="grille-deux">
+      <div class="conteneur-tableau">
+        <h3>Termes les plus recherchés</h3>
+        @if (d.top_termes.length === 0) {
+          <p class="etat-vide">Aucune recherche sur cette période.</p>
+        } @else {
+          <table class="tableau">
+            <thead>
+              <tr>
+                <th>Terme</th>
+                <th>Nb</th>
+                <th>Taux de clic</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (ligne of d.top_termes; track ligne.terme_normalise) {
+                <tr>
+                  <td>{{ ligne.terme_normalise }}</td>
+                  <td>{{ formaterNombre(ligne.nb) }}</td>
+                  <td>{{ formaterTaux(ligne.taux_clic) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+
+      <div class="conteneur-tableau">
+        <h3>Termes sans résultat</h3>
+        @if (d.top_sans_resultat.length === 0) {
+          <p class="etat-vide">Aucun terme sans résultat sur cette période.</p>
+        } @else {
+          <table class="tableau">
+            <thead>
+              <tr>
+                <th>Terme</th>
+                <th>Nb</th>
+                <th>Dernière</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (ligne of d.top_sans_resultat; track ligne.terme_normalise) {
+                <tr>
+                  <td>{{ ligne.terme_normalise }}</td>
+                  <td>{{ formaterNombre(ligne.nb) }}</td>
+                  <td>{{ formaterDate(ligne.derniere_recherche) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+  }
+</section>

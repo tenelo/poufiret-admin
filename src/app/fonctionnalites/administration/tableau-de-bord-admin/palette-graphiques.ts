@@ -27,6 +27,11 @@ export function formaterNombre(valeur: number): string {
   return Math.round(valeur).toLocaleString('fr-FR');
 }
 
+/** Formate un ratio (0 à 1) en pourcentage à 1 décimale ; "—" si null (dénominateur nul côté backend). */
+export function formaterTaux(valeur: number | null): string {
+  return valeur === null ? '—' : `${(Math.round(valeur * 1000) / 10).toLocaleString('fr-FR')} %`;
+}
+
 /**
  * Formate une durée en secondes en texte lisible français :
  * < 60 s → "45 s" ; < 3600 s → "7 min 09 s" ; ≥ 3600 s → "1 h 02 min".

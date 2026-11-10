@@ -1,0 +1,23 @@
+<section class="bloc">
+  <h2>Chiffres clés</h2>
+
+  @if (chargementEnCours()) {
+    <p class="indice">Chargement…</p>
+  } @else if (erreur()) {
+    <p class="erreur-generale">{{ erreur() }}</p>
+  } @else {
+    <div class="grille-kpi">
+      @for (carte of cartes(); track carte.cle) {
+        <div class="carte-kpi">
+          <span class="libelle">{{ carte.libelle }}</span>
+          <span class="valeur">{{ carte.valeur }}</span>
+          @if (carte.evolution !== null) {
+            <span class="evolution" [class.evolution-positive]="carte.sensPositif" [class.evolution-negative]="!carte.sensPositif">
+              {{ carte.sensPositif ? '▲' : '▼' }} {{ carte.evolution }} vs période précédente
+            </span>
+          }
+        </div>
+      }
+    </div>
+  }
+</section>

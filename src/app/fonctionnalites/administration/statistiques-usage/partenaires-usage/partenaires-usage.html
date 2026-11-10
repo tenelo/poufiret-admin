@@ -1,0 +1,52 @@
+<section class="bloc">
+  <h2>Partenaires</h2>
+
+  @if (chargementEnCours()) {
+    <p class="indice">Chargement…</p>
+  } @else if (erreur()) {
+    <p class="erreur-generale">{{ erreur() }}</p>
+  } @else if (donnees(); as d) {
+    @if (d.resultats.length === 0) {
+      <p class="etat-vide">Aucun partenaire actif sur cette période.</p>
+    } @else {
+      <div class="conteneur-tableau">
+        <table class="tableau">
+          <thead>
+            <tr>
+              <th class="triable" (click)="changerTri('nom_commerce')">Partenaire</th>
+              <th class="triable" (click)="changerTri('vues_vitrine')">Vues vitrine</th>
+              <th class="triable" (click)="changerTri('appels')">Appels</th>
+              <th class="triable" (click)="changerTri('whatsapp')">WhatsApp</th>
+              <th class="triable" (click)="changerTri('itineraires')">Itinéraires</th>
+              <th class="triable" (click)="changerTri('contacts')">Contacts</th>
+              <th class="triable" (click)="changerTri('commandes')">Commandes</th>
+              <th class="triable" (click)="changerTri('taux_contact_commande')">Contact → commande</th>
+              <th class="triable" (click)="changerTri('taux_vue_contact')">Vue → contact</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (ligne of d.resultats; track ligne.id) {
+              <tr>
+                <td>{{ ligne.nom_commerce }}</td>
+                <td>{{ formaterNombre(ligne.vues_vitrine) }}</td>
+                <td>{{ formaterNombre(ligne.appels) }}</td>
+                <td>{{ formaterNombre(ligne.whatsapp) }}</td>
+                <td>{{ formaterNombre(ligne.itineraires) }}</td>
+                <td>{{ formaterNombre(ligne.contacts) }}</td>
+                <td>{{ formaterNombre(ligne.commandes) }}</td>
+                <td>{{ formaterTaux(ligne.taux_contact_commande) }}</td>
+                <td>{{ formaterTaux(ligne.taux_vue_contact) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <button type="button" [disabled]="page() <= 1" (click)="pagePrecedente()">← Précédent</button>
+        <span>Page {{ page() }} / {{ nbPages() }} ({{ formaterNombre(d.count) }} partenaires)</span>
+        <button type="button" [disabled]="page() >= nbPages()" (click)="pageSuivante()">Suivant →</button>
+      </div>
+    }
+  }
+</section>

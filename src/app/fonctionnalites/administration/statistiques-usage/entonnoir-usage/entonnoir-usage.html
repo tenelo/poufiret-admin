@@ -1,0 +1,152 @@
+<section class="bloc">
+  <h2>Entonnoir panier → commande → livraison</h2>
+
+  @if (chargementEnCours()) {
+    <p class="indice">Chargement…</p>
+  } @else if (erreur()) {
+    <p class="erreur-generale">{{ erreur() }}</p>
+  } @else if (donnees(); as d) {
+    <div class="funnel">
+      <div class="etape-funnel">
+        <span class="valeur">{{ formaterNombre(d.nb_paniers_avec_ajout) }}</span>
+        <span class="libelle">Paniers avec ajout</span>
+      </div>
+      <span class="fleche" [title]="'Taux de conversion'">→ {{ formaterTaux(d.taux_conversion) }} →</span>
+      <div class="etape-funnel">
+        <span class="valeur">{{ formaterNombre(d.nb_commandes) }}</span>
+        <span class="libelle">Commandes</span>
+      </div>
+      <span class="fleche" [title]="'Taux de livraison'">→ {{ formaterTaux(d.taux_livraison) }} →</span>
+      <div class="etape-funnel">
+        <span class="valeur">{{ formaterNombre(d.nb_livrees) }}</span>
+        <span class="libelle">Livrées</span>
+      </div>
+    </div>
+
+    <div class="grille-kpi">
+      <div class="carte-kpi">
+        <span class="libelle">Ajouts au panier</span>
+        <span class="valeur">{{ formaterNombre(d.nb_ajouts_panier) }}</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="libelle">Annulées</span>
+        <span class="valeur">{{ formaterNombre(d.nb_annulees) }} ({{ formaterTaux(d.taux_annulation) }})</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="libelle">Refusées</span>
+        <span class="valeur">{{ formaterNombre(d.nb_refusees) }}</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="libelle">Expirées</span>
+        <span class="valeur">{{ formaterNombre(d.nb_expirees) }}</span>
+      </div>
+      <div class="carte-kpi">
+        <span class="libelle">Montant livré</span>
+        <span class="valeur">{{ formaterMontant(d.montant_livre) }}</span>
+      </div>
+    </div>
+
+    <div class="grille-deux">
+      <div class="conteneur-tableau">
+        <h3>Motifs d'annulation</h3>
+        @if (d.annulations.motifs.length === 0) {
+          <p class="etat-vide">Aucune annulation sur cette période.</p>
+        } @else {
+          <table class="tableau">
+            <thead>
+              <tr>
+                <th>Motif</th>
+                <th>Nb</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (ligne of d.annulations.motifs; track ligne.motif) {
+                <tr>
+                  <td>{{ ligne.motif }}</td>
+                  <td>{{ formaterNombre(ligne.nb) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <h3 class="sous-titre">Par acteur</h3>
+          <table class="tableau">
+            <thead>
+              <tr>
+                <th>Acteur</th>
+                <th>Nb</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (ligne of d.annulations.par_acteur; track ligne.acteur_role) {
+                <tr>
+                  <td>{{ libelleActeur(ligne.acteur_role) }}</td>
+                  <td>{{ formaterNombre(ligne.nb) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+
+      <div class="conteneur-tableau">
+        <h3>Motifs de refus</h3>
+        @if (d.refus.motifs.length === 0) {
+          <p class="etat-vide">Aucun refus sur cette période.</p>
+        } @else {
+          <table class="tableau">
+            <thead>
+              <tr>
+                <th>Motif</th>
+                <th>Nb</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (ligne of d.refus.motifs; track ligne.motif) {
+                <tr>
+                  <td>{{ ligne.motif }}</td>
+                  <td>{{ formaterNombre(ligne.nb) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+
+    <div class="conteneur-tableau conteneur-pleine-largeur">
+      <h3>Par catégorie</h3>
+      @if (d.par_categorie.length === 0) {
+        <p class="etat-vide">Aucune donnée par catégorie sur cette période.</p>
+      } @else {
+        <table class="tableau">
+          <thead>
+            <tr>
+              <th>Catégorie</th>
+              <th>Ajouts</th>
+              <th>Paniers</th>
+              <th>Commandes</th>
+              <th>Livrées</th>
+              <th>Annulées</th>
+              <th>Conversion</th>
+              <th>Livraison</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (ligne of d.par_categorie; track ligne.categorie_id) {
+              <tr>
+                <td>{{ ligne.categorie_nom }}</td>
+                <td>{{ formaterNombre(ligne.nb_ajouts_panier) }}</td>
+                <td>{{ formaterNombre(ligne.nb_paniers) }}</td>
+                <td>{{ formaterNombre(ligne.nb_commandes) }}</td>
+                <td>{{ formaterNombre(ligne.nb_livrees) }}</td>
+                <td>{{ formaterNombre(ligne.nb_annulees) }}</td>
+                <td>{{ formaterTaux(ligne.taux_conversion) }}</td>
+                <td>{{ formaterTaux(ligne.taux_livraison) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+</section>

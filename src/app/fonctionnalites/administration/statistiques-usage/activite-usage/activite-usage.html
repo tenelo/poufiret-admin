@@ -1,0 +1,34 @@
+<section class="bloc">
+  <h2>Activité</h2>
+
+  @if (chargementEnCours()) {
+    <p class="indice">Chargement…</p>
+  } @else if (erreur()) {
+    <p class="erreur-generale">{{ erreur() }}</p>
+  } @else if (donnees(); as d) {
+    <div class="ligne-stat">
+      <span class="libelle">Heures de pointe</span>
+      <span class="valeur">{{ libelleHeuresPointe() }}</span>
+    </div>
+    <div class="ligne-stat">
+      <span class="libelle">Jour de pointe</span>
+      <span class="valeur">{{ d.jour_de_pointe ?? '—' }}</span>
+    </div>
+
+    <div class="carte-graphique">
+      <h3>Par jour</h3>
+      <app-graphique type="line" [data]="donneesParJour()" [options]="optionsLegendeBas" />
+    </div>
+
+    <div class="grille-deux">
+      <div class="carte-graphique">
+        <h3>Par heure</h3>
+        <app-graphique type="bar" [data]="donneesParHeure()" [options]="optionsBarresEmpilees" />
+      </div>
+      <div class="carte-graphique">
+        <h3>Par jour de la semaine</h3>
+        <app-graphique type="bar" [data]="donneesParJourSemaine()" [options]="optionsBarresEmpilees" />
+      </div>
+    </div>
+  }
+</section>

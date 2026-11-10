@@ -1,0 +1,63 @@
+.bloc {
+  margin-bottom: 2rem;
+
+  h2 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    color: #1a1a1a;
+  }
+}
+
+.indice {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.erreur-generale {
+  padding: 0.6rem 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.grille-kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.carte-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  .libelle {
+    font-size: 0.8rem;
+    color: #6b7280;
+  }
+
+  .valeur {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .evolution {
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .evolution-positive {
+    color: #16a34a;
+  }
+
+  .evolution-negative {
+    color: #dc2626;
+  }
+}

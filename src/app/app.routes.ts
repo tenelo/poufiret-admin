@@ -41,6 +41,15 @@ export const routes: Routes = [
           import('./fonctionnalites/tableau-de-bord/tableau-de-bord').then((m) => m.TableauDeBord),
       },
       {
+        path: 'administration/statistiques-usage',
+        canActivate: [roleGuard(['admin']), capaciteGuard],
+        data: { capacite: 'voir_stats' },
+        loadComponent: () =>
+          import('./fonctionnalites/administration/statistiques-usage/statistiques-usage').then(
+            (m) => m.StatistiquesUsage,
+          ),
+      },
+      {
         path: 'mon-profil',
         canActivate: [roleGuard(['partenaire'])],
         loadComponent: () =>

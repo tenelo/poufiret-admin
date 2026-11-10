@@ -1,0 +1,153 @@
+.bloc {
+  margin-bottom: 2rem;
+
+  h2 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    color: #1a1a1a;
+  }
+}
+
+.indice {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.erreur-generale {
+  padding: 0.6rem 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.funnel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.etape-funnel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 1rem 1.25rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  min-width: 140px;
+
+  .valeur {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .libelle {
+    font-size: 0.78rem;
+    color: #6b7280;
+  }
+}
+
+.fleche {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #4f46e5;
+  white-space: nowrap;
+}
+
+.grille-kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.carte-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  .libelle {
+    font-size: 0.78rem;
+    color: #6b7280;
+  }
+
+  .valeur {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+}
+
+.grille-deux {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  @media (min-width: 800px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.conteneur-tableau {
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow-x: auto;
+
+  h3 {
+    margin: 0 0 0.75rem;
+    font-size: 0.9rem;
+    color: #1a1a1a;
+  }
+
+  .sous-titre {
+    margin-top: 1rem;
+  }
+}
+
+.conteneur-pleine-largeur {
+  width: 100%;
+}
+
+.etat-vide {
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+
+.tableau {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+
+  th,
+  td {
+    padding: 0.5rem 0.6rem;
+    text-align: left;
+  }
+
+  th {
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  td {
+    border-bottom: 1px solid #f3f4f6;
+    color: #374151;
+  }
+}
