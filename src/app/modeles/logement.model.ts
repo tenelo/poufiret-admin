@@ -138,6 +138,10 @@ export interface LoueurAdminListe {
   /** Vente (logements, véhicules) : annonces à vendre (vente/location_vente, non vendues) et vendues. */
   nb_a_vendre: number;
   nb_vendus: number;
+  // ---- Visibilité (apps.administration.views_visibilite) ----
+  est_visible: boolean;
+  est_supprime: boolean;
+  est_public: boolean;
 }
 
 export interface ReponseLoueursAdmin {

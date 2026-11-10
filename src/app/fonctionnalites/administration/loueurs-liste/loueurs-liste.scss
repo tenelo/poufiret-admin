@@ -160,7 +160,6 @@
   border-radius: 12px;
   text-align: left;
   font-family: inherit;
-  cursor: pointer;
 
   &:hover {
     border-color: #c7d2fe;
@@ -254,4 +253,154 @@
 .indicateur-vendu {
   background: #fef2f2;
   color: #b91c1c;
+}
+
+// ---- Actif/inactif, suppression douce, restauration (apps.administration.views_visibilite) ----
+
+.case-afficher-supprimes {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #374151;
+
+  input {
+    width: auto;
+  }
+}
+
+.message-succes {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.85rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #15803d;
+  font-size: 0.85rem;
+}
+
+.carte-loueur.carte-inactive {
+  opacity: 0.65;
+}
+
+.badge-supprime {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.zone-cliquable {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.pied-carte-loueur {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.interrupteur-actif {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: #374151;
+  white-space: nowrap;
+
+  input {
+    width: auto;
+  }
+}
+
+.bouton-action {
+  padding: 0.3rem 0.65rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    background: #f9fafb;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.bouton-supprimer {
+  border-color: #fecaca;
+  color: #b91c1c;
+
+  &:hover {
+    background: #fef2f2;
+  }
+}
+
+.boite-confirmation-ligne {
+  margin-top: 0.6rem;
+  padding: 0.75rem 0.9rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: #7f1d1d;
+
+  p {
+    margin: 0 0 0.6rem;
+  }
+}
+
+.actions-confirmation-ligne {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.bouton-secondaire-mini {
+  padding: 0.4rem 0.8rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+
+  &:hover {
+    background: #f3f4f6;
+  }
+}
+
+.bouton-principal-mini {
+  padding: 0.4rem 0.9rem;
+  background: #b91c1c;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }

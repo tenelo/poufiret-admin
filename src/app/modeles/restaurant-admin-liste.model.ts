@@ -16,6 +16,10 @@ export interface RestaurantAdminListe {
   commandes_du_jour: number;
   /** restaurant | boulangerie | pharmacie | mode | librairie | generique (voir Gabarit). */
   gabarit?: string | null;
+  // ---- Visibilité (apps.administration.views_visibilite) ----
+  est_visible: boolean;
+  est_supprime: boolean;
+  est_public: boolean;
 }
 
 /** Corps exact de GET /api/v1/restaurants/admin/ : pas de pagination, pas de forme alternative. */

@@ -5,6 +5,7 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { PartenairesListeService } from './partenaires-liste.service';
 import { DialogInfosPartenaire } from './dialog-infos-partenaire/dialog-infos-partenaire';
+import { PartenaireVisibiliteService } from '../partenaire-visibilite.service';
 import { extraireMessageErreur, erreurChamp } from '../tableau-de-bord-admin/extraire-message-erreur';
 import { formaterLocalisation } from '../../../partage/formater-localisation';
 import { CoordonneesGps, PositionGps } from '../../../partage/position-gps/position-gps';
@@ -39,6 +40,7 @@ const DEBOUNCE_RECHERCHE_MS = 350;
 })
 export class PartenairesListe implements OnInit {
   private readonly service = inject(PartenairesListeService);
+  private readonly visibiliteService = inject(PartenaireVisibiliteService);
   private readonly permissionsService = inject(PermissionsService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -57,6 +59,31 @@ export class PartenairesListe implements OnInit {
   readonly filtreType = signal('');
   readonly filtreStatut = signal<StatutPartenaireListe | ''>('');
   readonly filtreDepartement = signal<number | ''>('');
+  // ---- Actif / inactif, suppression douce, restauration (apps.administration.views_visibilite) ----
+  /** '' = tous (hors supprimés), '1' = actifs, '0' = inactifs. */
+  readonly filtreVisible = signal<'' | '1' | '0'>('');
+  readonly afficherSupprimes = signal(false);
+  readonly messageSucces = signal<string | null>(null);
+  readonly visibiliteEnCoursId = signal<number | null>(null);
+  readonly suppressionEnCoursId = signal<number | null>(null);
+  readonly restaurationEnCoursId = signal<number | null>(null);
+  readonly partenaireAConfirmerSuppression = signal<PartenaireListe | null>(null);
+
+  readonly peutMasquer = computed(
+    () =>
+      (this.permissionsService.permissionsActuelles()?.isSuperuser ?? false) ||
+      this.permissionsService.aLaCapacite('masquer_partenaire'),
+  );
+  readonly peutSupprimer = computed(
+    () =>
+      (this.permissionsService.permissionsActuelles()?.isSuperuser ?? false) ||
+      this.permissionsService.aLaCapacite('supprimer_soft_partenaire'),
+  );
+  readonly peutRestaurer = computed(
+    () =>
+      (this.permissionsService.permissionsActuelles()?.isSuperuser ?? false) ||
+      this.permissionsService.aLaCapacite('restaurer_partenaire'),
+  );
 
   readonly exportEnCours = signal(false);
   readonly erreurExport = signal<string | null>(null);
@@ -185,6 +212,8 @@ export class PartenairesListe implements OnInit {
       type: this.filtreType(),
       statut: this.filtreStatut(),
       departement: this.filtreDepartement(),
+      visible: this.filtreVisible(),
+      supprimes: this.afficherSupprimes(),
     };
   }
 
@@ -205,6 +234,16 @@ export class PartenairesListe implements OnInit {
 
   changerFiltreDepartement(valeur: string): void {
     this.filtreDepartement.set(valeur ? Number(valeur) : '');
+    this.charger();
+  }
+
+  changerFiltreVisible(valeur: string): void {
+    this.filtreVisible.set(valeur as '' | '1' | '0');
+    this.charger();
+  }
+
+  changerAfficherSupprimes(valeur: boolean): void {
+    this.afficherSupprimes.set(valeur);
     this.charger();
   }
 
@@ -424,5 +463,93 @@ export class PartenairesListe implements OnInit {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  // ---- Actif / inactif (bascule immédiate) ----
+
+  /** Clic sur la case « Actif » : bascule immédiate, pas de formulaire ni de confirmation.
+   *  En cas d'erreur, la liste n'est pas modifiée : la case revient donc à sa position. */
+  basculerVisibilite(partenaire: PartenaireListe): void {
+    if (this.visibiliteEnCoursId()) return;
+    this.visibiliteEnCoursId.set(partenaire.id);
+    this.erreurChargement.set(null);
+    this.messageSucces.set(null);
+
+    this.visibiliteService.changerVisibilite(partenaire.id, !partenaire.est_visible).subscribe({
+      next: (etat) => {
+        this.visibiliteEnCoursId.set(null);
+        this.remplacer(partenaire.id, etat.est_visible, partenaire.est_supprime);
+        this.messageSucces.set(
+          etat.est_visible
+            ? `« ${partenaire.nom_commerce} » est maintenant actif.`
+            : `« ${partenaire.nom_commerce} » est maintenant inactif.`,
+        );
+      },
+      error: (erreur: unknown) => {
+        this.visibiliteEnCoursId.set(null);
+        this.erreurChargement.set(extraireMessageErreur(erreur));
+      },
+    });
+  }
+
+  // ---- Suppression douce (confirmation) / restauration ----
+
+  demanderSuppression(partenaire: PartenaireListe): void {
+    this.messageSucces.set(null);
+    this.partenaireAConfirmerSuppression.set(partenaire);
+  }
+
+  annulerSuppression(): void {
+    if (this.suppressionEnCoursId()) return;
+    this.partenaireAConfirmerSuppression.set(null);
+  }
+
+  confirmerSuppression(): void {
+    const partenaire = this.partenaireAConfirmerSuppression();
+    if (!partenaire || this.suppressionEnCoursId()) return;
+    this.suppressionEnCoursId.set(partenaire.id);
+
+    this.visibiliteService.supprimer(partenaire.id).subscribe({
+      next: (etat) => {
+        this.suppressionEnCoursId.set(null);
+        this.partenaireAConfirmerSuppression.set(null);
+        this.remplacer(partenaire.id, etat.est_visible, etat.est_supprime);
+        this.messageSucces.set(
+          `« ${partenaire.nom_commerce} » a été supprimé (récupérable via « Afficher les supprimés »).`,
+        );
+      },
+      error: (erreur: unknown) => {
+        this.suppressionEnCoursId.set(null);
+        this.erreurChargement.set(extraireMessageErreur(erreur));
+      },
+    });
+  }
+
+  restaurer(partenaire: PartenaireListe): void {
+    if (this.restaurationEnCoursId()) return;
+    this.restaurationEnCoursId.set(partenaire.id);
+    this.messageSucces.set(null);
+
+    this.visibiliteService.restaurer(partenaire.id).subscribe({
+      next: (etat) => {
+        this.restaurationEnCoursId.set(null);
+        if (this.afficherSupprimes()) {
+          this.charger();
+        } else {
+          this.remplacer(partenaire.id, etat.est_visible, etat.est_supprime);
+        }
+        this.messageSucces.set(`« ${partenaire.nom_commerce} » a été restauré.`);
+      },
+      error: (erreur: unknown) => {
+        this.restaurationEnCoursId.set(null);
+        this.erreurChargement.set(extraireMessageErreur(erreur));
+      },
+    });
+  }
+
+  private remplacer(id: number, estVisible: boolean, estSupprime: boolean): void {
+    this.partenaires.update((liste) =>
+      liste.map((p) => (p.id === id ? { ...p, est_visible: estVisible, est_supprime: estSupprime } : p)),
+    );
   }
 }

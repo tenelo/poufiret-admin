@@ -30,6 +30,8 @@ export interface PartenaireListe {
   statut: StatutPartenaireListe;
   statut_libelle: string;
   est_visible: boolean;
+  /** Suppression douce (apps.administration.views_visibilite), récupérable via « Restaurer ». */
+  est_supprime: boolean;
   badge_certifie: boolean;
   est_faveur: boolean;
   plan_libelle: string;
@@ -49,6 +51,10 @@ export interface FiltresPartenairesListe {
   type?: string;
   statut?: StatutPartenaireListe | '';
   departement?: number | '';
+  /** '1' = actifs (visibles), '0' = inactifs (masqués), '' = tous. */
+  visible?: '1' | '0' | '';
+  /** true = n'afficher que les partenaires supprimés (soft), pour les restaurer. */
+  supprimes?: boolean;
 }
 
 export const OPTIONS_STATUT_PARTENAIRE_LISTE: { valeur: StatutPartenaireListe | ''; libelle: string }[] = [

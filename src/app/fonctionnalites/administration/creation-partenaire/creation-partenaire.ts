@@ -4,9 +4,11 @@ import { RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { CreationPartenaireService } from './creation-partenaire.service';
+import { PartenaireVisibiliteService } from '../partenaire-visibilite.service';
 import { extraireMessageErreur, erreurChamp } from '../tableau-de-bord-admin/extraire-message-erreur';
 import { LocaliteQuartierService } from '../../../noyau/geo/localite-quartier.service';
 import { PermissionsService } from '../../../noyau/permissions/permissions.service';
+import { EtatVisibilitePartenaire } from '../../../modeles/partenaire-visibilite.model';
 import { CoordonneesGps, PositionGps } from '../../../partage/position-gps/position-gps';
 import { Departement } from '../../../modeles/departement.model';
 import { OptionGeo } from '../../../modeles/geographie.model';
@@ -54,6 +56,9 @@ const CHAMPS_CONNUS_EDITION = [
  * En édition uniquement : case « Afficher le WhatsApp aux clients » (whatsapp_externe_actif),
  * désactivée si aucun numéro WhatsApp n'est renseigné ; l'erreur 400 backend (numéro non
  * exploitable) est déjà affichée sous le champ WhatsApp via erreurChampEdition('whatsapp').
+ * Également en édition uniquement : case « Actif » (visible dans l'app), qui bascule
+ * immédiatement via PartenaireVisibiliteService (endpoint dédié, hors de ce formulaire — l'état
+ * n'est donc pas renvoyé par GET/PATCH .../edition/, d'où un chargement séparé à l'ouverture).
  */
 @Component({
   selector: 'app-creation-partenaire',
@@ -64,6 +69,7 @@ const CHAMPS_CONNUS_EDITION = [
 export class CreationPartenaire implements OnInit, OnDestroy {
   private readonly formBuilder = inject(FormBuilder);
   private readonly service = inject(CreationPartenaireService);
+  private readonly visibiliteService = inject(PartenaireVisibiliteService);
   private readonly localiteQuartierService = inject(LocaliteQuartierService);
   private readonly permissionsService = inject(PermissionsService);
   private readonly destroyRef = inject(DestroyRef);
@@ -82,6 +88,17 @@ export class CreationPartenaire implements OnInit, OnDestroy {
       (this.permissionsService.permissionsActuelles()?.isSuperuser ?? false) ||
       this.permissionsService.aLaCapacite('gerer_geographie'),
   );
+
+  // ---- Actif / inactif (apps.administration.views_visibilite, édition uniquement) ----
+  readonly peutMasquer = computed(
+    () =>
+      (this.permissionsService.permissionsActuelles()?.isSuperuser ?? false) ||
+      this.permissionsService.aLaCapacite('masquer_partenaire'),
+  );
+  readonly etatVisibilite = signal<EtatVisibilitePartenaire | null>(null);
+  readonly chargementVisibilite = signal(false);
+  readonly basculeVisibiliteEnCours = signal(false);
+  readonly erreurVisibilite = signal<string | null>(null);
 
   readonly departements = signal<Departement[]>([]);
   readonly chargementDepartements = signal(true);
@@ -270,6 +287,39 @@ export class CreationPartenaire implements OnInit, OnDestroy {
       error: (erreur: unknown) => {
         this.chargementEdition.set(false);
         this.erreurChargementEdition.set(extraireMessageErreur(erreur));
+      },
+    });
+
+    // Endpoint séparé de GET .../edition/ (voir la note en tête de fichier).
+    this.chargementVisibilite.set(true);
+    this.visibiliteService.obtenirEtat(id).subscribe({
+      next: (etat) => {
+        this.chargementVisibilite.set(false);
+        this.etatVisibilite.set(etat);
+      },
+      error: () => this.chargementVisibilite.set(false),
+    });
+  }
+
+  /** Case « Actif » : bascule immédiate (endpoint dédié), pas de formulaire ni de confirmation. */
+  basculerActif(): void {
+    const etat = this.etatVisibilite();
+    const id = this.partenaireId();
+    if (!etat || id === null || this.basculeVisibiliteEnCours()) return;
+    this.basculeVisibiliteEnCours.set(true);
+    this.erreurVisibilite.set(null);
+
+    this.visibiliteService.changerVisibilite(id, !etat.est_visible).subscribe({
+      next: (nouvelEtat) => {
+        this.basculeVisibiliteEnCours.set(false);
+        this.etatVisibilite.set(nouvelEtat);
+        this.messageSuccesEdition.set(
+          nouvelEtat.est_visible ? 'Partenaire maintenant actif.' : 'Partenaire maintenant inactif.',
+        );
+      },
+      error: (erreur: unknown) => {
+        this.basculeVisibiliteEnCours.set(false);
+        this.erreurVisibilite.set(extraireMessageErreur(erreur));
       },
     });
   }

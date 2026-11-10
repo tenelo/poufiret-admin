@@ -19,6 +19,9 @@
   @if (erreurExport()) {
     <p class="erreur-generale">{{ erreurExport() }}</p>
   }
+  @if (messageSucces()) {
+    <p class="message-succes-detail">{{ messageSucces() }}</p>
+  }
 
   <div class="barre-filtres">
     <input
@@ -49,6 +52,21 @@
         <option [value]="departement.id">{{ departement.nom }}</option>
       }
     </select>
+    <select class="filtre" [value]="filtreVisible()" (change)="changerFiltreVisible($any($event.target).value)">
+      <option value="">Tous (actifs et inactifs)</option>
+      <option value="1">Actifs</option>
+      <option value="0">Inactifs</option>
+    </select>
+    @if (peutRestaurer()) {
+      <label class="case-aussi-pro">
+        <input
+          type="checkbox"
+          [checked]="afficherSupprimes()"
+          (change)="changerAfficherSupprimes($any($event.target).checked)"
+        />
+        Afficher les supprimés
+      </label>
+    }
   </div>
 
   @if (chargementEnCours()) {
@@ -69,13 +87,14 @@
     <div class="conteneur-tableau">
       <table class="tableau-partenaires">
         <colgroup>
-          <col style="width: 22%" />
-          <col style="width: 18%" />
+          <col style="width: 20%" />
           <col style="width: 16%" />
           <col style="width: 14%" />
-          <col style="width: 10%" />
-          <col style="width: 12%" />
+          <col style="width: 13%" />
+          <col style="width: 9%" />
+          <col style="width: 11%" />
           <col style="width: 8%" />
+          <col style="width: 9%" />
         </colgroup>
         <thead>
           <tr>
@@ -86,6 +105,7 @@
             <th>Statut</th>
             <th>Plan</th>
             <th>Vues</th>
+            <th>Actif</th>
           </tr>
         </thead>
         <tbody>
@@ -142,10 +162,22 @@
               </td>
               <td>{{ partenaire.plan_libelle || '—' }}</td>
               <td>{{ partenaire.nb_vues }}</td>
+              <td>
+                <input
+                  type="checkbox"
+                  [checked]="partenaire.est_visible"
+                  [disabled]="!peutMasquer() || visibiliteEnCoursId() === partenaire.id || partenaire.est_supprime"
+                  (click)="$event.stopPropagation()"
+                  (change)="basculerVisibilite(partenaire)"
+                />
+                @if (partenaire.est_supprime) {
+                  <span class="badge badge-suspendu">Supprimé</span>
+                }
+              </td>
             </tr>
             @if (partenaireOuvertId() === partenaire.id) {
               <tr class="ligne-detail">
-                <td colspan="7">
+                <td colspan="8">
                   <div class="panneau-detail">
                     @if (messageSuccesChangement()) {
                       <p class="message-succes-detail">{{ messageSuccesChangement() }}</p>
@@ -213,6 +245,26 @@
                           (click)="ouvrirDialogPosition(partenaire); $event.stopPropagation()"
                         >
                           Position du commerce
+                        </button>
+                      }
+                      @if (partenaire.est_supprime) {
+                        @if (peutRestaurer()) {
+                          <button
+                            type="button"
+                            class="bouton-secondaire"
+                            [disabled]="restaurationEnCoursId() === partenaire.id"
+                            (click)="restaurer(partenaire); $event.stopPropagation()"
+                          >
+                            {{ restaurationEnCoursId() === partenaire.id ? 'Restauration…' : 'Restaurer' }}
+                          </button>
+                        }
+                      } @else if (peutSupprimer()) {
+                        <button
+                          type="button"
+                          class="bouton-secondaire"
+                          (click)="demanderSuppression(partenaire); $event.stopPropagation()"
+                        >
+                          Supprimer
                         </button>
                       }
                     </div>
@@ -370,6 +422,28 @@
 
       <div class="actions-modale">
         <button type="button" class="bouton-secondaire" (click)="fermerDialogPosition()">Fermer</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (partenaireAConfirmerSuppression(); as partenaire) {
+  <div class="voile-confirmation" (click)="annulerSuppression()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>Supprimer « {{ partenaire.nom_commerce }} » ?</p>
+      <p class="rappel-deconnexion">
+        Suppression douce, récupérable via « Afficher les supprimés ».
+      </p>
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" (click)="annulerSuppression()">Annuler</button>
+        <button
+          type="button"
+          class="bouton-confirmer"
+          [disabled]="suppressionEnCoursId() === partenaire.id"
+          (click)="confirmerSuppression()"
+        >
+          {{ suppressionEnCoursId() === partenaire.id ? 'Suppression…' : 'Supprimer' }}
+        </button>
       </div>
     </div>
   </div>

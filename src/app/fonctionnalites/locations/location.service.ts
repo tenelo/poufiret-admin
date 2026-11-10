@@ -304,9 +304,21 @@ export class LocationService {
 
   // ---- Admin : liste des loueurs ----
 
-  listerLoueursAdmin(): Observable<LoueurAdminListe[]> {
+  /**
+   * GET /locations/admin/?visible=&supprimes= : visible = '1' (actifs) | '0' (inactifs) |
+   * undefined (tous, hors supprimés) ; supprimes=true : uniquement les partenaires supprimés
+   * (soft), pour les restaurer.
+   */
+  listerLoueursAdmin(visible?: '1' | '0', supprimes?: boolean): Observable<LoueurAdminListe[]> {
+    let params = new HttpParams();
+    if (visible) {
+      params = params.set('visible', visible);
+    }
+    if (supprimes) {
+      params = params.set('supprimes', '1');
+    }
     return this.http
-      .get<ReponseLoueursAdmin>(`${this.configuration.apiUrl}/locations/admin/`)
+      .get<ReponseLoueursAdmin>(`${this.configuration.apiUrl}/locations/admin/`, { params })
       .pipe(map((reponse) => reponse.resultats));
   }
 }

@@ -29,7 +29,26 @@
         }
       </select>
     }
+    <select class="champ-departement" [value]="filtreVisible()" (change)="changerFiltreVisible($any($event.target).value)">
+      <option value="">Tous (actifs et inactifs)</option>
+      <option value="1">Actifs</option>
+      <option value="0">Inactifs</option>
+    </select>
+    @if (peutRestaurer()) {
+      <label class="case-afficher-supprimes">
+        <input
+          type="checkbox"
+          [checked]="afficherSupprimes()"
+          (change)="changerAfficherSupprimes($any($event.target).checked)"
+        />
+        Afficher les supprimés
+      </label>
+    }
   </div>
+
+  @if (messageSucces()) {
+    <p class="message-succes">{{ messageSucces() }}</p>
+  }
 
   @if (chargementEnCours()) {
     <p class="etat">{{ definition.chargement }}</p>
@@ -45,33 +64,83 @@
   } @else {
     <div class="grille-restaurants">
       @for (restaurant of restaurantsFiltres(); track restaurant.id) {
-        <button type="button" class="carte-restaurant" (click)="ouvrir(restaurant)">
-          <div class="entete-carte">
-            <span class="nom">{{ restaurant.nom }}</span>
-            <span class="badge" [class.badge-ouvert]="restaurant.ouvert" [class.badge-ferme]="!restaurant.ouvert">
-              {{ restaurant.ouvert ? 'Ouvert' : 'Fermé' }}
-            </span>
-          </div>
-          <p class="departement">
-            <span class="gabarit">{{ libelleGabarit(restaurant) }}</span>
-            @if (restaurant.departement_nom) {
-              · {{ restaurant.departement_nom }}
-            }
-          </p>
-          <div class="indicateurs">
-            @if (!restaurant.a_une_fiche) {
-              <span class="alerte">⚠ Fiche à compléter</span>
-            }
-            @if (aDesMenus(restaurant)) {
-              @if (!restaurant.menu_du_jour_publie) {
-                <span class="alerte">⚠ Pas de menu aujourd'hui</span>
-              } @else {
-                <span class="ok">Menu du jour publié</span>
+        <div class="carte-restaurant" [class.carte-inactive]="!restaurant.est_visible || restaurant.est_supprime">
+          <button type="button" class="zone-cliquable" (click)="ouvrir(restaurant)">
+            <div class="entete-carte">
+              <span class="nom">{{ restaurant.nom }}</span>
+              <span class="badge" [class.badge-ouvert]="restaurant.ouvert" [class.badge-ferme]="!restaurant.ouvert">
+                {{ restaurant.ouvert ? 'Ouvert' : 'Fermé' }}
+              </span>
+              @if (restaurant.est_supprime) {
+                <span class="badge badge-supprime">Supprimé</span>
               }
+            </div>
+            <p class="departement">
+              <span class="gabarit">{{ libelleGabarit(restaurant) }}</span>
+              @if (restaurant.departement_nom) {
+                · {{ restaurant.departement_nom }}
+              }
+            </p>
+            <div class="indicateurs">
+              @if (!restaurant.a_une_fiche) {
+                <span class="alerte">⚠ Fiche à compléter</span>
+              }
+              @if (aDesMenus(restaurant)) {
+                @if (!restaurant.menu_du_jour_publie) {
+                  <span class="alerte">⚠ Pas de menu aujourd'hui</span>
+                } @else {
+                  <span class="ok">Menu du jour publié</span>
+                }
+              }
+              <span class="commandes">{{ restaurant.commandes_du_jour }} commande(s) aujourd'hui</span>
+            </div>
+          </button>
+
+          <div class="pied-carte-restaurant">
+            <label class="interrupteur-actif">
+              <input
+                type="checkbox"
+                [checked]="restaurant.est_visible"
+                [disabled]="!peutMasquer() || visibiliteEnCoursId() === restaurant.id || restaurant.est_supprime"
+                (change)="basculerVisibilite(restaurant)"
+              />
+              Actif
+            </label>
+            @if (restaurant.est_supprime) {
+              @if (peutRestaurer()) {
+                <button
+                  type="button"
+                  class="bouton-action"
+                  [disabled]="restaurationEnCoursId() === restaurant.id"
+                  (click)="restaurer(restaurant)"
+                >
+                  {{ restaurationEnCoursId() === restaurant.id ? 'Restauration…' : 'Restaurer' }}
+                </button>
+              }
+            } @else if (peutSupprimer()) {
+              <button type="button" class="bouton-action bouton-supprimer" (click)="demanderSuppression(restaurant)">
+                Supprimer
+              </button>
             }
-            <span class="commandes">{{ restaurant.commandes_du_jour }} commande(s) aujourd'hui</span>
           </div>
-        </button>
+
+          @if (restaurantAConfirmerSuppression()?.id === restaurant.id) {
+            <div class="boite-confirmation-ligne">
+              <p>Supprimer « {{ restaurant.nom }} » ? Cette action est récupérable via « Afficher les supprimés ».</p>
+              <div class="actions-confirmation-ligne">
+                <button type="button" class="bouton-secondaire-mini" (click)="annulerSuppression()">Annuler</button>
+                <button
+                  type="button"
+                  class="bouton-principal-mini"
+                  [disabled]="suppressionEnCoursId() === restaurant.id"
+                  (click)="confirmerSuppression()"
+                >
+                  {{ suppressionEnCoursId() === restaurant.id ? 'Suppression…' : 'Supprimer' }}
+                </button>
+              </div>
+            </div>
+          }
+        </div>
       }
     </div>
   }

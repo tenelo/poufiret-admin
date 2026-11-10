@@ -94,6 +94,28 @@
           <p class="erreur-champ">{{ erreurChamp }}</p>
         }
 
+        @if (modeEdition()) {
+          @if (chargementVisibilite()) {
+            <p class="indice">Chargement de l'état…</p>
+          } @else if (etatVisibilite(); as etat) {
+            <label class="case-categorie">
+              <input
+                type="checkbox"
+                [checked]="etat.est_visible"
+                [disabled]="!peutMasquer() || basculeVisibiliteEnCours() || etat.est_supprime"
+                (change)="basculerActif()"
+              />
+              Actif (visible dans l'application)
+            </label>
+            @if (etat.est_supprime) {
+              <p class="aide">Ce partenaire est supprimé : restaurez-le depuis la liste Partenaires pour le réactiver.</p>
+            }
+            @if (erreurVisibilite()) {
+              <p class="erreur-champ">{{ erreurVisibilite() }}</p>
+            }
+          }
+        }
+
         <label for="type_partenaire">Type de partenaire</label>
         <select id="type_partenaire" formControlName="type_partenaire">
           <option value="">— Non renseigné —</option>

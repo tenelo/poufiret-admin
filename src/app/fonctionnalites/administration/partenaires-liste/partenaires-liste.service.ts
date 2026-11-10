@@ -34,7 +34,7 @@ export class PartenairesListeService {
   private readonly http = inject(HttpClient);
   private readonly configuration = inject(ConfigurationService);
 
-  /** GET /administration/partenaires/liste/?q=&type=&statut=&departement= */
+  /** GET /administration/partenaires/liste/?q=&type=&statut=&departement=&visible=&supprimes= */
   lister(filtres: FiltresPartenairesListe = {}): Observable<ReponsePartenairesListe> {
     return this.http.get<ReponsePartenairesListe>(
       `${this.configuration.apiUrl}/administration/partenaires/liste/`,
@@ -104,6 +104,12 @@ export class PartenairesListeService {
     }
     if (filtres.departement) {
       params = params.set('departement', filtres.departement);
+    }
+    if (filtres.visible) {
+      params = params.set('visible', filtres.visible);
+    }
+    if (filtres.supprimes) {
+      params = params.set('supprimes', '1');
     }
     return params;
   }

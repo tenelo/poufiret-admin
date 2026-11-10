@@ -437,12 +437,21 @@ export class RestaurantService {
   // ---- Admin : liste des établissements (ex-restaurants) ----
 
   /**
-   * GET /restaurants/admin/ : liste complète (pas de pagination, pas de recherche serveur) — la
-   * recherche et le filtre par département se font côté client dans RestaurantsListe.
+   * GET /restaurants/admin/?visible=&supprimes= : liste complète (pas de pagination, pas de
+   * recherche serveur) — la recherche et le filtre par département se font côté client dans
+   * RestaurantsListe. visible : '1' (actifs) | '0' (inactifs) | undefined (tous, hors supprimés).
+   * supprimes=true : uniquement les partenaires supprimés (soft), pour les restaurer.
    */
-  listerRestaurantsAdmin(): Observable<RestaurantAdminListe[]> {
+  listerRestaurantsAdmin(visible?: '1' | '0', supprimes?: boolean): Observable<RestaurantAdminListe[]> {
+    let params = new HttpParams();
+    if (visible) {
+      params = params.set('visible', visible);
+    }
+    if (supprimes) {
+      params = params.set('supprimes', '1');
+    }
     return this.http
-      .get<ReponseRestaurantsAdminListe>(`${this.configuration.apiUrl}/restaurants/admin/`)
+      .get<ReponseRestaurantsAdminListe>(`${this.configuration.apiUrl}/restaurants/admin/`, { params })
       .pipe(map((reponse) => reponse.resultats));
   }
 }

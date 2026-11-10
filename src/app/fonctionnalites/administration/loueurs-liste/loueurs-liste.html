@@ -45,7 +45,26 @@
         }
       </select>
     }
+    <select class="champ-departement" [value]="filtreVisible()" (change)="changerFiltreVisible($any($event.target).value)">
+      <option value="">Tous (actifs et inactifs)</option>
+      <option value="1">Actifs</option>
+      <option value="0">Inactifs</option>
+    </select>
+    @if (peutRestaurer()) {
+      <label class="case-afficher-supprimes">
+        <input
+          type="checkbox"
+          [checked]="afficherSupprimes()"
+          (change)="changerAfficherSupprimes($any($event.target).checked)"
+        />
+        Afficher les supprimés
+      </label>
+    }
   </div>
+
+  @if (messageSucces()) {
+    <p class="message-succes">{{ messageSucces() }}</p>
+  }
 
   @if (chargementEnCours()) {
     <p class="etat">Chargement des loueurs…</p>
@@ -61,35 +80,85 @@
   } @else {
     <div class="grille-loueurs">
       @for (loueur of loueursFiltres(); track loueur.id) {
-        <button type="button" class="carte-loueur" (click)="ouvrir(loueur)">
-          <div class="entete-carte">
-            <span class="nom">{{ loueur.nom }}</span>
-            <span
-              class="badge badge-type"
-              [class.badge-vehicules]="loueur.type_partenaire === 'loueur_voiture'"
-              [class.badge-hotels]="loueur.type_partenaire === 'hotelier'"
-            >
-              {{ libelleType(loueur) }}
-            </span>
-            @if (loueur.demandes_en_attente > 0) {
-              <span class="badge badge-alerte">{{ loueur.demandes_en_attente }} à traiter</span>
+        <div class="carte-loueur" [class.carte-inactive]="!loueur.est_visible || loueur.est_supprime">
+          <button type="button" class="zone-cliquable" (click)="ouvrir(loueur)">
+            <div class="entete-carte">
+              <span class="nom">{{ loueur.nom }}</span>
+              <span
+                class="badge badge-type"
+                [class.badge-vehicules]="loueur.type_partenaire === 'loueur_voiture'"
+                [class.badge-hotels]="loueur.type_partenaire === 'hotelier'"
+              >
+                {{ libelleType(loueur) }}
+              </span>
+              @if (loueur.demandes_en_attente > 0) {
+                <span class="badge badge-alerte">{{ loueur.demandes_en_attente }} à traiter</span>
+              }
+              @if (loueur.est_supprime) {
+                <span class="badge badge-supprime">Supprimé</span>
+              }
+            </div>
+            @if (loueur.departement_nom) {
+              <p class="departement">{{ loueur.departement_nom }}</p>
+            }
+            <div class="indicateurs">
+              <span class="indicateur indicateur-disponible">{{ loueur.nb_disponibles }} disponible(s)</span>
+              <span class="indicateur indicateur-reserve">{{ loueur.nb_reserves }} réservé(s)</span>
+              <span class="indicateur indicateur-loue">{{ loueur.nb_loues }} loué(s)</span>
+              @if (loueur.nb_a_vendre > 0) {
+                <span class="indicateur indicateur-a-vendre">{{ loueur.nb_a_vendre }} à vendre</span>
+              }
+              @if (loueur.nb_vendus > 0) {
+                <span class="indicateur indicateur-vendu">{{ loueur.nb_vendus }} vendu(s)</span>
+              }
+            </div>
+          </button>
+
+          <div class="pied-carte-loueur">
+            <label class="interrupteur-actif">
+              <input
+                type="checkbox"
+                [checked]="loueur.est_visible"
+                [disabled]="!peutMasquer() || visibiliteEnCoursId() === loueur.id || loueur.est_supprime"
+                (change)="basculerVisibilite(loueur)"
+              />
+              Actif
+            </label>
+            @if (loueur.est_supprime) {
+              @if (peutRestaurer()) {
+                <button
+                  type="button"
+                  class="bouton-action"
+                  [disabled]="restaurationEnCoursId() === loueur.id"
+                  (click)="restaurer(loueur)"
+                >
+                  {{ restaurationEnCoursId() === loueur.id ? 'Restauration…' : 'Restaurer' }}
+                </button>
+              }
+            } @else if (peutSupprimer()) {
+              <button type="button" class="bouton-action bouton-supprimer" (click)="demanderSuppression(loueur)">
+                Supprimer
+              </button>
             }
           </div>
-          @if (loueur.departement_nom) {
-            <p class="departement">{{ loueur.departement_nom }}</p>
+
+          @if (loueurAConfirmerSuppression()?.id === loueur.id) {
+            <div class="boite-confirmation-ligne">
+              <p>Supprimer « {{ loueur.nom }} » ? Cette action est récupérable via « Afficher les supprimés ».</p>
+              <div class="actions-confirmation-ligne">
+                <button type="button" class="bouton-secondaire-mini" (click)="annulerSuppression()">Annuler</button>
+                <button
+                  type="button"
+                  class="bouton-principal-mini"
+                  [disabled]="suppressionEnCoursId() === loueur.id"
+                  (click)="confirmerSuppression()"
+                >
+                  {{ suppressionEnCoursId() === loueur.id ? 'Suppression…' : 'Supprimer' }}
+                </button>
+              </div>
+            </div>
           }
-          <div class="indicateurs">
-            <span class="indicateur indicateur-disponible">{{ loueur.nb_disponibles }} disponible(s)</span>
-            <span class="indicateur indicateur-reserve">{{ loueur.nb_reserves }} réservé(s)</span>
-            <span class="indicateur indicateur-loue">{{ loueur.nb_loues }} loué(s)</span>
-            @if (loueur.nb_a_vendre > 0) {
-              <span class="indicateur indicateur-a-vendre">{{ loueur.nb_a_vendre }} à vendre</span>
-            }
-            @if (loueur.nb_vendus > 0) {
-              <span class="indicateur indicateur-vendu">{{ loueur.nb_vendus }} vendu(s)</span>
-            }
-          </div>
-        </button>
+        </div>
       }
     </div>
   }
