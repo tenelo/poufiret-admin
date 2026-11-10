@@ -102,7 +102,10 @@
   <span class="nom-categorie">{{ categorie.nom }}</span>
   <span class="meta-categorie">
     {{ categorie.nb_partenaires }} partenaire{{ categorie.nb_partenaires > 1 ? 's' : '' }}
-    @if (categorie.parent_id === null) {
+    @if (categorie.parent_id === null && categorie.nb_enfants > 0) {
+      · {{ categorie.nb_enfants }} sous-catégorie{{ categorie.nb_enfants > 1 ? 's' : '' }}
+      ({{ categorie.affichage_enfants === 'grille' ? 'Grille' : 'Pastilles' }})
+    } @else if (categorie.parent_id === null) {
       · {{ categorie.nb_enfants }} sous-catégorie{{ categorie.nb_enfants > 1 ? 's' : '' }}
     }
   </span>

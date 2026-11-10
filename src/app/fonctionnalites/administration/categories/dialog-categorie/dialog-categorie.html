@@ -64,6 +64,31 @@
         Visible
       </label>
 
+      <label>Affichage des sous-catégories</label>
+      <p class="aide">Utilisé quand cette catégorie a des sous-catégories.</p>
+      <div class="options-affichage-enfants">
+        <label class="case-type">
+          <input
+            type="radio"
+            name="affichage-enfants"
+            value="pastilles"
+            [checked]="affichageEnfants() === 'pastilles'"
+            (change)="changerAffichageEnfants('pastilles')"
+          />
+          Pastilles
+        </label>
+        <label class="case-type">
+          <input
+            type="radio"
+            name="affichage-enfants"
+            value="grille"
+            [checked]="affichageEnfants() === 'grille'"
+            (change)="changerAffichageEnfants('grille')"
+          />
+          Grille
+        </label>
+      </div>
+
       <label>Types de partenaire liés</label>
       <p class="aide">Un partenaire de ce type sera automatiquement placé dans cette catégorie.</p>
       <div class="liste-types-partenaire">

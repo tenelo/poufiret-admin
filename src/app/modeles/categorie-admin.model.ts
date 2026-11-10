@@ -4,6 +4,8 @@
  * partenaire liés, mots-clés de recherche, archivage).
  */
 
+export type AffichageEnfantsCategorie = 'pastilles' | 'grille';
+
 export interface CategorieAdmin {
   id: number;
   nom: string;
@@ -20,6 +22,8 @@ export interface CategorieAdmin {
   mots_cles: string[];
   nb_partenaires: number;
   nb_enfants: number;
+  /** Présentation des sous-catégories dans l'app ; pastilles par défaut. */
+  affichage_enfants: AffichageEnfantsCategorie;
 }
 
 export interface ReponseCategoriesAdmin {
@@ -52,6 +56,7 @@ export interface RequeteCategorieAdmin {
   est_active?: boolean;
   types_partenaire?: string[];
   mots_cles?: string[];
+  affichage_enfants?: AffichageEnfantsCategorie;
 }
 
 // Corps de POST ordre/ : ordre complet des enfants directs d'un même parent

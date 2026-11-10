@@ -122,6 +122,11 @@ textarea {
   }
 }
 
+.options-affichage-enfants {
+  display: flex;
+  gap: 1.2rem;
+}
+
 .liste-types-partenaire {
   display: flex;
   flex-direction: column;

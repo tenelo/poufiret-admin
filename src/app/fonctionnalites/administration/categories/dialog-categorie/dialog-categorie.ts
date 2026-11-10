@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit, computed, input, output, signal } from '@angular/core';
 
 import {
+  AffichageEnfantsCategorie,
   CategorieAdmin,
   ErreursCategorieAdmin,
   RequeteCategorieAdmin,
@@ -38,6 +39,7 @@ export class DialogCategorie implements OnInit, OnDestroy {
   readonly icone = signal('');
   readonly parentId = signal<number | ''>('');
   readonly estActive = signal(true);
+  readonly affichageEnfants = signal<AffichageEnfantsCategorie>('pastilles');
   readonly touche = signal(false);
 
   readonly typesSelectionnes = signal<Set<string>>(new Set());
@@ -66,6 +68,7 @@ export class DialogCategorie implements OnInit, OnDestroy {
       this.icone.set(categorie.icone ?? '');
       this.parentId.set(categorie.parent_id ?? '');
       this.estActive.set(categorie.est_active);
+      this.affichageEnfants.set(categorie.affichage_enfants);
       this.typesSelectionnes.set(new Set(categorie.types_partenaire));
       this.motsCles.set([...categorie.mots_cles]);
       this.apercuImage.set(categorie.image);
@@ -83,6 +86,10 @@ export class DialogCategorie implements OnInit, OnDestroy {
   /** Vrai si ce type est déjà revendiqué par une AUTRE catégorie que celle en édition. */
   estTypeIndisponible(type: TypePartenaireCategorie): boolean {
     return type.categorie_id !== null && type.categorie_id !== this.categorie()?.id;
+  }
+
+  changerAffichageEnfants(valeur: string): void {
+    this.affichageEnfants.set(valeur as AffichageEnfantsCategorie);
   }
 
   basculerType(valeur: string): void {
@@ -171,6 +178,7 @@ export class DialogCategorie implements OnInit, OnDestroy {
       icone: this.icone().trim(),
       parent_id: this.parentId() ? Number(this.parentId()) : null,
       est_active: this.estActive(),
+      affichage_enfants: this.affichageEnfants(),
       types_partenaire: [...this.typesSelectionnes()],
       mots_cles: this.motsCles(),
     };
