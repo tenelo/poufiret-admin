@@ -53,6 +53,11 @@
           <app-onglet-hebergements [prefixe]="prefixe()" />
         }
       }
+      @case ('vitrine') {
+        @if (typePartenaire()) {
+          <app-onglet-vitrine [prefixe]="prefixe()" />
+        }
+      }
       @case ('demandes') {
         <app-onglet-demandes-loueur
           [prefixe]="prefixe()"

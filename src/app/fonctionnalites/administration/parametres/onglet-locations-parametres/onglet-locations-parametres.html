@@ -1,0 +1,36 @@
+<div class="onglet-locations-parametres">
+  @if (chargementEnCours()) {
+    <p class="indice">Chargement…</p>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else {
+    <form (submit)="$event.preventDefault(); soumettre()">
+      <label for="nb-max-images-vitrine">Nombre maximum d'images de vitrine</label>
+      <p class="aide">
+        Nombre maximum d'images affichées dans le carrousel de la fiche établissement d'un hôtel
+        ou d'une résidence, pour tous les partenaires.
+      </p>
+      <input
+        id="nb-max-images-vitrine"
+        type="number"
+        min="1"
+        step="1"
+        [value]="nbMaxImages()"
+        (input)="changerNbMaxImages($any($event.target).value)"
+      />
+      @if (erreurNbMaxImages()) {
+        <p class="erreur-champ">{{ erreurNbMaxImages() }}</p>
+      }
+      @if (messageSucces()) {
+        <p class="message-succes">{{ messageSucces() }}</p>
+      }
+
+      <button type="submit" class="bouton-principal" [disabled]="enregistrementEnCours()">
+        {{ enregistrementEnCours() ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
+    </form>
+  }
+</div>

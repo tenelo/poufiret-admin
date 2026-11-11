@@ -18,6 +18,7 @@ import {
 } from '../../modeles/logement.model';
 import { BienLocation, RequeteDisponibiliteBien } from '../../modeles/bien-location.model';
 import { Etablissement, RequeteEtablissement } from '../../modeles/hebergement.model';
+import { ParametresVitrine, Vitrine } from '../../modeles/vitrine-etablissement.model';
 
 /** Préfixe "mon-espace" (loueur) ou "admin/<partenaire_id>" (admin, n'importe quel loueur). */
 export type PrefixeLocation = string;
@@ -300,6 +301,59 @@ export class LocationService {
     vendu: boolean,
   ): Observable<T> {
     return this.http.post<T>(`${this.base(prefixe)}${ressource}/${id}/vendu/`, { vendu });
+  }
+
+  // ---- Vitrine (hotelier) : carrousel de la fiche établissement dans l'app ----
+
+  obtenirVitrine(prefixe: PrefixeLocation): Observable<Vitrine> {
+    return this.http.get<Vitrine>(`${this.base(prefixe)}vitrine/`);
+  }
+
+  /** Ajoute une photo d'un hébergement existant (déjà téléversée) à la vitrine. */
+  ajouterImageVitrineExistante(
+    prefixe: PrefixeLocation,
+    imageHebergementId: number,
+    legende?: string,
+  ): Observable<Vitrine> {
+    return this.http.post<Vitrine>(`${this.base(prefixe)}vitrine/`, {
+      image_hebergement: imageHebergementId,
+      ...(legende ? { legende } : {}),
+    });
+  }
+
+  /** Ajoute une photo propre à la vitrine (pas liée à un hébergement) : corps multipart. */
+  ajouterImageVitrinePropre(prefixe: PrefixeLocation, fichier: File, legende?: string): Observable<Vitrine> {
+    const formData = new FormData();
+    formData.append('image', fichier);
+    if (legende) {
+      formData.append('legende', legende);
+    }
+    return this.http.post<Vitrine>(`${this.base(prefixe)}vitrine/`, formData);
+  }
+
+  modifierLegendeVitrine(prefixe: PrefixeLocation, id: string, legende: string): Observable<Vitrine> {
+    return this.http.patch<Vitrine>(`${this.base(prefixe)}vitrine/${id}/`, { legende });
+  }
+
+  retirerImageVitrine(prefixe: PrefixeLocation, id: string): Observable<Vitrine> {
+    return this.http.delete<Vitrine>(`${this.base(prefixe)}vitrine/${id}/`);
+  }
+
+  /** Un seul appel : `ids` = toutes les images de la vitrine, dans le nouvel ordre. */
+  reordonnerVitrine(prefixe: PrefixeLocation, ids: string[]): Observable<Vitrine> {
+    return this.http.post<Vitrine>(`${this.base(prefixe)}vitrine/ordre/`, { ids });
+  }
+
+  // ---- Paramètre global de la vitrine (super-admin, hors préfixe partenaire) ----
+
+  obtenirParametresVitrine(): Observable<ParametresVitrine> {
+    return this.http.get<ParametresVitrine>(`${this.configuration.apiUrl}/locations/admin/parametres/`);
+  }
+
+  modifierParametresVitrine(nbMaxImagesVitrine: number): Observable<ParametresVitrine> {
+    return this.http.patch<ParametresVitrine>(`${this.configuration.apiUrl}/locations/admin/parametres/`, {
+      nb_max_images_vitrine: nbMaxImagesVitrine,
+    });
   }
 
   // ---- Admin : liste des loueurs ----

@@ -8,6 +8,7 @@ import { OngletVehicules } from '../onglet-vehicules/onglet-vehicules';
 import { OngletEtablissement } from '../onglet-etablissement/onglet-etablissement';
 import { OngletHebergements } from '../onglet-hebergements/onglet-hebergements';
 import { OngletDemandesLoueur } from '../onglet-demandes-loueur/onglet-demandes-loueur';
+import { OngletVitrine } from '../onglet-vitrine/onglet-vitrine';
 import {
   LocationService,
   PREFIXE_MON_ESPACE_LOCATION,
@@ -15,13 +16,20 @@ import {
   prefixeAdminLocation,
 } from '../location.service';
 
-export type OngletLoueur = 'etablissement' | 'logements' | 'vehicules' | 'hebergements' | 'demandes';
+export type OngletLoueur = 'etablissement' | 'logements' | 'vehicules' | 'hebergements' | 'vitrine' | 'demandes';
 
-const TOUS_ONGLETS: OngletLoueur[] = ['etablissement', 'logements', 'vehicules', 'hebergements', 'demandes'];
+const TOUS_ONGLETS: OngletLoueur[] = [
+  'etablissement',
+  'logements',
+  'vehicules',
+  'hebergements',
+  'vitrine',
+  'demandes',
+];
 
 /**
  * Onglets selon le type de partenaire : Logements (loueur_maison, et par défaut), Véhicules
- * (loueur_voiture), Établissement + Hébergements (hotelier) ; Demandes pour tous.
+ * (loueur_voiture), Établissement + Hébergements + Vitrine (hotelier) ; Demandes pour tous.
  */
 function ongletsPour(typePartenaire: string | null): { valeur: OngletLoueur; libelle: string }[] {
   const demandes = { valeur: 'demandes' as OngletLoueur, libelle: 'Demandes' };
@@ -32,6 +40,7 @@ function ongletsPour(typePartenaire: string | null): { valeur: OngletLoueur; lib
       return [
         { valeur: 'etablissement', libelle: 'Établissement' },
         { valeur: 'hebergements', libelle: 'Hébergements' },
+        { valeur: 'vitrine', libelle: 'Vitrine' },
         demandes,
       ];
     default:
@@ -55,6 +64,7 @@ function ongletsPour(typePartenaire: string | null): { valeur: OngletLoueur; lib
     OngletVehicules,
     OngletEtablissement,
     OngletHebergements,
+    OngletVitrine,
     OngletDemandesLoueur,
   ],
   templateUrl: './espace-loueur.html',

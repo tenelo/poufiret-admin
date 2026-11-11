@@ -3,15 +3,16 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { OngletRechercheParametres } from './onglet-recherche-parametres/onglet-recherche-parametres';
+import { OngletLocationsParametres } from './onglet-locations-parametres/onglet-locations-parametres';
 import { GestionAdmins } from '../gestion-admins/gestion-admins';
 import { Geographie } from '../geographie/geographie';
 import { Moderation } from '../moderation/moderation';
 import { PermissionsService } from '../../../noyau/permissions/permissions.service';
 import { NomCapacite } from '../../../modeles/permissions-admin.model';
 
-type OngletParametres = 'admins' | 'geographie' | 'recherche' | 'moderation';
+type OngletParametres = 'admins' | 'geographie' | 'recherche' | 'locations' | 'moderation';
 
-const ONGLETS_VALIDES: OngletParametres[] = ['admins', 'geographie', 'recherche', 'moderation'];
+const ONGLETS_VALIDES: OngletParametres[] = ['admins', 'geographie', 'recherche', 'locations', 'moderation'];
 
 /**
  * Écran admin "Paramètres" : page à onglets — Gestion des admins, Géographie, Recherche
@@ -24,7 +25,7 @@ const ONGLETS_VALIDES: OngletParametres[] = ['admins', 'geographie', 'recherche'
  */
 @Component({
   selector: 'app-parametres',
-  imports: [GestionAdmins, Geographie, OngletRechercheParametres, Moderation],
+  imports: [GestionAdmins, Geographie, OngletRechercheParametres, OngletLocationsParametres, Moderation],
   templateUrl: './parametres.html',
   styleUrl: './parametres.scss',
 })
@@ -45,6 +46,8 @@ export class Parametres {
   readonly peutVoirAdmins = computed(() => this.aLeDroit('gerer_admins'));
   readonly peutVoirGeographie = computed(() => this.aLeDroit('gerer_geographie'));
   readonly peutVoirRecherche = computed(() => this.aLeDroit('gerer_parametres'));
+  // Paramètre vitrine (P/admin/parametres/) : 403 côté backend sans super-admin.
+  readonly peutVoirLocations = computed(() => this.estSuperAdmin());
   readonly peutVoirModeration = computed(() => this.estSuperAdmin());
 
   readonly onglets = computed(() =>
@@ -52,6 +55,7 @@ export class Parametres {
       { valeur: 'admins' as const, libelle: 'Gestion des admins', visible: this.peutVoirAdmins() },
       { valeur: 'geographie' as const, libelle: 'Géographie', visible: this.peutVoirGeographie() },
       { valeur: 'recherche' as const, libelle: 'Recherche', visible: this.peutVoirRecherche() },
+      { valeur: 'locations' as const, libelle: 'Locations', visible: this.peutVoirLocations() },
       { valeur: 'moderation' as const, libelle: 'Modération de comptes', visible: this.peutVoirModeration() },
     ].filter((o) => o.visible),
   );

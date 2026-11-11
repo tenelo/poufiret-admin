@@ -1,0 +1,38 @@
+<div class="voile-modale" (click)="annule.emit()">
+  <div class="modale" (click)="$event.stopPropagation()">
+    <h2>Choisir parmi mes photos</h2>
+
+    @if (photos().length === 0) {
+      <p class="indice">Aucune photo disponible : ajoutez d'abord des photos à vos hébergements.</p>
+    } @else {
+      @for (groupe of groupes(); track groupe.cle) {
+        <div class="groupe-chambre">
+          <h3>{{ groupe.nom }}</h3>
+          <div class="grille-photos">
+            @for (photo of groupe.photos; track photo.id) {
+              <button
+                type="button"
+                class="vignette-photo"
+                [class.vignette-indisponible]="photo.dans_vitrine"
+                [disabled]="photo.dans_vitrine"
+                (click)="choisir(photo)"
+              >
+                <img [src]="photo.url" alt="" />
+                @if (photo.est_principale) {
+                  <span class="badge-principale">Principale</span>
+                }
+                @if (photo.dans_vitrine) {
+                  <span class="badge-deja-vitrine">Déjà dans la vitrine</span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+      }
+    }
+
+    <div class="actions-modale">
+      <button type="button" class="bouton-secondaire" (click)="annule.emit()">Fermer</button>
+    </div>
+  </div>
+</div>

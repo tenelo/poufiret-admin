@@ -1,0 +1,86 @@
+.onglet-locations-parametres {
+  max-width: 480px;
+}
+
+.indice {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.etat-erreur {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.3rem;
+}
+
+.aide {
+  margin: 0 0 0.75rem;
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+input {
+  width: 160px;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: #4f46e5;
+  }
+}
+
+.erreur-champ {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: #dc2626;
+}
+
+.message-succes {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  color: #166534;
+}
+
+.bouton-principal {
+  margin-top: 1rem;
+  align-self: flex-start;
+  padding: 0.55rem 1.2rem;
+  background: #1b5e20;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: #164a1a;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

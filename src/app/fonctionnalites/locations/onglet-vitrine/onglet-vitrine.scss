@@ -1,0 +1,261 @@
+.page-vitrine {
+  max-width: 760px;
+}
+
+.aide {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.etat,
+.etat-vide {
+  color: #6b7280;
+  font-size: 0.85rem;
+  padding: 1rem 0;
+}
+
+.etat-erreur {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+}
+
+.entete-vitrine {
+  margin-bottom: 0.75rem;
+
+  .compteur {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+  }
+}
+
+.erreur-generale {
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.message-succes {
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #166534;
+  font-size: 0.85rem;
+}
+
+.avertissement {
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  color: #92400e;
+  font-size: 0.82rem;
+}
+
+.liste-vitrine {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.vignette-vitrine {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+
+  img {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+}
+
+.poignee {
+  cursor: grab;
+  color: #9ca3af;
+}
+
+.details-vignette {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+
+  .origine {
+    font-size: 0.78rem;
+    color: #6b7280;
+  }
+}
+
+.champ-legende {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-family: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: #4f46e5;
+  }
+}
+
+.bouton-retirer {
+  padding: 0.4rem 0.75rem;
+  background: #ffffff;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    background: #fef2f2;
+  }
+}
+
+.actions-ajout {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.bouton-secondaire {
+  padding: 0.55rem 1rem;
+  background: #ffffff;
+  border: 1px solid #4f46e5;
+  border-radius: 8px;
+  color: #4f46e5;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: #eef2ff;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.apercu-ajout {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+
+  img {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  input[type='text'] {
+    padding: 0.5rem 0.7rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.85rem;
+  }
+}
+
+.actions-vignette {
+  display: flex;
+  gap: 0.5rem;
+
+  button {
+    padding: 0.45rem 0.9rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+
+    &:first-child {
+      background: #1b5e20;
+      border-color: #1b5e20;
+      color: #ffffff;
+    }
+  }
+}
+
+.indice-max {
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: #92400e;
+}
+
+.voile-confirmation {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(17, 24, 39, 0.5);
+  z-index: 100;
+}
+
+.boite-confirmation {
+  width: 100%;
+  max-width: 380px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.25rem;
+
+  p {
+    margin: 0 0 1rem;
+    color: #374151;
+  }
+}
+
+.actions-modale {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.bouton-danger {
+  padding: 0.5rem 1rem;
+  background: #dc2626;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}

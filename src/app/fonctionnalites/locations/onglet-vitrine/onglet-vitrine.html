@@ -1,0 +1,116 @@
+<section class="page-vitrine">
+  <p class="aide">
+    Ces images défilent en haut de la page de l'établissement dans l'application.
+  </p>
+
+  @if (chargementEnCours()) {
+    <p class="etat">Chargement de la vitrine…</p>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (vitrine(); as v) {
+    <div class="entete-vitrine">
+      <span class="compteur">{{ v.nb_images }} / {{ v.nb_max_images }} images</span>
+    </div>
+
+    @if (messageErreur()) {
+      <p class="erreur-generale">{{ messageErreur() }}</p>
+    }
+    @if (messageSucces()) {
+      <p class="message-succes">{{ messageSucces() }}</p>
+    }
+    @if (depasseLeMax()) {
+      <p class="avertissement">
+        La vitrine compte plus d'images que le maximum autorisé : seules les {{ v.nb_max_images }}
+        premières (dans l'ordre ci-dessous) sont affichées dans l'application.
+      </p>
+    }
+
+    @if (v.nb_images === 0) {
+      <p class="etat-vide">
+        Vitrine vide : l'application affiche alors la photo principale de chaque chambre.
+      </p>
+    } @else {
+      <div class="liste-vitrine" cdkDropList (cdkDropListDropped)="surDepot($event)">
+        @for (image of imagesOrdonnees(); track image.id) {
+          <div class="vignette-vitrine" cdkDrag>
+            <span class="poignee" cdkDragHandle title="Glisser pour réordonner">⠿</span>
+            <img [src]="image.url" [alt]="image.legende ?? ''" />
+            <div class="details-vignette">
+              <span class="origine">
+                {{ image.hebergement_nom ?? "Photo de l'établissement" }}
+              </span>
+              <input
+                type="text"
+                class="champ-legende"
+                placeholder="Légende"
+                [value]="texteLegende(image)"
+                (input)="changerTexteLegende(image, $any($event.target).value)"
+                (blur)="enregistrerLegende(image)"
+                [disabled]="enregistrementLegendeEnCoursId() === image.id"
+              />
+            </div>
+            <button type="button" class="bouton-retirer" (click)="demanderRetrait(image)">Retirer</button>
+          </div>
+        }
+      </div>
+    }
+
+    <div class="actions-ajout">
+      <button type="button" class="bouton-secondaire" [disabled]="vitrinePleine()" (click)="ouvrirPicker()">
+        Choisir parmi mes photos
+      </button>
+
+      @if (apercuSelection(); as apercu) {
+        <div class="apercu-ajout">
+          <img [src]="apercu" alt="Aperçu" />
+          <input
+            type="text"
+            placeholder="Légende (facultative)"
+            [value]="legendeSelection()"
+            (input)="changerLegendeSelection($any($event.target).value)"
+          />
+          <div class="actions-vignette">
+            <button type="button" [disabled]="envoiEnCours()" (click)="ajouterPhotoPropre()">
+              {{ envoiEnCours() ? 'Envoi…' : 'Ajouter' }}
+            </button>
+            <button type="button" (click)="annulerSelectionFichier()">Annuler</button>
+          </div>
+        </div>
+      } @else {
+        <input #entreeFichier type="file" accept="image/*" hidden [disabled]="vitrinePleine()" (change)="selectionnerFichier($event)" />
+        <button type="button" class="bouton-secondaire" [disabled]="vitrinePleine()" (click)="entreeFichier.click()">
+          Ajouter une photo de l'établissement
+        </button>
+      }
+    </div>
+
+    @if (vitrinePleine()) {
+      <p class="indice-max">Vitrine pleine : maximum {{ v.nb_max_images }} images.</p>
+    }
+
+    @if (pickerOuvert()) {
+      <app-choisir-photo-vitrine
+        [photos]="v.photos_disponibles"
+        (choisie)="ajouterPhotoExistante($event)"
+        (annule)="fermerPicker()"
+      />
+    }
+  }
+
+  @if (imageAConfirmerRetrait(); as image) {
+    <div class="voile-confirmation" (click)="annulerRetrait()">
+      <div class="boite-confirmation" (click)="$event.stopPropagation()">
+        <p>Retirer cette image de la vitrine ?</p>
+        <div class="actions-modale">
+          <button type="button" class="bouton-secondaire" (click)="annulerRetrait()">Annuler</button>
+          <button type="button" class="bouton-danger" [disabled]="retraitEnCours()" (click)="confirmerRetrait()">
+            {{ retraitEnCours() ? 'Retrait…' : 'Retirer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</section>
