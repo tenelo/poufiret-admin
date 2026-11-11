@@ -9,6 +9,8 @@ import {
   QuotaFormule,
   ReponseQuotasFormules,
   ReponseTransitionPubliciteAdmin,
+  RequeteCreationPubPartenaire,
+  RequeteReconductionPubPartenaire,
   StatsPublicitesAdmin,
   TypeExportPublicites,
 } from '../../../modeles/publicites-admin.model';
@@ -18,6 +20,25 @@ import {
   bornesPeriodeStatsPub,
 } from '../../../modeles/statistiques-pub-admin.model';
 import { declencherTelechargementFichier, nomFichierHorodate } from '../telecharger-fichier';
+
+/** Formule telle que lue sur GET /publicites/formules/ (seul le champ utile ici). */
+interface DureeFormule {
+  id: string;
+  duree_jours: number;
+}
+
+/** Ajoute à un FormData les champs communs (dates, règlement, motif pour « Offerte »). */
+function ajouterReglement(
+  formData: FormData,
+  donnees: { dateDebut: string; dateFin: string; reglement: string; motif?: string },
+): void {
+  formData.append('date_debut', donnees.dateDebut);
+  formData.append('date_fin', donnees.dateFin);
+  formData.append('reglement', donnees.reglement);
+  if (donnees.reglement === 'offerte' && donnees.motif?.trim()) {
+    formData.append('motif', donnees.motif.trim());
+  }
+}
 
 /** Service admin des publicités : stats globales, export CSV, transitions de statut. */
 @Injectable({ providedIn: 'root' })
@@ -58,6 +79,51 @@ export class PublicitesAdminService {
     return this.http
       .get<ReponseQuotasFormules>(`${this.configuration.apiUrl}/publicites/admin/formules/`)
       .pipe(map((reponse) => reponse.formules ?? []));
+  }
+
+  /**
+   * GET /publicites/formules/ : durée de chaque formule active (jours), par id — pour préremplir
+   * la date de fin d'une pub créée ou reconduite par l'admin.
+   */
+  chargerDureesFormules(): Observable<Record<string, number>> {
+    return this.http
+      .get<DureeFormule[] | { results: DureeFormule[] }>(`${this.configuration.apiUrl}/publicites/formules/`)
+      .pipe(
+        map((reponse) => (Array.isArray(reponse) ? reponse : reponse.results ?? [])),
+        map((formules) => Object.fromEntries(formules.map((f) => [f.id, Number(f.duree_jours)]))),
+      );
+  }
+
+  /**
+   * POST /publicites/admin/creer-pour-partenaire/ (multipart, capacité gerer_pubs_partenaires) :
+   * crée une pub pour un partenaire, réglée « payee » ou « offerte ». Mêmes noms de champs que la
+   * création côté partenaire (formule, titre, description, image_couverture, video, portee).
+   * Ne jamais poser de Content-Type : HttpClient gère le boundary du FormData.
+   */
+  creerPubPartenaire(donnees: RequeteCreationPubPartenaire): Observable<unknown> {
+    const formData = new FormData();
+    formData.append('partenaire', String(donnees.partenaireId));
+    formData.append('formule', donnees.formuleId);
+    formData.append('titre', donnees.titre);
+    if (donnees.description) formData.append('description', donnees.description);
+    formData.append('image_couverture', donnees.imageCouverture);
+    if (donnees.video) formData.append('video', donnees.video);
+    if (donnees.portee) formData.append('portee', donnees.portee);
+    ajouterReglement(formData, donnees);
+    return this.http.post(`${this.configuration.apiUrl}/publicites/admin/creer-pour-partenaire/`, formData);
+  }
+
+  /**
+   * POST /publicites/admin/<id>/reconduire/ (multipart, capacité gerer_pubs_partenaires) :
+   * reconduit une campagne terminée ; formule (formule_id) et image facultatives, comme la
+   * reconduction côté partenaire.
+   */
+  reconduirePubPartenaire(id: string, donnees: RequeteReconductionPubPartenaire): Observable<unknown> {
+    const formData = new FormData();
+    if (donnees.formuleId) formData.append('formule_id', donnees.formuleId);
+    if (donnees.imageCouverture) formData.append('image_couverture', donnees.imageCouverture);
+    ajouterReglement(formData, donnees);
+    return this.http.post(`${this.configuration.apiUrl}/publicites/admin/${id}/reconduire/`, formData);
   }
 
   /** GET /publicites/admin/export/?type= : récupère le CSV et déclenche son téléchargement. */

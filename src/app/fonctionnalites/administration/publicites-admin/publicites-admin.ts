@@ -11,6 +11,7 @@ import { QuotasFormules } from '../quotas-formules/quotas-formules';
 import { StatsPublicite } from '../../../partage/stats-publicite/stats-publicite';
 import { InterrupteurStatsVisibles } from './interrupteur-stats-visibles/interrupteur-stats-visibles';
 import { BarreFiltresPublicitesAdmin } from './filtres-publicites-admin/filtres-publicites-admin';
+import { DialogPubPartenaire, ModeDialogPubPartenaire } from './dialog-pub-partenaire/dialog-pub-partenaire';
 import { extraireMessageErreur } from '../tableau-de-bord-admin/extraire-message-erreur';
 import { couleursGraphique, formaterNombre } from '../tableau-de-bord-admin/palette-graphiques';
 import { LIBELLES_PORTEE } from '../../../modeles/publicite.model';
@@ -43,7 +44,14 @@ interface ActionEnAttenteConfirmation {
  */
 @Component({
   selector: 'app-publicites-admin',
-  imports: [Graphique, QuotasFormules, BarreFiltresPublicitesAdmin, InterrupteurStatsVisibles, StatsPublicite],
+  imports: [
+    Graphique,
+    QuotasFormules,
+    BarreFiltresPublicitesAdmin,
+    InterrupteurStatsVisibles,
+    StatsPublicite,
+    DialogPubPartenaire,
+  ],
   templateUrl: './publicites-admin.html',
   styleUrl: './publicites-admin.scss',
 })
@@ -97,6 +105,17 @@ export class PublicitesAdmin implements OnInit, OnDestroy {
     this.peutExporter() ? '' : "Vous n'avez pas la capacité exporter_csv.",
   );
   readonly peutModerer = computed(() => this.permissionsService.aLaCapacite('valider_publicite'));
+  /** Créer / reconduire une pub pour un partenaire : capacité gerer_pubs_partenaires ou super-admin. */
+  readonly peutGererPubsPartenaires = computed(
+    () =>
+      (this.permissionsService.permissionsActuelles()?.isSuperuser ?? false) ||
+      this.permissionsService.aLaCapacite('gerer_pubs_partenaires'),
+  );
+
+  // ---- Fenêtre « Créer une pub pour un partenaire » / « Reconduire » ----
+  readonly dialogPubPartenaire = signal<{ mode: ModeDialogPubPartenaire; publicite: PubliciteAdmin | null } | null>(
+    null,
+  );
 
   readonly optionsDonut: ChartConfiguration['options'] = {
     plugins: { legend: { position: 'bottom' } },
@@ -191,6 +210,32 @@ export class PublicitesAdmin implements OnInit, OnDestroy {
   libellePortee(publicite: PubliciteAdmin): string | null {
     const portee = publicite.portee_effective ?? publicite.portee;
     return portee ? this.libellesPortee[portee] : null;
+  }
+
+  // ---- Pub créée ou reconduite pour un partenaire ----
+
+  ouvrirCreationPubPartenaire(): void {
+    this.messageErreur.set(null);
+    this.messageSucces.set(null);
+    this.dialogPubPartenaire.set({ mode: 'creation', publicite: null });
+  }
+
+  ouvrirReconduction(publicite: PubliciteAdmin): void {
+    this.messageErreur.set(null);
+    this.messageSucces.set(null);
+    this.dialogPubPartenaire.set({ mode: 'reconduction', publicite });
+  }
+
+  fermerDialogPubPartenaire(): void {
+    this.dialogPubPartenaire.set(null);
+  }
+
+  /** Succès : message, liste des campagnes et quotas des formules rafraîchis. */
+  surPubPartenaireReussie(message: string): void {
+    this.dialogPubPartenaire.set(null);
+    this.messageSucces.set(message);
+    this.charger(true);
+    this.quotas()?.charger();
   }
 
   // ---- Stats visibles par le partenaire (campagnes actives ou terminées) ----

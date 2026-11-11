@@ -111,6 +111,7 @@ export const GROUPES_CAPACITES: GroupeCapacites[] = [
     capacites: [
       { nom: 'valider_publicite', libelle: 'Valider une publicité' },
       { nom: 'offrir_campagne', libelle: 'Offrir des crédits de campagne' },
+      { nom: 'gerer_pubs_partenaires', libelle: 'Créer et reconduire des pubs pour un partenaire' },
       // Privilégiée : seul un super-admin peut la modifier (case verrouillée pour les autres).
       { nom: 'gerer_formules_pub', libelle: 'Gérer les formules et paramètres pub', privilegiee: true },
     ],

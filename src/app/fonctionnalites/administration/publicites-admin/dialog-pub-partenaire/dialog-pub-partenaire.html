@@ -1,0 +1,182 @@
+<div class="voile-modale" (click)="annule.emit()">
+  <div class="modale" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <h2>{{ estReconduction() ? 'Reconduire une campagne' : 'Créer une pub pour un partenaire' }}</h2>
+
+    @if (estReconduction() && publicite(); as pub) {
+      <section class="rappel-campagne">
+        <h3>Campagne d'origine</h3>
+        <p class="titre-rappel">{{ pub.titre }}</p>
+        @if (pub.partenaire_nom) {
+          <p>Partenaire : {{ pub.partenaire_nom }}</p>
+        }
+        <p>Formule : {{ formuleOrigine()?.nom ?? pub.formule }}</p>
+        @if (pub.debut_diffusion || pub.fin_diffusion) {
+          <p>Diffusée du {{ pub.debut_diffusion ?? '—' }} au {{ pub.fin_diffusion ?? '—' }}</p>
+        }
+        @if (pub.description) {
+          <p class="description-rappel">{{ pub.description }}</p>
+        }
+      </section>
+    }
+
+    @if (etapeConfirmation()) {
+      <section class="etape-confirmation">
+        <p>
+          Reconduire « {{ publicite()?.titre }} » du <strong>{{ dateDebut() }}</strong> au
+          <strong>{{ dateFin() }}</strong>, formule « {{ formuleEffective()?.nom ?? publicite()?.formule }} »,
+          <strong>{{ reglement() === 'offerte' ? 'offerte' : 'payée' }}</strong> ?
+        </p>
+        @if (erreurGenerale()) {
+          <p class="erreur-generale">{{ erreurGenerale() }}</p>
+        }
+        <div class="actions-modale">
+          <button type="button" class="bouton-secondaire" [disabled]="envoiEnCours()" (click)="retourFormulaire()">
+            Retour
+          </button>
+          <button type="button" class="bouton-principal" [disabled]="envoiEnCours()" (click)="envoyer()">
+            {{ envoiEnCours() ? 'Envoi…' : 'Confirmer la reconduction' }}
+          </button>
+        </div>
+      </section>
+    } @else {
+      <form (submit)="$event.preventDefault(); soumettre()">
+        @if (!estReconduction()) {
+          <section>
+            <h3>Partenaire et formule</h3>
+            <label for="dpp-partenaire">Partenaire</label>
+            <app-selecteur-partenaire
+              idChamp="dpp-partenaire"
+              [partenaire]="partenaire()"
+              (partenaireChange)="partenaire.set($event)"
+            />
+            @if (erreursChamps()['partenaire']) {
+              <p class="erreur-champ">{{ erreursChamps()['partenaire'] }}</p>
+            }
+          </section>
+        }
+
+        <section>
+          @if (estReconduction()) {
+            <h3>Formule et visuel (facultatifs)</h3>
+          }
+          <label for="dpp-formule">Formule</label>
+          <select id="dpp-formule" (change)="changerFormule($any($event.target).value)">
+            <option value="" [selected]="formuleId() === ''">
+              {{ estReconduction() ? 'Même formule' + (formuleOrigine() ? ' (' + formuleOrigine()!.nom + ')' : '') : '— Choisir —' }}
+            </option>
+            @for (f of formulesActives(); track f.id) {
+              <option [value]="f.id" [selected]="f.id === formuleId()">{{ libelleFormule(f) }}</option>
+            }
+          </select>
+          @if (erreursChamps()['formule'] || erreursChamps()['formule_id']) {
+            <p class="erreur-champ">{{ erreursChamps()['formule'] || erreursChamps()['formule_id'] }}</p>
+          }
+
+          @if (!estReconduction()) {
+            <label for="dpp-titre">Titre</label>
+            <input id="dpp-titre" type="text" [value]="titre()" (input)="titre.set($any($event.target).value)" />
+            @if (erreursChamps()['titre']) {
+              <p class="erreur-champ">{{ erreursChamps()['titre'] }}</p>
+            }
+
+            <label for="dpp-description">Description</label>
+            <textarea
+              id="dpp-description"
+              rows="3"
+              [value]="description()"
+              (input)="description.set($any($event.target).value)"
+            ></textarea>
+          }
+
+          <label for="dpp-image">
+            Image de couverture{{ estReconduction() ? ' (facultative : sinon celle d’origine)' : '' }}
+          </label>
+          <input id="dpp-image" type="file" accept="image/*" (change)="selectionnerFichier($event, 'image')" />
+          @if (erreursChamps()['image_couverture']) {
+            <p class="erreur-champ">{{ erreursChamps()['image_couverture'] }}</p>
+          }
+
+          @if (!estReconduction()) {
+            <label for="dpp-video">Vidéo (facultative)</label>
+            <input id="dpp-video" type="file" accept="video/*" (change)="selectionnerFichier($event, 'video')" />
+            @if (erreursChamps()['video']) {
+              <p class="erreur-champ">{{ erreursChamps()['video'] }}</p>
+            }
+
+            <label for="dpp-portee">Portée (facultative)</label>
+            <select id="dpp-portee" (change)="portee.set($any($event.target).value)">
+              <option value="" [selected]="portee() === ''">Portée de la formule</option>
+              @for (option of optionsPortee; track option.valeur) {
+                <option [value]="option.valeur" [selected]="option.valeur === portee()">{{ option.libelle }}</option>
+              }
+            </select>
+            @if (erreursChamps()['portee']) {
+              <p class="erreur-champ">{{ erreursChamps()['portee'] }}</p>
+            }
+          }
+        </section>
+
+        <section>
+          <h3>Diffusion et règlement</h3>
+          <div class="grille-champs">
+            <div>
+              <label for="dpp-debut">Date de début</label>
+              <input id="dpp-debut" type="date" [value]="dateDebut()" (change)="changerDateDebut($any($event.target).value)" />
+              @if (erreursChamps()['date_debut']) {
+                <p class="erreur-champ">{{ erreursChamps()['date_debut'] }}</p>
+              }
+            </div>
+            <div>
+              <label for="dpp-fin">Date de fin</label>
+              <input id="dpp-fin" type="date" [value]="dateFin()" (change)="dateFin.set($any($event.target).value)" />
+              @if (dureeFormule() !== null) {
+                <p class="aide">Préremplie : début + {{ dureeFormule() }} jour(s) de la formule.</p>
+              }
+              @if (erreursChamps()['date_fin']) {
+                <p class="erreur-champ">{{ erreursChamps()['date_fin'] }}</p>
+              }
+            </div>
+          </div>
+
+          <fieldset class="choix-reglement">
+            <legend>Règlement</legend>
+            @for (option of optionsReglement; track option.valeur) {
+              <label class="option-reglement">
+                <input
+                  type="radio"
+                  name="dpp-reglement"
+                  [value]="option.valeur"
+                  [checked]="reglement() === option.valeur"
+                  (change)="changerReglement(option.valeur)"
+                />
+                {{ option.libelle }}
+              </label>
+            }
+          </fieldset>
+          @if (erreursChamps()['reglement']) {
+            <p class="erreur-champ">{{ erreursChamps()['reglement'] }}</p>
+          }
+
+          @if (reglement() === 'offerte') {
+            <label for="dpp-motif">Motif (facultatif)</label>
+            <textarea id="dpp-motif" rows="2" [value]="motif()" (input)="motif.set($any($event.target).value)"></textarea>
+            @if (erreursChamps()['motif']) {
+              <p class="erreur-champ">{{ erreursChamps()['motif'] }}</p>
+            }
+          }
+        </section>
+
+        @if (erreurGenerale()) {
+          <p class="erreur-generale">{{ erreurGenerale() }}</p>
+        }
+
+        <div class="actions-modale">
+          <button type="button" class="bouton-secondaire" [disabled]="envoiEnCours()" (click)="annule.emit()">Annuler</button>
+          <button type="submit" class="bouton-principal" [disabled]="envoiEnCours()">
+            {{ envoiEnCours() ? 'Envoi…' : estReconduction() ? 'Reconduire…' : 'Créer la pub' }}
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</div>

@@ -2,6 +2,11 @@
   <div class="entete">
     <h1>Publicités</h1>
     <div class="actions-entete">
+      @if (peutGererPubsPartenaires()) {
+        <button type="button" class="bouton-principal" (click)="ouvrirCreationPubPartenaire()">
+          + Créer une pub pour un partenaire
+        </button>
+      }
       <button type="button" class="bouton-secondaire" [disabled]="chargementEnCours()" (click)="rafraichir()">
         {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
       </button>
@@ -133,6 +138,12 @@
               />
             }
 
+            @if (peutGererPubsPartenaires() && pub.statut === 'terminee') {
+              <div class="actions-publicite">
+                <button type="button" class="bouton-action" (click)="ouvrirReconduction(pub)">Reconduire</button>
+              </div>
+            }
+
             @if (peutModerer() && actionsDisponibles(pub).length > 0) {
               <div class="actions-publicite">
                 @for (action of actionsDisponibles(pub); track action.cible) {
@@ -154,6 +165,16 @@
     }
   }
 </section>
+
+@if (dialogPubPartenaire(); as dialog) {
+  <app-dialog-pub-partenaire
+    [mode]="dialog.mode"
+    [publicite]="dialog.publicite"
+    [formules]="formulesQuotas()"
+    (annule)="fermerDialogPubPartenaire()"
+    (reussi)="surPubPartenaireReussie($event)"
+  />
+}
 
 @if (actionAConfirmer(); as attente) {
   <div class="voile-confirmation" (click)="annulerAction()">

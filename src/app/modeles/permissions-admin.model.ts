@@ -35,6 +35,7 @@ export type NomCapacite =
   | 'creer_partenaire'
   | 'valider_publicite'
   | 'offrir_campagne'
+  | 'gerer_pubs_partenaires'
   | 'valider_commande'
   | 'valider_paiement'
   | 'modifier_plans_formules'
@@ -103,6 +104,7 @@ export const LIBELLES_CAPACITE: Record<NomCapacite, string> = {
   creer_partenaire: 'Créer un partenaire',
   valider_publicite: 'Valider une publicité',
   offrir_campagne: 'Offrir une campagne publicitaire',
+  gerer_pubs_partenaires: 'Créer et reconduire des pubs pour un partenaire',
   valider_commande: 'Valider une commande',
   valider_paiement: 'Valider un paiement',
   modifier_plans_formules: 'Modifier les plans et formules',

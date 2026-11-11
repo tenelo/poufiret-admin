@@ -47,6 +47,10 @@ export interface PubliciteAdmin {
   // URLs absolues, fournies par le backend telles quelles.
   image_couverture?: string | null;
   video?: string | null;
+  // Optionnels (rappel de la fenêtre « Reconduire ») : affichés seulement s'ils sont fournis.
+  description?: string | null;
+  partenaire_nom?: string | null;
+  formule_id?: string | null;
 }
 
 /** Compteurs par statut (hors brouillon) ; ignorent le filtre `statut` mais respectent les autres. */
@@ -99,6 +103,8 @@ export interface QuotaFormule {
   nb_en_attente: number;
   nb_en_attente_paiement: number;
   nb_en_attente_validation: number;
+  // Durée de diffusion (jours), si l'endpoint la fournit ; sinon lue dans GET /publicites/formules/.
+  duree_jours?: number;
 }
 
 export interface ReponseQuotasFormules {
@@ -152,3 +158,46 @@ export const OPTIONS_EXPORT_PUBLICITES: { valeur: TypeExportPublicites; libelle:
   { valeur: 'profils', libelle: 'Profils' },
   { valeur: 'sessions', libelle: 'Sessions' },
 ];
+
+// ---- Pub créée ou reconduite par l'admin pour un partenaire (capacité gerer_pubs_partenaires) ----
+
+/** Règlement obligatoire d'une pub créée ou reconduite par l'admin. */
+export type ReglementPubPartenaire = 'payee' | 'offerte';
+
+export const OPTIONS_REGLEMENT_PUB_PARTENAIRE: { valeur: ReglementPubPartenaire; libelle: string }[] = [
+  { valeur: 'payee', libelle: 'Payée' },
+  { valeur: 'offerte', libelle: 'Offerte' },
+];
+
+/** Champs communs à la création et à la reconduction (dates AAAA-MM-JJ). */
+interface RequetePubPartenaireCommune {
+  dateDebut: string;
+  dateFin: string;
+  reglement: ReglementPubPartenaire;
+  /** Seulement pour « Offerte » (ignoré sinon). */
+  motif?: string;
+}
+
+/** Corps de la création (envoyé en multipart par PublicitesAdminService). */
+export interface RequeteCreationPubPartenaire extends RequetePubPartenaireCommune {
+  partenaireId: number;
+  formuleId: string;
+  titre: string;
+  description?: string;
+  imageCouverture: File;
+  video?: File;
+  portee?: PorteePublicite;
+}
+
+/** Corps de la reconduction (multipart) : formule et image facultatives (sinon celles d'origine). */
+export interface RequeteReconductionPubPartenaire extends RequetePubPartenaireCommune {
+  formuleId?: string;
+  imageCouverture?: File;
+}
+
+/** Ajoute `jours` jours à une date AAAA-MM-JJ (calcul en UTC, sans décalage de fuseau). */
+export function ajouterJours(dateIso: string, jours: number): string {
+  const [annee, mois, jour] = dateIso.split('-').map(Number);
+  const date = new Date(Date.UTC(annee, mois - 1, jour + jours));
+  return date.toISOString().slice(0, 10);
+}
