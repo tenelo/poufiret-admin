@@ -24,6 +24,11 @@ export interface CategorieAdmin {
   nb_enfants: number;
   /** Présentation des sous-catégories dans l'app ; pastilles par défaut. */
   affichage_enfants: AffichageEnfantsCategorie;
+  /**
+   * Nombre maximum de photos par article (1 à 4) ; null = selon l'abonnement du vendeur.
+   * S'applique aussi aux sous-catégories sans réglage propre (héritage calculé côté serveur).
+   */
+  nb_max_photos_par_article?: number | null;
 }
 
 export interface ReponseCategoriesAdmin {
@@ -57,6 +62,8 @@ export interface RequeteCategorieAdmin {
   types_partenaire?: string[];
   mots_cles?: string[];
   affichage_enfants?: AffichageEnfantsCategorie;
+  /** null = vide (selon l'abonnement du vendeur), envoyé comme chaîne vide en multipart. */
+  nb_max_photos_par_article?: number | null;
 }
 
 // Corps de POST ordre/ : ordre complet des enfants directs d'un même parent
@@ -65,6 +72,15 @@ export interface RequeteOrdreCategoriesAdmin {
   parent_id: number | null;
   ordre: number[];
 }
+
+/** Choix du champ « Nombre maximum de photos par article » ('' = vide). */
+export const OPTIONS_MAX_PHOTOS_PAR_ARTICLE: { valeur: number | ''; libelle: string }[] = [
+  { valeur: '', libelle: 'Vide' },
+  { valeur: 1, libelle: '1' },
+  { valeur: 2, libelle: '2' },
+  { valeur: 3, libelle: '3' },
+  { valeur: 4, libelle: '4' },
+];
 
 export interface ErreursCategorieAdmin {
   nom: string | null;

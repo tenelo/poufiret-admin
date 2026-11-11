@@ -60,6 +60,8 @@ export interface PlatCarte extends Tracabilite {
   fiche_specifique?: Record<string, unknown> | null;
   // Imbriqués en lecture dans la réponse du plat (pas besoin d'un GET séparé une fois le plat chargé).
   images: ImagePlatCarte[];
+  /** Plafond effectif de photos (catégorie, sinon abonnement), calculé par le serveur. */
+  nb_photos_max?: number | null;
   variantes: VarianteCarte[];
   groupes_options: GroupeOptionCarte[];
 }

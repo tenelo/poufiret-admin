@@ -1,0 +1,50 @@
+<div class="ajout-photos">
+  <span class="compteur-photos" [class.compteur-plein]="plafondAtteint()">
+    @if (plafond() !== null) {
+      {{ nbPhotos() }} / {{ plafond() }} photos
+    } @else {
+      {{ nbPhotos() }} photo{{ nbPhotos() > 1 ? 's' : '' }}
+    }
+  </span>
+
+  @if (messageErreur()) {
+    <p class="erreur-ajout">{{ messageErreur() }}</p>
+  }
+
+  @if (selection().length > 0) {
+    <div class="apercus">
+      @for (element of selection(); track element.apercu; let premiere = $first) {
+        <div class="apercu">
+          <img [src]="element.apercu" [alt]="element.fichier.name" />
+          @if (premiere && premierePrincipale()) {
+            <span class="badge-principale">Principale</span>
+          }
+        </div>
+      }
+    </div>
+    <label class="case-principale">
+      <input type="checkbox" [checked]="premierePrincipale()" (change)="premierePrincipale.set($any($event.target).checked)" />
+      {{ selection().length > 1 ? 'Définir la première comme photo principale' : 'Définir comme photo principale' }}
+    </label>
+    <div class="actions-ajout">
+      <button type="button" class="bouton-secondaire" [disabled]="envoiEnCours()" (click)="annuler()">Annuler</button>
+      <button type="button" class="bouton-principal" [disabled]="envoiEnCours() || plafondAtteint()" (click)="envoyer()">
+        {{ envoiEnCours() ? 'Envoi en cours…' : selection().length > 1 ? 'Ajouter ces ' + selection().length + ' photos' : 'Ajouter cette photo' }}
+      </button>
+    </div>
+  } @else {
+    <input #entreeFichiers type="file" accept="image/*" multiple hidden (change)="selectionner($event)" />
+    <button
+      type="button"
+      class="bouton-secondaire bouton-ajouter"
+      [disabled]="plafondAtteint() || envoiEnCours()"
+      [title]="plafondAtteint() ? messagePlafond() : ''"
+      (click)="entreeFichiers.click()"
+    >
+      + Ajouter des photos
+    </button>
+    @if (plafondAtteint()) {
+      <p class="plafond-atteint">{{ messagePlafond() }}</p>
+    }
+  }
+</div>

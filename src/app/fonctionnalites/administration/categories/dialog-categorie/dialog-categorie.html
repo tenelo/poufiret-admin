@@ -89,6 +89,17 @@
         </label>
       </div>
 
+      <label for="max-photos-categorie">Nombre maximum de photos par article</label>
+      <select id="max-photos-categorie" (change)="changerMaxPhotos($any($event.target).value)">
+        @for (option of optionsMaxPhotos; track option.valeur) {
+          <option [value]="option.valeur" [selected]="option.valeur === maxPhotosParArticle()">{{ option.libelle }}</option>
+        }
+      </select>
+      <p class="aide">
+        Vide : selon l'abonnement du vendeur. S'applique aussi aux sous-catégories qui n'ont pas leur
+        propre réglage.
+      </p>
+
       <label>Types de partenaire liés</label>
       <p class="aide">Un partenaire de ce type sera automatiquement placé dans cette catégorie.</p>
       <div class="liste-types-partenaire">

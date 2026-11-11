@@ -28,6 +28,8 @@ export interface ArticleListe extends ChampsArticleLectureSeule {
   est_disponible: boolean;
   categorie: number | null;
   image_principale: string | null;
+  /** Plafond effectif de photos de l'article (catégorie, sinon abonnement), calculé par le serveur. */
+  nb_photos_max?: number | null;
 }
 
 /** Détail complet tel que renvoyé par GET /catalogue/articles/<slug>/. */

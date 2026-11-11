@@ -4,6 +4,7 @@ import {
   AffichageEnfantsCategorie,
   CategorieAdmin,
   ErreursCategorieAdmin,
+  OPTIONS_MAX_PHOTOS_PAR_ARTICLE,
   RequeteCategorieAdmin,
   TypePartenaireCategorie,
 } from '../../../../modeles/categorie-admin.model';
@@ -40,6 +41,9 @@ export class DialogCategorie implements OnInit, OnDestroy {
   readonly parentId = signal<number | ''>('');
   readonly estActive = signal(true);
   readonly affichageEnfants = signal<AffichageEnfantsCategorie>('pastilles');
+  /** '' = vide : selon l'abonnement du vendeur. */
+  readonly maxPhotosParArticle = signal<number | ''>('');
+  readonly optionsMaxPhotos = OPTIONS_MAX_PHOTOS_PAR_ARTICLE;
   readonly touche = signal(false);
 
   readonly typesSelectionnes = signal<Set<string>>(new Set());
@@ -69,6 +73,7 @@ export class DialogCategorie implements OnInit, OnDestroy {
       this.parentId.set(categorie.parent_id ?? '');
       this.estActive.set(categorie.est_active);
       this.affichageEnfants.set(categorie.affichage_enfants);
+      this.maxPhotosParArticle.set(categorie.nb_max_photos_par_article ?? '');
       this.typesSelectionnes.set(new Set(categorie.types_partenaire));
       this.motsCles.set([...categorie.mots_cles]);
       this.apercuImage.set(categorie.image);
@@ -90,6 +95,10 @@ export class DialogCategorie implements OnInit, OnDestroy {
 
   changerAffichageEnfants(valeur: string): void {
     this.affichageEnfants.set(valeur as AffichageEnfantsCategorie);
+  }
+
+  changerMaxPhotos(valeur: string): void {
+    this.maxPhotosParArticle.set(valeur === '' ? '' : Number(valeur));
   }
 
   basculerType(valeur: string): void {
@@ -179,6 +188,7 @@ export class DialogCategorie implements OnInit, OnDestroy {
       parent_id: this.parentId() ? Number(this.parentId()) : null,
       est_active: this.estActive(),
       affichage_enfants: this.affichageEnfants(),
+      nb_max_photos_par_article: this.maxPhotosParArticle() === '' ? null : Number(this.maxPhotosParArticle()),
       types_partenaire: [...this.typesSelectionnes()],
       mots_cles: this.motsCles(),
     };
