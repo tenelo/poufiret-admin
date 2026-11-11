@@ -28,7 +28,7 @@ export interface CategorieAdmin {
    * Nombre maximum de photos par article (1 à 4) ; null = selon l'abonnement du vendeur.
    * S'applique aussi aux sous-catégories sans réglage propre (héritage calculé côté serveur).
    */
-  nb_max_photos_par_article?: number | null;
+  max_photos_par_article?: number | null;
 }
 
 export interface ReponseCategoriesAdmin {
@@ -63,7 +63,7 @@ export interface RequeteCategorieAdmin {
   mots_cles?: string[];
   affichage_enfants?: AffichageEnfantsCategorie;
   /** null = vide (selon l'abonnement du vendeur), envoyé comme chaîne vide en multipart. */
-  nb_max_photos_par_article?: number | null;
+  max_photos_par_article?: number | null;
 }
 
 // Corps de POST ordre/ : ordre complet des enfants directs d'un même parent

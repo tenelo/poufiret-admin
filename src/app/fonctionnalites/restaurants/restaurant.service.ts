@@ -22,6 +22,7 @@ import {
   GroupeOptionCarte,
   ImagePlatCarte,
   OptionCarte,
+  PlafondPhotosPlat,
   PlatCarte,
   RequeteEpuise,
   RequeteGroupeOptionCarte,
@@ -293,8 +294,28 @@ export class RestaurantService {
 
   // ---- Carte : images des plats ----
 
-  listerImagesPlat(prefixe: PrefixeRestaurant, platId: number): Observable<ImagePlatCarte[]> {
-    return this.listerPaginee<ImagePlatCarte>(`${this.base(prefixe)}carte/plats/${platId}/images/`);
+  /**
+   * GET P/carte/plats/<id>/images/ : images du plat et leur plafond de photos (clé
+   * plafond_photos de la 1re page ; absente si le backend ne l'expose pas encore, le plafond
+   * est alors null — aucune limite appliquée côté écran, comme avant ce champ).
+   */
+  listerImagesPlat(
+    prefixe: PrefixeRestaurant,
+    platId: number,
+  ): Observable<{ images: ImagePlatCarte[]; plafond: PlafondPhotosPlat | null }> {
+    const url = `${this.base(prefixe)}carte/plats/${platId}/images/`;
+    const params = new HttpParams().set('page_size', TAILLE_PAGE_CARTE);
+    type ReponseImagesPlat = ReponsePaginee<ImagePlatCarte> & { plafond_photos?: PlafondPhotosPlat };
+    return this.http.get<ReponseImagesPlat>(url, { params }).pipe(
+      expand((reponse) => (reponse.next ? this.http.get<ReponseImagesPlat>(reponse.next) : EMPTY)),
+      reduce(
+        (acc, reponse, index) => ({
+          images: [...acc.images, ...reponse.results],
+          plafond: index === 0 ? (reponse.plafond_photos ?? null) : acc.plafond,
+        }),
+        { images: [] as ImagePlatCarte[], plafond: null as PlafondPhotosPlat | null },
+      ),
+    );
   }
 
   ajouterImagePlat(

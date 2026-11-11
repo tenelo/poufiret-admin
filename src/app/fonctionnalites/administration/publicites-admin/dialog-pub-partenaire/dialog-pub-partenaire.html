@@ -128,7 +128,7 @@
             </div>
             <div>
               <label for="dpp-fin">Date de fin</label>
-              <input id="dpp-fin" type="date" [value]="dateFin()" (change)="dateFin.set($any($event.target).value)" />
+              <input id="dpp-fin" type="date" [value]="dateFin()" (change)="changerDateFin($any($event.target).value)" />
               @if (dureeFormule() !== null) {
                 <p class="aide">Préremplie : début + {{ dureeFormule() }} jour(s) de la formule.</p>
               }

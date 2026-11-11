@@ -143,7 +143,7 @@
           <p class="aide">2 à 4 photos sous plusieurs angles.</p>
         }
         @if (platCourant(); as plat) {
-          <app-carte-images [prefixe]="prefixe()" [platId]="plat.id" [plafond]="plat.nb_photos_max ?? null" />
+          <app-carte-images [prefixe]="prefixe()" [platId]="plat.id" />
         }
       }
 

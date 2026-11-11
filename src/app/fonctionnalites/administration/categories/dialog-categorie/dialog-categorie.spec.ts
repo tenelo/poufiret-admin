@@ -24,7 +24,7 @@ const CATEGORIE: CategorieAdmin = {
   nb_partenaires: 0,
   nb_enfants: 0,
   affichage_enfants: 'pastilles',
-  nb_max_photos_par_article: 3,
+  max_photos_par_article: 3,
 };
 
 describe('DialogCategorie — nombre maximum de photos par article', () => {
@@ -63,7 +63,7 @@ describe('DialogCategorie — nombre maximum de photos par article', () => {
     fixture.componentInstance.nom.set('Chaussures');
     choisir('4');
     fixture.componentInstance.soumettre();
-    expect(emis[0].nb_max_photos_par_article).toBe(4);
+    expect(emis[0].max_photos_par_article).toBe(4);
   });
 
   it('envoie null quand le champ est vide, y compris pour vider un réglage existant', async () => {
@@ -71,11 +71,11 @@ describe('DialogCategorie — nombre maximum de photos par article', () => {
     expect(fixture.componentInstance.maxPhotosParArticle()).toBe(3);
     choisir('');
     fixture.componentInstance.soumettre();
-    expect(emis[0].nb_max_photos_par_article).toBeNull();
+    expect(emis[0].max_photos_par_article).toBeNull();
   });
 });
 
-describe('CategoriesAdminService — champ nb_max_photos_par_article', () => {
+describe('CategoriesAdminService — champ max_photos_par_article', () => {
   const API = 'https://api.test/api/v1';
 
   function corpsEnvoye(donnees: RequeteCategorieAdmin): Record<string, FormDataEntryValue> {
@@ -91,14 +91,14 @@ describe('CategoriesAdminService — champ nb_max_photos_par_article', () => {
   }
 
   it('envoie la valeur en texte', () => {
-    expect(corpsEnvoye({ nom: 'Mode', nb_max_photos_par_article: 2 })['nb_max_photos_par_article']).toBe('2');
+    expect(corpsEnvoye({ nom: 'Mode', max_photos_par_article: 2 })['max_photos_par_article']).toBe('2');
   });
 
   it('envoie une chaîne vide pour « Vide » (null)', () => {
-    expect(corpsEnvoye({ nom: 'Mode', nb_max_photos_par_article: null })['nb_max_photos_par_article']).toBe('');
+    expect(corpsEnvoye({ nom: 'Mode', max_photos_par_article: null })['max_photos_par_article']).toBe('');
   });
 
   it('n’envoie pas le champ s’il est absent de la requête', () => {
-    expect(corpsEnvoye({ nom: 'Mode' })['nb_max_photos_par_article']).toBeUndefined();
+    expect(corpsEnvoye({ nom: 'Mode' })['max_photos_par_article']).toBeUndefined();
   });
 });

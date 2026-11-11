@@ -27,13 +27,19 @@ interface DureeFormule {
   duree_jours: number;
 }
 
-/** Ajoute à un FormData les champs communs (dates, règlement, motif pour « Offerte »). */
+/**
+ * Ajoute à un FormData les champs communs (dates, règlement, motif pour « Offerte »).
+ * date_fin seulement si fournie (l'admin l'a modifiée) : sinon le serveur la calcule
+ * lui-même selon la durée de la formule.
+ */
 function ajouterReglement(
   formData: FormData,
-  donnees: { dateDebut: string; dateFin: string; reglement: string; motif?: string },
+  donnees: { dateDebut: string; dateFin?: string; reglement: string; motif?: string },
 ): void {
   formData.append('date_debut', donnees.dateDebut);
-  formData.append('date_fin', donnees.dateFin);
+  if (donnees.dateFin) {
+    formData.append('date_fin', donnees.dateFin);
+  }
   formData.append('reglement', donnees.reglement);
   if (donnees.reglement === 'offerte' && donnees.motif?.trim()) {
     formData.append('motif', donnees.motif.trim());
@@ -95,7 +101,7 @@ export class PublicitesAdminService {
   }
 
   /**
-   * POST /publicites/admin/creer-pour-partenaire/ (multipart, capacité gerer_pubs_partenaires) :
+   * POST /publicites/admin/creer/ (multipart, capacité gerer_pubs_partenaires) :
    * crée une pub pour un partenaire, réglée « payee » ou « offerte ». Mêmes noms de champs que la
    * création côté partenaire (formule, titre, description, image_couverture, video, portee).
    * Ne jamais poser de Content-Type : HttpClient gère le boundary du FormData.
@@ -110,7 +116,7 @@ export class PublicitesAdminService {
     if (donnees.video) formData.append('video', donnees.video);
     if (donnees.portee) formData.append('portee', donnees.portee);
     ajouterReglement(formData, donnees);
-    return this.http.post(`${this.configuration.apiUrl}/publicites/admin/creer-pour-partenaire/`, formData);
+    return this.http.post(`${this.configuration.apiUrl}/publicites/admin/creer/`, formData);
   }
 
   /**

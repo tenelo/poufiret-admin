@@ -60,8 +60,6 @@ export interface PlatCarte extends Tracabilite {
   fiche_specifique?: Record<string, unknown> | null;
   // Imbriqués en lecture dans la réponse du plat (pas besoin d'un GET séparé une fois le plat chargé).
   images: ImagePlatCarte[];
-  /** Plafond effectif de photos (catégorie, sinon abonnement), calculé par le serveur. */
-  nb_photos_max?: number | null;
   variantes: VarianteCarte[];
   groupes_options: GroupeOptionCarte[];
 }
@@ -93,6 +91,23 @@ export interface ImagePlatCarte {
   ordre: number;
   est_principale: boolean;
   est_active: boolean;
+}
+
+/**
+ * Plafond de photos du plat, renvoyé par GET P/carte/plats/<id>/images/ (clé plafond_photos de
+ * la réponse) : max (null = illimité), source du plafond (catégorie ou abonnement). Il n'existe
+ * PAS de champ équivalent sur le plat lui-même (voir PlatCarte) : seule la liste des images
+ * l'expose. Même forme que PlafondPhotosArticle (image-article.model.ts), dupliquée ici :
+ * domaines distincts (carte restaurant vs catalogue), sans import croisé entre les deux.
+ */
+export interface PlafondPhotosPlat {
+  max: number | null;
+  source: 'categorie' | 'abonnement';
+  categorie_id: number | null;
+  categorie_nom: string | null;
+  plan_libelle: string | null;
+  nb_photos: number;
+  peut_ajouter: boolean;
 }
 
 // ---- Variantes ----

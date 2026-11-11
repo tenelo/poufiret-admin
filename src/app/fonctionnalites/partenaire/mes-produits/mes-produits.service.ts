@@ -5,7 +5,7 @@ import { EMPTY, Observable, expand, map, reduce } from 'rxjs';
 import { ConfigurationService } from '../../../noyau/config/configuration.service';
 import { ArticleDetail, ArticleListe, RequeteArticle } from '../../../modeles/article.model';
 import { CategorieCatalogue } from '../../../modeles/categorie-catalogue.model';
-import { ImageArticle } from '../../../modeles/image-article.model';
+import { ImageArticle, PlafondPhotosArticle, ReponseImagesArticle } from '../../../modeles/image-article.model';
 import { ReponsePaginee } from '../../../modeles/pagination.model';
 
 // DRF peut renvoyer soit un tableau brut, soit une page paginée {results: [...]}
@@ -88,12 +88,22 @@ export class MesProduitsService {
       .pipe(map(normaliserListe));
   }
 
-  /** GET /catalogue/images/?article=<id> : images d'un article. */
-  listerImages(articleId: number): Observable<ImageArticle[]> {
+  /**
+   * GET /catalogue/images/?article=<id> : images d'un article et leur plafond de photos
+   * (clé plafond_photos de la réponse ; absente si le backend ne l'expose pas encore, le
+   * plafond est alors null et l'appelant retombe sur le quota du forfait).
+   */
+  listerImages(articleId: number): Observable<{ images: ImageArticle[]; plafond: PlafondPhotosArticle | null }> {
     const params = new HttpParams().set('article', articleId);
     return this.http
-      .get<ReponseListe<ImageArticle>>(`${this.configuration.apiUrl}/catalogue/images/`, { params })
-      .pipe(map(normaliserListe));
+      .get<ImageArticle[] | ReponseImagesArticle>(`${this.configuration.apiUrl}/catalogue/images/`, { params })
+      .pipe(
+        map((reponse) =>
+          Array.isArray(reponse)
+            ? { images: reponse, plafond: null }
+            : { images: reponse.results ?? reponse.resultats ?? [], plafond: reponse.plafond_photos ?? null },
+        ),
+      );
   }
 
   /**

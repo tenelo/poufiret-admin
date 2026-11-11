@@ -73,6 +73,10 @@ export class DialogPubPartenaire implements OnInit {
   readonly portee = signal<PorteePublicite | ''>('');
   readonly dateDebut = signal(aujourdhuiIso());
   readonly dateFin = signal('');
+  /** Vrai si l'admin a modifié la date de fin lui-même (sinon elle n'est pas envoyée au serveur,
+   *  qui la calcule selon la durée de la formule). Remis à faux à chaque repréremplissage
+   *  automatique (changement de formule ou de date de début). */
+  readonly dateFinModifiee = signal(false);
   readonly reglement = signal<ReglementPubPartenaire | ''>('');
   readonly motif = signal('');
 
@@ -124,11 +128,16 @@ export class DialogPubPartenaire implements OnInit {
     return `${f.nom} — ${places}`;
   }
 
-  /** Date de fin = début + durée de la formule (si connue) ; reste modifiable à la main. */
+  /**
+   * Date de fin = début + durée de la formule (si connue) ; reste modifiable à la main.
+   * Remet `dateFinModifiee` à faux : ce repréremplissage automatique ne compte pas comme une
+   * modification de l'admin (voir `changerDateFin`).
+   */
   private preremplirDateFin(): void {
     const duree = this.dureeFormule();
     if (this.dateDebut() && duree !== null && !Number.isNaN(duree)) {
       this.dateFin.set(ajouterJours(this.dateDebut(), duree));
+      this.dateFinModifiee.set(false);
     }
   }
 
@@ -140,6 +149,12 @@ export class DialogPubPartenaire implements OnInit {
   changerDateDebut(valeur: string): void {
     this.dateDebut.set(valeur);
     this.preremplirDateFin();
+  }
+
+  /** L'admin modifie la date de fin lui-même : envoyée telle quelle au serveur (voir `envoyer`). */
+  changerDateFin(valeur: string): void {
+    this.dateFin.set(valeur);
+    this.dateFinModifiee.set(true);
   }
 
   changerReglement(valeur: ReglementPubPartenaire): void {
@@ -199,7 +214,9 @@ export class DialogPubPartenaire implements OnInit {
     if (this.envoiEnCours()) return;
     const commun = {
       dateDebut: this.dateDebut(),
-      dateFin: this.dateFin(),
+      // Seulement si l'admin l'a modifiée : sinon le serveur calcule la fin selon la durée
+      // de la formule (voir `dateFinModifiee`).
+      dateFin: this.dateFinModifiee() ? this.dateFin() : undefined,
       reglement: this.reglement() as ReglementPubPartenaire,
       motif: this.reglement() === 'offerte' ? this.motif().trim() || undefined : undefined,
     };

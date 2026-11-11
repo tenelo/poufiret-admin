@@ -73,7 +73,7 @@ export class DialogCategorie implements OnInit, OnDestroy {
       this.parentId.set(categorie.parent_id ?? '');
       this.estActive.set(categorie.est_active);
       this.affichageEnfants.set(categorie.affichage_enfants);
-      this.maxPhotosParArticle.set(categorie.nb_max_photos_par_article ?? '');
+      this.maxPhotosParArticle.set(categorie.max_photos_par_article ?? '');
       this.typesSelectionnes.set(new Set(categorie.types_partenaire));
       this.motsCles.set([...categorie.mots_cles]);
       this.apercuImage.set(categorie.image);
@@ -188,7 +188,7 @@ export class DialogCategorie implements OnInit, OnDestroy {
       parent_id: this.parentId() ? Number(this.parentId()) : null,
       est_active: this.estActive(),
       affichage_enfants: this.affichageEnfants(),
-      nb_max_photos_par_article: this.maxPhotosParArticle() === '' ? null : Number(this.maxPhotosParArticle()),
+      max_photos_par_article: this.maxPhotosParArticle() === '' ? null : Number(this.maxPhotosParArticle()),
       types_partenaire: [...this.typesSelectionnes()],
       mots_cles: this.motsCles(),
     };

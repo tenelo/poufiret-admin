@@ -3,7 +3,7 @@ import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList, moveItemInArray } fro
 import { Observable, forkJoin, of, switchMap } from 'rxjs';
 
 import { MesProduitsService } from '../mes-produits.service';
-import { ImageArticle } from '../../../../modeles/image-article.model';
+import { ImageArticle, PlafondPhotosArticle } from '../../../../modeles/image-article.model';
 import { extraireMessageErreur } from '../extraire-message-erreur';
 import { AjoutPhotos, TeleverserPhoto } from '../../../../partage/ajout-photos/ajout-photos';
 
@@ -23,7 +23,8 @@ export class GestionImages implements OnInit {
 
   readonly articleId = input.required<number>();
   readonly nomArticle = input('');
-  /** Plafond effectif de photos de l'article (renvoyé par le serveur, sinon celui du forfait). */
+  /** Repli : quota du forfait, utilisé seulement si la réponse de la liste d'images n'expose
+   *  pas plafond_photos (voir `plafondPhotos` et `plafond`). */
   readonly quotaMax = input(Infinity);
 
   readonly ferme = output<void>();
@@ -32,6 +33,8 @@ export class GestionImages implements OnInit {
   readonly erreurChargement = signal<string | null>(null);
 
   readonly images = signal<ImageArticle[]>([]);
+  /** Plafond lu dans la réponse de la liste (plafond_photos) ; null si absent de la réponse. */
+  readonly plafondPhotos = signal<PlafondPhotosArticle | null>(null);
 
   readonly suppressionEnCoursId = signal<number | null>(null);
   readonly imageAConfirmerSuppression = signal<ImageArticle | null>(null);
@@ -43,8 +46,18 @@ export class GestionImages implements OnInit {
   readonly messageErreur = signal<string | null>(null);
   readonly messageSucces = signal<string | null>(null);
 
-  /** Plafond transmis à AjoutPhotos (null = aucun plafond connu). */
-  readonly plafond = computed(() => (Number.isFinite(this.quotaMax()) ? this.quotaMax() : null));
+  /**
+   * Plafond transmis à AjoutPhotos : plafond_photos.max si la réponse de la liste l'expose
+   * (null = illimité, transmis tel quel), sinon le repli historique sur le quota du forfait
+   * (`quotaMax`, null si infini c.-à-d. aucun plafond connu).
+   */
+  readonly plafond = computed(() => {
+    const plafondPhotos = this.plafondPhotos();
+    if (plafondPhotos) {
+      return plafondPhotos.max;
+    }
+    return Number.isFinite(this.quotaMax()) ? this.quotaMax() : null;
+  });
 
   /** Envoi d'une photo (POST /catalogue/images/), utilisé par AjoutPhotos. */
   readonly televerser: TeleverserPhoto = (fichier, estPrincipale) =>
@@ -64,9 +77,10 @@ export class GestionImages implements OnInit {
     this.erreurChargement.set(null);
 
     this.mesProduitsService.listerImages(this.articleId()).subscribe({
-      next: (images) => {
+      next: ({ images, plafond }) => {
         this.chargementEnCours.set(false);
         this.images.set(images);
+        this.plafondPhotos.set(plafond);
       },
       error: (erreur: unknown) => {
         this.chargementEnCours.set(false);

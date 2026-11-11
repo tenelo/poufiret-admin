@@ -172,7 +172,9 @@ export const OPTIONS_REGLEMENT_PUB_PARTENAIRE: { valeur: ReglementPubPartenaire;
 /** Champs communs à la création et à la reconduction (dates AAAA-MM-JJ). */
 interface RequetePubPartenaireCommune {
   dateDebut: string;
-  dateFin: string;
+  /** Absente si l'admin n'a pas modifié la valeur préremplie : le serveur calcule alors la fin
+   *  selon la durée de la formule. */
+  dateFin?: string;
   reglement: ReglementPubPartenaire;
   /** Seulement pour « Offerte » (ignoré sinon). */
   motif?: string;

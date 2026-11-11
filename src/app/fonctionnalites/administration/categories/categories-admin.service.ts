@@ -87,10 +87,10 @@ export class CategoriesAdminService {
         formData.append('types_partenaire', type);
       }
     }
-    if (donnees.nb_max_photos_par_article !== undefined) {
+    if (donnees.max_photos_par_article !== undefined) {
       // Vide = null côté serveur (même convention que parent_id).
-      const max = donnees.nb_max_photos_par_article;
-      formData.append('nb_max_photos_par_article', max === null ? '' : String(max));
+      const max = donnees.max_photos_par_article;
+      formData.append('max_photos_par_article', max === null ? '' : String(max));
     }
     if (donnees.mots_cles !== undefined) {
       for (const motCle of donnees.mots_cles) {

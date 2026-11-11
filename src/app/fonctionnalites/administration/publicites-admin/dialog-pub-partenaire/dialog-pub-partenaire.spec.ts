@@ -85,9 +85,11 @@ describe('DialogPubPartenaire', () => {
 
     composant.changerFormule('f-argent');
     expect(composant.dateFin()).toBe('2026-12-08');
+    expect(composant.dateFinModifiee()).toBeFalse();
 
-    composant.dateFin.set('2026-12-20');
+    composant.changerDateFin('2026-12-20');
     expect(composant.dateFin()).toBe('2026-12-20');
+    expect(composant.dateFinModifiee()).toBeTrue();
   });
 
   it('lit la durée sur /publicites/formules/ quand les quotas ne la donnent pas', async () => {
@@ -119,13 +121,13 @@ describe('DialogPubPartenaire', () => {
     remplirCreation();
     composant.soumettre();
 
-    http.expectNone(`${API}/publicites/admin/creer-pour-partenaire/`);
+    http.expectNone(`${API}/publicites/admin/creer/`);
     expect(composant.erreursChamps()['reglement']).toBeTruthy();
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Indiquez si la pub est « Payée » ou « Offerte »');
   });
 
-  it('envoie la création avec le bon corps (offerte avec motif)', async () => {
+  it('envoie la création avec le bon corps (offerte avec motif), sans date_fin non modifiée', async () => {
     await creer('creation');
     const reussi = jasmine.createSpy('reussi');
     composant.reussi.subscribe(reussi);
@@ -134,7 +136,7 @@ describe('DialogPubPartenaire', () => {
     composant.motif.set('  Partenaire historique ');
     composant.soumettre();
 
-    const requete = http.expectOne(`${API}/publicites/admin/creer-pour-partenaire/`);
+    const requete = http.expectOne(`${API}/publicites/admin/creer/`);
     expect(requete.request.method).toBe('POST');
     const corps = champs(requete.request.body as FormData);
     expect(corps['partenaire']).toBe('42');
@@ -143,7 +145,8 @@ describe('DialogPubPartenaire', () => {
     expect(corps['description']).toBe('Tous les matins');
     expect((corps['image_couverture'] as File).name).toBe('couverture.png');
     expect(corps['date_debut']).toBe('2026-12-01');
-    expect(corps['date_fin']).toBe('2026-12-31');
+    // Date de fin non modifiée par l'admin : pas envoyée, le serveur la calcule lui-même.
+    expect(corps['date_fin']).toBeUndefined();
     expect(corps['reglement']).toBe('offerte');
     expect(corps['motif']).toBe('Partenaire historique');
     expect(corps['video']).toBeUndefined();
@@ -151,6 +154,17 @@ describe('DialogPubPartenaire', () => {
 
     requete.flush({ id: 'nouvelle' });
     expect(reussi).toHaveBeenCalled();
+  });
+
+  it('envoie date_fin seulement si l’admin l’a modifiée', async () => {
+    await creer('creation');
+    remplirCreation();
+    composant.changerDateFin('2026-12-25');
+    composant.changerReglement('payee');
+    composant.soumettre();
+
+    const corps = champs(http.expectOne(`${API}/publicites/admin/creer/`).request.body as FormData);
+    expect(corps['date_fin']).toBe('2026-12-25');
   });
 
   it('n’envoie pas de motif pour une pub « Payée »', async () => {
@@ -161,7 +175,7 @@ describe('DialogPubPartenaire', () => {
     composant.changerReglement('payee');
     composant.soumettre();
 
-    const corps = champs(http.expectOne(`${API}/publicites/admin/creer-pour-partenaire/`).request.body as FormData);
+    const corps = champs(http.expectOne(`${API}/publicites/admin/creer/`).request.body as FormData);
     expect(corps['reglement']).toBe('payee');
     expect(corps['motif']).toBeUndefined();
   });
@@ -185,7 +199,8 @@ describe('DialogPubPartenaire', () => {
     const corps = champs(requete.request.body as FormData);
     expect(corps['formule_id']).toBe('f-or');
     expect(corps['date_debut']).toBe('2026-12-01');
-    expect(corps['date_fin']).toBe('2026-12-31');
+    // Date de fin non modifiée par l'admin : pas envoyée, le serveur la calcule lui-même.
+    expect(corps['date_fin']).toBeUndefined();
     expect(corps['reglement']).toBe('payee');
     expect(corps['image_couverture']).toBeUndefined();
     expect(corps['motif']).toBeUndefined();
@@ -203,7 +218,7 @@ describe('DialogPubPartenaire', () => {
     composant.soumettre();
 
     http
-      .expectOne(`${API}/publicites/admin/creer-pour-partenaire/`)
+      .expectOne(`${API}/publicites/admin/creer/`)
       .flush({ message: 'Quota de la formule « Or » atteint (5/5).' }, { status: 409, statusText: 'Conflict' });
     fixture.detectChanges();
 

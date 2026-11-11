@@ -24,8 +24,6 @@ export class CarteImages implements OnInit {
 
   readonly prefixe = input.required<PrefixeRestaurant>();
   readonly platId = input.required<number>();
-  /** Plafond effectif de photos renvoyé par le serveur (null = aucun plafond connu, comme avant). */
-  readonly plafond = input<number | null>(null);
 
   /** Envoi d'une photo du plat, utilisé par AjoutPhotos. */
   readonly televerser: TeleverserPhoto = (fichier, estPrincipale) =>
@@ -34,6 +32,9 @@ export class CarteImages implements OnInit {
   readonly chargementEnCours = signal(true);
   readonly erreurChargement = signal<string | null>(null);
   readonly images = signal<ImagePlatCarte[]>([]);
+  /** Plafond lu dans la réponse de la liste (plafond_photos.max) ; null si absent de la réponse
+   *  (aucune limite appliquée dans ce cas, comme avant ce champ). Transmis tel quel à AjoutPhotos. */
+  readonly plafond = signal<number | null>(null);
 
   readonly suppressionEnCoursId = signal<number | null>(null);
   readonly changementPrincipaleEnCoursId = signal<number | null>(null);
@@ -52,9 +53,10 @@ export class CarteImages implements OnInit {
     this.erreurChargement.set(null);
 
     this.service.listerImagesPlat(this.prefixe(), this.platId()).subscribe({
-      next: (images) => {
+      next: ({ images, plafond }) => {
         this.chargementEnCours.set(false);
         this.images.set(images);
+        this.plafond.set(plafond?.max ?? null);
       },
       error: (erreur: unknown) => {
         this.chargementEnCours.set(false);

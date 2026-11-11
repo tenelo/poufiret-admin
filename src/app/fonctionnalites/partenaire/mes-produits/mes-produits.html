@@ -162,7 +162,7 @@
     <app-gestion-images
       [articleId]="article.id"
       [nomArticle]="article.nom"
-      [quotaMax]="article.nb_photos_max ?? profil()?.nb_photos_par_article ?? 0"
+      [quotaMax]="profil()?.nb_photos_par_article ?? 0"
       (ferme)="fermerImages()"
     />
   }
