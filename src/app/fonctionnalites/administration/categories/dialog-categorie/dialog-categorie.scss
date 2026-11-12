@@ -78,6 +78,14 @@ textarea {
   font-size: 0.85rem;
 }
 
+.ligne-erreur {
+  margin: 0;
+
+  & + & {
+    margin-top: 0.3rem;
+  }
+}
+
 .bloc-image {
   display: flex;
   align-items: center;

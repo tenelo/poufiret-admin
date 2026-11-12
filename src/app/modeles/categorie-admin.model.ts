@@ -84,5 +84,25 @@ export const OPTIONS_MAX_PHOTOS_PAR_ARTICLE: { valeur: number | ''; libelle: str
 
 export interface ErreursCategorieAdmin {
   nom: string | null;
+  /** Repli : message global (générique si le serveur n'en donne pas d'exploitable). */
   general: string | null;
+  /**
+   * 400 : messages du serveur, chacun précédé du libellé de son champ (« Types de partenaire
+   * liés : … ») ; affichés à la place de `general`. Le nom reste affiché sous son champ.
+   */
+  messages: string[];
 }
+
+/** Libellés des champs du formulaire, pour préfixer les erreurs 400 du serveur (clés de details). */
+export const LIBELLES_CHAMPS_CATEGORIE: Record<string, string> = {
+  nom: 'Nom',
+  description: 'Description',
+  icone: 'Icône',
+  image: 'Image',
+  parent_id: 'Catégorie parente',
+  est_active: 'Visible',
+  affichage_enfants: 'Affichage des sous-catégories',
+  types_partenaire: 'Types de partenaire liés',
+  mots_cles: 'Mots-clés de recherche',
+  max_photos_par_article: 'Nombre maximum de photos par article',
+};

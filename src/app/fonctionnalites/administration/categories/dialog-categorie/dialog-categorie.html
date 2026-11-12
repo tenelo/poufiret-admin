@@ -137,7 +137,13 @@
         />
       </div>
 
-      @if (erreurs()?.general; as messageGeneral) {
+      @if (erreurs()?.messages?.length) {
+        <div class="erreur-generale" role="alert">
+          @for (message of erreurs()!.messages; track $index) {
+            <p class="ligne-erreur">{{ message }}</p>
+          }
+        </div>
+      } @else if (erreurs()?.general; as messageGeneral) {
         <p class="erreur-generale">{{ messageGeneral }}</p>
       }
 

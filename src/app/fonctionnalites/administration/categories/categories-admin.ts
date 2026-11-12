@@ -6,9 +6,11 @@ import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList, moveItemInArray } fro
 import { CategoriesAdminService } from './categories-admin.service';
 import { DialogCategorie } from './dialog-categorie/dialog-categorie';
 import { extraireMessageErreur, erreurChamp } from '../tableau-de-bord-admin/extraire-message-erreur';
+import { extraireErreursFormulaire } from '../publicites-admin/formules-parametres-pub/extraire-erreurs-champs';
 import {
   CategorieAdmin,
   ErreursCategorieAdmin,
+  LIBELLES_CHAMPS_CATEGORIE,
   RequeteCategorieAdmin,
   TypePartenaireCategorie,
 } from '../../../modeles/categorie-admin.model';
@@ -33,6 +35,23 @@ const DUREE_MESSAGE_MS = 4000;
  * ici) ; s'y ajoutent création/édition (icône, image, parent, types de partenaire
  * liés, mots-clés), suppression (avec repli "Archiver" sur conflit 409) et archivage.
  */
+/**
+ * Erreurs 400 du serveur pour la fenêtre catégorie, chacune précédée du libellé de son champ
+ * (clés de `details` : nom, parent_id, types_partenaire, mots_cles, image, max_photos_par_article,
+ * non_field_errors). Le nom est exclu : il s'affiche déjà sous son champ. Liste vide si la
+ * réponse n'a pas d'erreur de champ exploitable (repli sur le message global).
+ */
+function messagesServeurCategorie(erreur: unknown): string[] {
+  const formulaire = extraireErreursFormulaire(erreur);
+  if (!formulaire) return [];
+  const messages = Object.entries(formulaire.champs)
+    .filter(([cle]) => cle !== 'nom')
+    .map(([cle, message]) => `${LIBELLES_CHAMPS_CATEGORIE[cle] ?? cle.replace(/_/g, ' ')} : ${message}`);
+  // Erreur non rattachée à un champ (non_field_errors, ou message sans details) : sans libellé, en tête.
+  if (formulaire.general) messages.unshift(formulaire.general);
+  return messages;
+}
+
 @Component({
   selector: 'app-categories-admin',
   imports: [CdkDropList, CdkDrag, CdkDragHandle, NgTemplateOutlet, DialogCategorie],
@@ -83,7 +102,11 @@ export class CategoriesAdmin implements OnInit {
     if (!erreur) {
       return null;
     }
-    return { nom: erreurChamp(erreur, 'nom'), general: extraireMessageErreur(erreur) };
+    return {
+      nom: erreurChamp(erreur, 'nom'),
+      general: extraireMessageErreur(erreur),
+      messages: messagesServeurCategorie(erreur),
+    };
   });
 
   // ---- Confirmations (supprimer, archiver) ----
