@@ -1,0 +1,7 @@
+@if (miseAJourDisponible()) {
+  <div class="bandeau-nouvelle-version" role="status">
+    <span class="message">Une nouvelle version est disponible.</span>
+    <button type="button" class="bouton-mettre-a-jour" (click)="mettreAJour()">Mettre à jour</button>
+    <button type="button" class="bouton-fermer" aria-label="Fermer" (click)="fermer()">×</button>
+  </div>
+}

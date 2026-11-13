@@ -24,8 +24,12 @@
   }
 }
 
+// font-size agrandit l'émoji 🔔 (cloche partenaire) ; width/height agrandissent le SVG
+// (cloche admin, voir cloche-canal.html) — sans effet l'un sur l'autre, les deux coexistent.
 .icone-cloche {
-  font-size: 1.2rem;
+  font-size: 1.50rem;
+  width: 1.50rem;
+  height: 1.50rem;
   line-height: 1;
 }
 
@@ -59,18 +63,18 @@
 
 .badge-cloche {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
+  top: 0;
+  right: 0;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #dc2626;
   color: #ffffff;
   border-radius: 999px;
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 700;
   line-height: 1;
   box-shadow: 0 0 0 2px #ffffff;

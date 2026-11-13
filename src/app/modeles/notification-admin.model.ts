@@ -59,11 +59,25 @@ export interface ReponseNotificationsAdmin {
   nb_non_lues: number;
 }
 
-/** GET admin/compteur/ (polling toutes les 30 s, un seul appel pour les deux cloches). */
+/** GET admin/compteur/ (secours REST tant que le WebSocket est coupé, voir NotificationsAdminWebSocket). */
 export interface ReponseCompteurNotificationsAdmin {
   restaurant: number;
   general: number;
   nb_non_lues: number;
+}
+
+/**
+ * Message unique de wss://<hôte>/ws/notifications/admin/?token=<jeton> : envoyé à la connexion
+ * puis à chaque changement. `nouvelle: true` seulement après la création d'une notification pour
+ * ce compte (signal du son) ; `false` à la connexion et après « lire »/« tout-lire » (depuis
+ * n'importe quel onglet du compte).
+ */
+export interface MessageCompteursAdmin {
+  type: 'compteurs';
+  restaurant: number;
+  general: number;
+  nb_non_lues: number;
+  nouvelle: boolean;
 }
 
 /** POST admin/tout-lire/?canal= : ne marque comme lu que les notifications de ce canal. */
