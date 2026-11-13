@@ -1,15 +1,4 @@
-import {
-  Component,
-  DestroyRef,
-  ElementRef,
-  HostListener,
-  OnInit,
-  computed,
-  effect,
-  inject,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, DestroyRef, HostListener, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { AuthService } from '../../../noyau/auth/auth.service';
@@ -17,7 +6,7 @@ import { CoordinateurSonAdmin } from '../../../noyau/notifications/coordinateur-
 import { DetecteurCompteur } from '../../../noyau/notifications/detecteur-compteur';
 import { NotificationsAdminService } from '../../../noyau/notifications/notifications-admin.service';
 import { NotificationsAdminWebSocket } from '../../../noyau/notifications/notifications-admin-websocket';
-import { CHEMIN_SON_NOTIFICATION, SonNotification } from '../../../noyau/notifications/son-notification';
+import { SonNotification } from '../../../noyau/notifications/son-notification';
 import { ClocheCanal } from './cloche-canal/cloche-canal';
 import { extraireMessageErreur } from '../../../fonctionnalites/administration/tableau-de-bord-admin/extraire-message-erreur';
 import {
@@ -42,8 +31,9 @@ const NB_NOTIFICATIONS_AFFICHEES = 10;
  * Compteurs en temps réel via WebSocket (NotificationsAdminWebSocket) : son/animation dès qu'un
  * message porte `nouvelle: true`, au même instant que la mise à jour du chiffre. Secours REST
  * (DetecteurCompteur, GET compteur/) toutes les 60 s tant que le WebSocket est coupé, son sur une
- * hausse du total OU de l'un des deux canaux. Un seul onglet admin sonne à la fois
- * (CoordinateurSonAdmin) ; les compteurs, eux, se mettent à jour dans tous les onglets. Chaque
+ * hausse du total OU de l'un des deux canaux. Un seul onglet admin — le premier à débloquer son
+ * son — sonne en continu, y compris en arrière-plan (élection par navigator.locks, voir
+ * CoordinateurSonAdmin) ; les compteurs, eux, se mettent à jour dans tous les onglets. Chaque
  * cloche a son propre panneau, sa propre liste et son propre « Tout marquer comme lu »
  * (POST tout-lire/?canal=). Même son que la cloche partenaire.
  */
@@ -63,11 +53,9 @@ export class ClocheNotificationsAdmin implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
-  private readonly lecteurAudio = viewChild<ElementRef<HTMLAudioElement>>('lecteurAudio');
-  private readonly son = new SonNotification(this.destroyRef, () => this.lecteurAudio()?.nativeElement);
+  private readonly son = new SonNotification(this.destroyRef);
   private readonly coordinateurSon = new CoordinateurSonAdmin(this.destroyRef);
 
-  readonly cheminSon = CHEMIN_SON_NOTIFICATION;
   readonly formaterDateRelative = formaterDateRelative;
   /** Affiche « Activer le son » près des cloches tant que le navigateur bloque la lecture. */
   readonly sonBloque = this.son.bloque;
@@ -97,6 +85,15 @@ export class ClocheNotificationsAdmin implements OnInit {
 
   constructor() {
     // effect() doit être appelé dans un contexte d'injection (constructeur).
+
+    // Dès que le son devient débloqué (clic « Activer le son », ou 1re interaction quelconque),
+    // cet onglet se porte candidat au rôle de sonneur unique (voir CoordinateurSonAdmin) — jamais
+    // tant qu'il reste muet, pour qu'un onglet muet ne soit jamais élu.
+    effect(() => {
+      if (!this.son.bloque()) {
+        this.coordinateurSon.demanderElection();
+      }
+    });
 
     // WebSocket (temps réel) : met à jour les deux compteurs immédiatement ; son/animation au
     // même instant si le message porte `nouvelle: true` (signal explicite du serveur).

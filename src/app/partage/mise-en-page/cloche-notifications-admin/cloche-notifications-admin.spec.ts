@@ -119,22 +119,27 @@ describe('ClocheNotificationsAdmin', () => {
     expect(declencher).toHaveBeenCalledTimes(1);
   });
 
-  it('affiche « Activer le son » seulement quand la lecture est bloquée, et appelle debloquer() au clic', async () => {
+  it('affiche « Activer le son » tant que la lecture est bloquée (par défaut, avant tout déblocage), et appelle debloquer() au clic', async () => {
     await creer();
 
-    expect(fixture.nativeElement.querySelector('.bouton-activer-son')).toBeNull();
-
-    // bloqueInterne est privé côté TypeScript seulement : accessible à l'exécution, comme Angular
-    // le permet depuis un template (sonBloque = son.bloque est la même vue en lecture seule).
-    const bloqueInterne = (component as any).son.bloqueInterne as ReturnType<typeof signal<boolean>>;
-    bloqueInterne.set(true);
-    fixture.detectChanges();
-
+    // bloque = audioContext.state !== 'running' : vrai par défaut, aucun contexte n'existe encore.
     const bouton = fixture.nativeElement.querySelector('.bouton-activer-son') as HTMLButtonElement;
     expect(bouton).not.toBeNull();
 
     const debloquer = spyOn<any>((component as any).son, 'debloquer');
     bouton.click();
     expect(debloquer).toHaveBeenCalled();
+  });
+
+  it('masque « Activer le son » une fois la lecture débloquée (bloqueInterne à jour)', async () => {
+    await creer();
+
+    // bloqueInterne est privé côté TypeScript seulement : accessible à l'exécution, comme Angular
+    // le permet depuis un template (sonBloque = son.bloque est la même vue en lecture seule).
+    const bloqueInterne = (component as any).son.bloqueInterne as ReturnType<typeof signal<boolean>>;
+    bloqueInterne.set(false);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.bouton-activer-son')).toBeNull();
   });
 });
