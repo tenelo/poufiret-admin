@@ -4,3 +4,20 @@
   align-items: center;
   gap: 0.25rem;
 }
+
+// Visible seulement tant que le navigateur bloque la lecture automatique (voir SonNotification.bloque).
+.bouton-activer-son {
+  padding: 0.3rem 0.6rem;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 999px;
+  color: #92400e;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    background: #fde68a;
+  }
+}

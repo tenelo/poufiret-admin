@@ -13,8 +13,10 @@ import {
 import { Router } from '@angular/router';
 
 import { AuthService } from '../../../noyau/auth/auth.service';
+import { CoordinateurSonAdmin } from '../../../noyau/notifications/coordinateur-son-admin';
 import { DetecteurCompteur } from '../../../noyau/notifications/detecteur-compteur';
 import { NotificationsAdminService } from '../../../noyau/notifications/notifications-admin.service';
+import { NotificationsAdminWebSocket } from '../../../noyau/notifications/notifications-admin-websocket';
 import { CHEMIN_SON_NOTIFICATION, SonNotification } from '../../../noyau/notifications/son-notification';
 import { ClocheCanal } from './cloche-canal/cloche-canal';
 import { extraireMessageErreur } from '../../../fonctionnalites/administration/tableau-de-bord-admin/extraire-message-erreur';
@@ -28,30 +30,34 @@ import {
 } from '../../../modeles/notification-admin.model';
 import { formaterDateRelative } from '../../formater-date-relative';
 
-const INTERVALLE_POLLING_MS = 30000;
+// Secours REST : actif seulement tant que le WebSocket est coupé (voir NotificationsAdminWebSocket).
+const INTERVALLE_SECOURS_MS = 60000;
 const DUREE_ANIMATION_MS = 1200;
 const NB_NOTIFICATIONS_AFFICHEES = 10;
 
 /**
  * Deux cloches de notifications de l'en-tête admin / super-admin, chacune pour son canal : même
  * icône 🔔 pour les deux, jaune pour Restaurants (commandes restaurant), bleue pour Général
- * (campagnes de pub, autres commandes, demandes de location, demandes d'intervention). Un seul
- * polling du compteur combiné
- * (GET compteur/ → {restaurant, general, nb_non_lues}), son/animation dès que l'un des deux
- * augmente ; chaque cloche a son propre panneau, sa propre liste et son propre « Tout marquer
- * comme lu » (POST tout-lire/?canal=). Même moteur de détection (DetecteurCompteur) et même son
- * que la cloche partenaire.
+ * (campagnes de pub, autres commandes, demandes de location, demandes d'intervention).
+ * Compteurs en temps réel via WebSocket (NotificationsAdminWebSocket) : son/animation dès qu'un
+ * message porte `nouvelle: true`, au même instant que la mise à jour du chiffre. Secours REST
+ * (DetecteurCompteur, GET compteur/) toutes les 60 s tant que le WebSocket est coupé, son sur une
+ * hausse du total OU de l'un des deux canaux. Un seul onglet admin sonne à la fois
+ * (CoordinateurSonAdmin) ; les compteurs, eux, se mettent à jour dans tous les onglets. Chaque
+ * cloche a son propre panneau, sa propre liste et son propre « Tout marquer comme lu »
+ * (POST tout-lire/?canal=). Même son que la cloche partenaire.
  */
 @Component({
   selector: 'app-cloche-notifications-admin',
   imports: [ClocheCanal],
-  providers: [DetecteurCompteur],
+  providers: [DetecteurCompteur, NotificationsAdminWebSocket],
   templateUrl: './cloche-notifications-admin.html',
   styleUrl: './cloche-notifications-admin.scss',
 })
 export class ClocheNotificationsAdmin implements OnInit {
-  // Un seul détecteur, partagé par les deux canaux : son/animation sur le TOTAL (restaurant + general).
+  // Secours REST uniquement désormais (voir ngOnInit) : le temps réel passe par wsAdmin.
   private readonly detecteur = inject(DetecteurCompteur<ReponseCompteurNotificationsAdmin>);
+  private readonly wsAdmin = inject(NotificationsAdminWebSocket);
   private readonly service = inject(NotificationsAdminService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
@@ -59,11 +65,18 @@ export class ClocheNotificationsAdmin implements OnInit {
 
   private readonly lecteurAudio = viewChild<ElementRef<HTMLAudioElement>>('lecteurAudio');
   private readonly son = new SonNotification(this.destroyRef, () => this.lecteurAudio()?.nativeElement);
+  private readonly coordinateurSon = new CoordinateurSonAdmin(this.destroyRef);
 
   readonly cheminSon = CHEMIN_SON_NOTIFICATION;
   readonly formaterDateRelative = formaterDateRelative;
+  /** Affiche « Activer le son » près des cloches tant que le navigateur bloque la lecture. */
+  readonly sonBloque = this.son.bloque;
 
   readonly enAnimation = signal(false);
+
+  // Dernières valeurs connues (WebSocket ou secours REST), pour détecter une hausse sur CHAQUE
+  // canal côté secours REST (qui ne porte pas de `nouvelle` — voir l'effet correspondant).
+  private precedent: ReponseCompteurNotificationsAdmin | null = null;
 
   // Au plus un panneau ouvert à la fois : null = les deux fermés, sinon le canal ouvert.
   readonly canalOuvert = signal<CanalNotificationAdmin | null>(null);
@@ -84,30 +97,60 @@ export class ClocheNotificationsAdmin implements OnInit {
 
   constructor() {
     // effect() doit être appelé dans un contexte d'injection (constructeur).
+
+    // WebSocket (temps réel) : met à jour les deux compteurs immédiatement ; son/animation au
+    // même instant si le message porte `nouvelle: true` (signal explicite du serveur).
     effect(() => {
-      // Chaque tick de polling recale les deux compteurs sur la réponse serveur.
-      const reponse = this.detecteur.derniereReponse();
-      if (reponse) {
-        this.nbNonLuesRestaurant.set(reponse.restaurant);
-        this.nbNonLuesGeneral.set(reponse.general);
+      const message = this.wsAdmin.dernierMessage();
+      if (!message) {
+        return;
+      }
+      this.nbNonLuesRestaurant.set(message.restaurant);
+      this.nbNonLuesGeneral.set(message.general);
+      this.precedent = message;
+      if (message.nouvelle) {
+        this.declencherNotification();
       }
     });
+
+    // Secours REST (WebSocket coupé, voir ngOnInit) : recale les compteurs à chaque contrôle ;
+    // sonne sur une vraie hausse du total OU de l'un des deux canaux (jamais l'inverse, pour ne
+    // pas manquer une hausse sur un canal compensée par une lecture sur l'autre).
     effect(() => {
-      if (this.detecteur.aAugmente()) {
+      const reponse = this.detecteur.derniereReponse();
+      if (!reponse) {
+        return;
+      }
+      const avant = this.precedent;
+      this.nbNonLuesRestaurant.set(reponse.restaurant);
+      this.nbNonLuesGeneral.set(reponse.general);
+      this.precedent = reponse;
+      const hausse =
+        !!avant &&
+        (reponse.restaurant > avant.restaurant ||
+          reponse.general > avant.general ||
+          reponse.nb_non_lues > avant.nb_non_lues);
+      if (hausse) {
         this.declencherNotification();
       }
     });
   }
 
   ngOnInit(): void {
-    // Le polling s'arrête avec le composant : l'en-tête est détruit à la déconnexion.
+    // La connexion et le polling s'arrêtent avec le composant : l'en-tête est détruit à la déconnexion.
+    this.wsAdmin.demarrer();
     this.detecteur.demarrer({
       charger: () => this.service.compteur(),
       selectionnerCompteur: (reponse) => reponse.nb_non_lues,
-      intervalleMs: INTERVALLE_POLLING_MS,
-      actif: () => this.authService.role() === 'admin',
+      intervalleMs: INTERVALLE_SECOURS_MS,
+      actif: () => this.authService.role() === 'admin' && !this.wsAdmin.connecte(),
       pauseSiOngletMasque: true,
     });
+  }
+
+  /** Débloque la lecture du son (clic sur « Activer le son »). */
+  activerSon(): void {
+    this.son.debloquer();
   }
 
   /** Texte du badge d'une cloche : masqué à 0 (voir le template), « 99+ » au-delà de 99. */
@@ -245,20 +288,26 @@ export class ClocheNotificationsAdmin implements OnInit {
     }
   }
 
-  /** Ajuste un canal localement (lu / tout-lire) et resynchronise le total du détecteur partagé. */
+  /**
+   * Ajuste un canal localement (lu / tout-lire), sans son (comportement actuel conservé) : le
+   * WebSocket confirmera ensuite avec `nouvelle: false`, y compris dans les autres onglets.
+   */
   private definirCompteurCanal(canal: CanalNotificationAdmin, valeur: number): void {
     if (canal === 'restaurant') {
       this.nbNonLuesRestaurant.set(valeur);
     } else {
       this.nbNonLuesGeneral.set(valeur);
     }
-    this.detecteur.definirCompteur(this.nbNonLuesRestaurant() + this.nbNonLuesGeneral());
+    const total = this.nbNonLuesRestaurant() + this.nbNonLuesGeneral();
+    this.detecteur.definirCompteur(total);
+    // Resynchronise `precedent` : sinon le prochain contrôle (secours REST) verrait une hausse
+    // illusoire par rapport à une valeur devenue obsolète.
+    this.precedent = { restaurant: this.nbNonLuesRestaurant(), general: this.nbNonLuesGeneral(), nb_non_lues: total };
   }
 
   private declencherNotification(): void {
     this.enAnimation.set(true);
     setTimeout(() => this.enAnimation.set(false), DUREE_ANIMATION_MS);
-    this.son.jouer();
-    this.detecteur.accuserAugmentation();
+    this.coordinateurSon.proposerSonner(() => this.son.jouer());
   }
 }

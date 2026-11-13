@@ -1,12 +1,10 @@
 @use '../../cloche-notifications/cloche-commune';
 
-// Icône (SVG, voir le gabarit) colorée via currentColor : jaune pour Restaurants, bleue pour Général.
-.cloche-restaurant .icone-cloche {
-  color: #eabd08;
-}
-
+// Icône (SVG, voir le gabarit) colorée via currentColor : même couleur pour les deux cloches,
+// seule la bulle (badge-cloche, ci-dessous) les distingue.
+.cloche-restaurant .icone-cloche,
 .cloche-generale .icone-cloche {
-  color: #1607a3;
+  color: #4f46e5;
 }
 
 // Badge de la cloche Général : jaune (demandé explicitement), pas bleu comme l'icône.
