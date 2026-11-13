@@ -82,6 +82,9 @@ export class CategoriesAdminService {
     if (donnees.est_active !== undefined) {
       formData.append('est_active', String(donnees.est_active));
     }
+    if (donnees.affichage_enfants !== undefined) {
+      formData.append('affichage_enfants', donnees.affichage_enfants);
+    }
     if (donnees.types_partenaire !== undefined) {
       for (const type of donnees.types_partenaire) {
         formData.append('types_partenaire', type);

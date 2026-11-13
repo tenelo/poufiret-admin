@@ -102,3 +102,31 @@ describe('CategoriesAdminService — champ max_photos_par_article', () => {
     expect(corpsEnvoye({ nom: 'Mode' })['max_photos_par_article']).toBeUndefined();
   });
 });
+
+describe('CategoriesAdminService — champ affichage_enfants', () => {
+  const API = 'https://api.test/api/v1';
+
+  function corpsEnvoye(donnees: RequeteCategorieAdmin): Record<string, FormDataEntryValue> {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: ConfigurationService, useValue: { apiUrl: API } }],
+    });
+    TestBed.inject(CategoriesAdminService).modifier(7, donnees).subscribe();
+    const requete = TestBed.inject(HttpTestingController).expectOne((r) => r.method === 'PATCH');
+    const champs: Record<string, FormDataEntryValue> = {};
+    (requete.request.body as FormData).forEach((v, k) => (champs[k] = v));
+    requete.flush(CATEGORIE);
+    return champs;
+  }
+
+  it('envoie « grille » quand ce choix est fait', () => {
+    expect(corpsEnvoye({ nom: 'Mode', affichage_enfants: 'grille' })['affichage_enfants']).toBe('grille');
+  });
+
+  it('envoie « pastilles » sinon', () => {
+    expect(corpsEnvoye({ nom: 'Mode', affichage_enfants: 'pastilles' })['affichage_enfants']).toBe('pastilles');
+  });
+
+  it('n’envoie pas le champ s’il est absent de la requête', () => {
+    expect(corpsEnvoye({ nom: 'Mode' })['affichage_enfants']).toBeUndefined();
+  });
+});
