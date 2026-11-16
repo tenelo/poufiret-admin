@@ -53,6 +53,14 @@ export interface MaPublicite {
   statut_libelle?: string;
   debut_diffusion: string | null;
   fin_diffusion: string | null;
+  // Reconduction (champs optionnels pour compatibilité ascendante) : date de la copie la plus
+  // récente, son identité/statut, et si cette pub peut elle-même être reconduite.
+  reconduite_le?: string | null;
+  reconduction_id?: string | null;
+  reconduction_statut?: StatutPublicite | null;
+  peut_etre_reconduite?: boolean;
+  // Renseigné seulement sur une copie : id de la pub d'origine.
+  reconduite_depuis_id?: string | null;
 }
 
 // Corps de POST /publicites/mes-publicites/ (envoyé en multipart par le service).
@@ -172,6 +180,12 @@ interface StatistiquePubliciteBase {
   statut_libelle?: string;
   // Stats visibles pour ce partenaire (effectif : campagne active/terminée et non masquées par l'admin).
   stats_visibles?: boolean;
+  // Reconduction (champs optionnels pour compatibilité ascendante) : voir MaPublicite.
+  reconduite_le?: string | null;
+  reconduction_id?: string | null;
+  reconduction_statut?: StatutPublicite | null;
+  peut_etre_reconduite?: boolean;
+  reconduite_depuis_id?: string | null;
 }
 
 export interface StatistiquePubliciteDetaillee extends StatistiquePubliciteBase {

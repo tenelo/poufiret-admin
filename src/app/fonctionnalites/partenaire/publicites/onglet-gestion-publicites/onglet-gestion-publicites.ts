@@ -8,6 +8,7 @@ import { DialogReconduction, DonneesReconduction } from './dialog-reconduction/d
 import { extraireMessageErreur } from '../../mes-produits/extraire-message-erreur';
 import {
   FormulePublicite,
+  LIBELLES_STATUT_PUBLICITE,
   libelleStatutPublicite,
   MaPublicite,
   PorteePublicite,
@@ -37,6 +38,7 @@ export class OngletGestionPublicites implements OnInit {
   readonly porteeForfait = signal<PorteePublicite | null>(null);
 
   readonly libelleStatut = libelleStatutPublicite;
+  readonly libellesStatut = LIBELLES_STATUT_PUBLICITE;
 
   readonly soumissionEnCoursId = signal<string | null>(null);
   readonly messageErreur = signal<string | null>(null);
@@ -146,7 +148,28 @@ export class OngletGestionPublicites implements OnInit {
   }
 
   peutReconduire(publicite: MaPublicite): boolean {
-    return publicite.statut === 'terminee';
+    return publicite.statut === 'terminee' && publicite.peut_etre_reconduite !== false;
+  }
+
+  formaterDate(iso: string | null | undefined): string {
+    if (!iso) {
+      return '—';
+    }
+    return new Date(iso).toLocaleDateString('fr-FR');
+  }
+
+  /** Vrai si l'original d'une copie est présent dans la liste actuellement chargée (clic possible). */
+  originalDisponible(publicite: MaPublicite): boolean {
+    const id = publicite.reconduite_depuis_id;
+    return !!id && this.publicites().some((p) => p.id === id);
+  }
+
+  /** Amène l'original de cette copie dans la vue, s'il est dans la liste actuellement chargée. */
+  allerVersOriginal(publicite: MaPublicite): void {
+    const id = publicite.reconduite_depuis_id;
+    if (id) {
+      document.getElementById('pub-' + id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 
   // ---- Détail d'une campagne ----

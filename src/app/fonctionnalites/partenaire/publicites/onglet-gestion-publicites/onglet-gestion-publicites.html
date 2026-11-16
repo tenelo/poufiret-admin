@@ -30,7 +30,7 @@
 } @else {
   <div class="grille-publicites">
     @for (publicite of publicites(); track publicite.id) {
-      <div class="carte-publicite" (click)="ouvrirDetail(publicite)">
+      <div class="carte-publicite" [id]="'pub-' + publicite.id" (click)="ouvrirDetail(publicite)">
         @if (publicite.image_couverture) {
           <img [src]="publicite.image_couverture" [alt]="publicite.titre" class="image-couverture" />
         } @else {
@@ -53,7 +53,28 @@
               </button>
             </div>
           </div>
+          @if (publicite.reconduite_depuis_id) {
+            @if (originalDisponible(publicite)) {
+              <button
+                type="button"
+                class="lien-reconduction"
+                (click)="$event.stopPropagation(); allerVersOriginal(publicite)"
+              >
+                ↩ Reconduction
+              </button>
+            } @else {
+              <span class="mention-reconduction">↩ Reconduction</span>
+            }
+          }
           <p class="formule">Formule : {{ libelleFormule(publicite) }}</p>
+          @if (publicite.reconduite_le) {
+            <p class="mention-reconduite-le">
+              Reconduite le {{ formaterDate(publicite.reconduite_le) }}
+              @if (publicite.reconduction_statut) {
+                <span class="badge badge-{{ publicite.reconduction_statut }}">{{ libellesStatut[publicite.reconduction_statut] }}</span>
+              }
+            </p>
+          }
 
           <div class="actions-carte">
             @if (peutSoumettre(publicite)) {

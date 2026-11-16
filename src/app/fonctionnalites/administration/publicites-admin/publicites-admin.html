@@ -121,9 +121,26 @@
               <span class="titre">{{ pub.titre }}</span>
               <span class="badge badge-{{ pub.statut }}">{{ libellesStatut[pub.statut] }}</span>
             </div>
+            @if (pub.reconduite_depuis_id) {
+              @if (originalDisponible(pub)) {
+                <button type="button" class="lien-reconduction" (click)="allerVersOriginal(pub)">
+                  ↩ Reconduction
+                </button>
+              } @else {
+                <span class="mention-reconduction">↩ Reconduction</span>
+              }
+            }
             <p class="formule">Formule : {{ pub.formule }}</p>
             @if (libellePortee(pub); as portee) {
               <p class="formule">Portée effective : {{ portee }}</p>
+            }
+            @if (pub.reconduite_le) {
+              <p class="mention-reconduite-le">
+                Reconduite le {{ formaterDate(pub.reconduite_le) }}
+                @if (pub.reconduction_statut) {
+                  <span class="badge badge-{{ pub.reconduction_statut }}">{{ libellesStatut[pub.reconduction_statut] }}</span>
+                }
+              </p>
             }
 
             @if (peutBasculerStats(pub)) {
@@ -138,7 +155,7 @@
               />
             }
 
-            @if (peutGererPubsPartenaires() && pub.statut === 'terminee') {
+            @if (peutGererPubsPartenaires() && peutReconduire(pub)) {
               <div class="actions-publicite">
                 <button type="button" class="bouton-action" (click)="ouvrirReconduction(pub)">Reconduire</button>
               </div>

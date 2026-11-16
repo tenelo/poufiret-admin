@@ -212,6 +212,34 @@ export class PublicitesAdmin implements OnInit, OnDestroy {
     return portee ? this.libellesPortee[portee] : null;
   }
 
+  // ---- Reconduction ----
+
+  /** Bouton « Reconduire » : campagne terminée, et le backend ne l'interdit pas déjà (copie en cours). */
+  peutReconduire(publicite: PubliciteAdmin): boolean {
+    return publicite.statut === 'terminee' && publicite.peut_etre_reconduite !== false;
+  }
+
+  formaterDate(iso: string | null | undefined): string {
+    if (!iso) {
+      return '—';
+    }
+    return new Date(iso).toLocaleDateString('fr-FR');
+  }
+
+  /** Vrai si l'original d'une copie est présent dans la liste actuellement chargée (clic possible). */
+  originalDisponible(publicite: PubliciteAdmin): boolean {
+    const id = publicite.reconduite_depuis_id;
+    return !!id && (this.donnees()?.publicites.some((p) => p.id === id) ?? false);
+  }
+
+  /** Amène l'original de cette copie dans la vue, s'il est dans la liste actuellement chargée. */
+  allerVersOriginal(publicite: PubliciteAdmin): void {
+    const id = publicite.reconduite_depuis_id;
+    if (id) {
+      document.getElementById('pub-' + id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
   // ---- Pub créée ou reconduite pour un partenaire ----
 
   ouvrirCreationPubPartenaire(): void {
