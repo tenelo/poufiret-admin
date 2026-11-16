@@ -123,6 +123,19 @@ export class DialogPubPartenaire implements OnInit {
     this.preremplirDateFin();
   }
 
+  /** Date avec heure (ISO complet, ex. debut_diffusion/fin_diffusion) : JJ/MM/AAAA en heure locale. */
+  formaterDate(iso: string | null | undefined): string {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('fr-FR');
+  }
+
+  /** Date seule au format input[type=date] (YYYY-MM-DD) en JJ/MM/AAAA, sans passer par Date : pas
+   *  de composante horaire à interpréter, donc aucun risque de décalage de fuseau. */
+  formaterDateSimple(iso: string): string {
+    const [annee, mois, jour] = iso.split('-');
+    return annee && mois && jour ? `${jour}/${mois}/${annee}` : iso;
+  }
+
   libelleFormule(f: QuotaFormule): string {
     const places = f.places_restantes <= 0 ? 'complète' : `${f.places_restantes} place${f.places_restantes > 1 ? 's' : ''} restante${f.places_restantes > 1 ? 's' : ''}`;
     return `${f.nom} — ${places}`;

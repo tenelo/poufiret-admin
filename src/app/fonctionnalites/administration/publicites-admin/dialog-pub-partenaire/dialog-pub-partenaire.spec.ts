@@ -32,8 +32,9 @@ const PUB_TERMINEE: PubliciteAdmin = {
   formule: 'Argent',
   formule_id: 'f-argent',
   statut: 'terminee',
-  debut_diffusion: '2026-10-01',
-  fin_diffusion: '2026-10-08',
+  // Format réel du backend : ISO complet avec heure (voir ticket « dates brutes »).
+  debut_diffusion: '2026-10-01T11:06:24.445253Z',
+  fin_diffusion: '2026-10-08T11:06:24.445253Z',
 };
 
 function champs(formData: FormData): Record<string, FormDataEntryValue> {
@@ -178,6 +179,26 @@ describe('DialogPubPartenaire', () => {
     const corps = champs(http.expectOne(`${API}/publicites/admin/creer/`).request.body as FormData);
     expect(corps['reglement']).toBe('payee');
     expect(corps['motif']).toBeUndefined();
+  });
+
+  it('affiche les dates de diffusion et de confirmation au format JJ/MM/AAAA (pas d’ISO brut)', async () => {
+    await creer('reconduction', PUB_TERMINEE);
+    fixture.detectChanges();
+
+    // Rappel « Campagne d'origine » : date avec heure (debut_diffusion/fin_diffusion).
+    const rappel = fixture.nativeElement.querySelector('.rappel-campagne')!.textContent as string;
+    expect(rappel).toMatch(/Diffusée du \d{2}\/\d{2}\/2026 au \d{2}\/\d{2}\/2026/);
+    expect(rappel).not.toContain('T11:06:24');
+    expect(rappel).not.toContain('Z');
+
+    // Étape de confirmation : date seule (input[type=date], YYYY-MM-DD).
+    composant.changerDateDebut('2026-12-01');
+    composant.changerReglement('payee');
+    composant.soumettre();
+    fixture.detectChanges();
+
+    const confirmation = fixture.nativeElement.querySelector('.etape-confirmation')!.textContent as string;
+    expect(confirmation).toContain('du 01/12/2026 au 08/12/2026');
   });
 
   it('envoie la reconduction avec le bon corps après confirmation', async () => {

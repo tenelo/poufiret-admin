@@ -11,7 +11,7 @@
         }
         <p>Formule : {{ formuleOrigine()?.nom ?? pub.formule }}</p>
         @if (pub.debut_diffusion || pub.fin_diffusion) {
-          <p>Diffusée du {{ pub.debut_diffusion ?? '—' }} au {{ pub.fin_diffusion ?? '—' }}</p>
+          <p>Diffusée du {{ formaterDate(pub.debut_diffusion) }} au {{ formaterDate(pub.fin_diffusion) }}</p>
         }
         @if (pub.description) {
           <p class="description-rappel">{{ pub.description }}</p>
@@ -22,8 +22,8 @@
     @if (etapeConfirmation()) {
       <section class="etape-confirmation">
         <p>
-          Reconduire « {{ publicite()?.titre }} » du <strong>{{ dateDebut() }}</strong> au
-          <strong>{{ dateFin() }}</strong>, formule « {{ formuleEffective()?.nom ?? publicite()?.formule }} »,
+          Reconduire « {{ publicite()?.titre }} » du <strong>{{ formaterDateSimple(dateDebut()) }}</strong> au
+          <strong>{{ formaterDateSimple(dateFin()) }}</strong>, formule « {{ formuleEffective()?.nom ?? publicite()?.formule }} »,
           <strong>{{ reglement() === 'offerte' ? 'offerte' : 'payée' }}</strong> ?
         </p>
         @if (erreurGenerale()) {
