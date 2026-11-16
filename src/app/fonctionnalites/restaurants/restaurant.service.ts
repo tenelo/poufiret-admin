@@ -370,8 +370,9 @@ export class RestaurantService {
   }
 
   creerVariante(prefixe: PrefixeRestaurant, donnees: RequeteVarianteCarte): Observable<VarianteCarte> {
+    const corps = donnees.image !== undefined ? this.construireFormDataVariante(donnees) : donnees;
     return this.http
-      .post<VarianteCarte>(`${this.base(prefixe)}carte/variantes/`, donnees)
+      .post<VarianteCarte>(`${this.base(prefixe)}carte/variantes/`, corps)
       .pipe(map(normaliserVariante));
   }
 
@@ -380,9 +381,29 @@ export class RestaurantService {
     id: number,
     donnees: Partial<RequeteVarianteCarte>,
   ): Observable<VarianteCarte> {
+    const corps = donnees.image !== undefined ? this.construireFormDataVariante(donnees) : donnees;
     return this.http
-      .patch<VarianteCarte>(`${this.base(prefixe)}carte/variantes/${id}/`, donnees)
+      .patch<VarianteCarte>(`${this.base(prefixe)}carte/variantes/${id}/`, corps)
       .pipe(map(normaliserVariante));
+  }
+
+  /**
+   * Multipart, utilisé seulement quand `image` est présent dans la requête (fichier = nouvelle
+   * image, null = retirer l'image existante — le backend accepte une image vide en PATCH pour la
+   * retirer). Sans image, create/modifierVariante envoient du JSON brut, comme avant.
+   */
+  private construireFormDataVariante(donnees: Partial<RequeteVarianteCarte>): FormData {
+    const formData = new FormData();
+    if (donnees.article !== undefined) formData.append('article', String(donnees.article));
+    if (donnees.nom !== undefined) formData.append('nom', donnees.nom);
+    if (donnees.prix_supplement !== undefined) formData.append('prix_supplement', String(donnees.prix_supplement));
+    if (donnees.est_par_defaut !== undefined) formData.append('est_par_defaut', String(donnees.est_par_defaut));
+    if (donnees.ordre !== undefined) formData.append('ordre', String(donnees.ordre));
+    if (donnees.est_active !== undefined) formData.append('est_active', String(donnees.est_active));
+    if (donnees.stock !== undefined) formData.append('stock', donnees.stock === null ? '' : String(donnees.stock));
+    if (donnees.est_epuise !== undefined) formData.append('est_epuise', String(donnees.est_epuise));
+    if (donnees.image !== undefined) formData.append('image', donnees.image ?? '');
+    return formData;
   }
 
   supprimerVariante(prefixe: PrefixeRestaurant, id: number): Observable<void> {

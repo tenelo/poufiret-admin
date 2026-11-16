@@ -130,6 +130,8 @@ export interface VarianteCarte {
   /** null = stock illimité. */
   stock: number | null;
   est_epuise: boolean;
+  // URL absolue (ou null), notamment utilisée pour les « Formats » des grilleurs.
+  image: string | null;
 }
 
 export interface RequeteVarianteCarte {
@@ -141,6 +143,8 @@ export interface RequeteVarianteCarte {
   est_active?: boolean;
   stock?: number | null;
   est_epuise?: boolean;
+  // Facultatif : fichier = nouvelle image, null = retirer l'image existante, absent = inchangée.
+  image?: File | null;
 }
 
 // ---- Groupes d'options ----

@@ -12,6 +12,7 @@ import { ProfilPartenaire } from '../../modeles/profil-partenaire.model';
  */
 const TYPES_RESTAURATION = ['restaurateur', 'fast_food'];
 const TYPES_ETABLISSEMENT = ['boulanger', 'pharmacien', 'boutique_mode', 'libraire', 'eleveur'];
+const TYPES_GRILLEUR = ['grilleur'];
 
 @Injectable({ providedIn: 'root' })
 export class ProfilPartenaireContexteService {
@@ -28,6 +29,10 @@ export class ProfilPartenaireContexteService {
   /** Autres gabarits de l'espace établissement (boulangerie, pharmacie, mode, librairie, élevage). */
   readonly estEtablissement = computed(() =>
     TYPES_ETABLISSEMENT.includes(this.profilInterne()?.type_partenaire ?? ''),
+  );
+  /** Grilleur : espace établissement avec carte (Formats), sans menus. */
+  readonly estGrilleur = computed(() =>
+    TYPES_GRILLEUR.includes(this.profilInterne()?.type_partenaire ?? ''),
   );
   readonly estLoueur = computed(() => this.profilInterne()?.type_partenaire === 'loueur_maison');
   readonly estLoueurVoiture = computed(() => this.profilInterne()?.type_partenaire === 'loueur_voiture');

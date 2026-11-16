@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { Observable, forkJoin, of } from 'rxjs';
 
 import { RestaurantService, PrefixeRestaurant } from '../../restaurant.service';
@@ -19,6 +19,8 @@ import {
 type ValeurChampFiche = string | boolean;
 
 type OngletDialogPlat = 'infos' | 'images' | 'variantes' | 'options';
+
+const TAILLE_MAX_IMAGE_VARIANTE_OCTETS = 5 * 1024 * 1024;
 
 /** Contexte d'un changement de prix en attente de confirmation (voir confirmerPrix()). */
 interface ContextePrix {
@@ -59,7 +61,7 @@ interface ContextePrix {
   templateUrl: './dialog-plat-carte.html',
   styleUrl: './dialog-plat-carte.scss',
 })
-export class DialogPlatCarte implements OnInit {
+export class DialogPlatCarte implements OnInit, OnDestroy {
   private readonly service = inject(RestaurantService);
 
   readonly prefixe = input.required<PrefixeRestaurant>();
@@ -108,6 +110,11 @@ export class DialogPlatCarte implements OnInit {
   // Saisie en cours du prix final d'une variante existante (clé = id de la variante).
   readonly prixFinalSaisi = signal<Record<number, string>>({});
 
+  // ---- Image facultative de la nouvelle variante (format photo, ex. grilleurs) ----
+  readonly nouvelleVarianteImage = signal<File | null>(null);
+  readonly apercuNouvelleVarianteImage = signal<string | null>(null);
+  private urlApercuNouvelleVarianteImage: string | null = null;
+
   // ---- Groupes d'options ----
   readonly nouveauGroupeLibelle = signal('');
   readonly nouveauGroupeMin = signal('1');
@@ -131,6 +138,12 @@ export class DialogPlatCarte implements OnInit {
       this.appliquerPlat(plat);
     } else {
       this.section.set(this.sectionParDefaut() ?? '');
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.urlApercuNouvelleVarianteImage) {
+      URL.revokeObjectURL(this.urlApercuNouvelleVarianteImage);
     }
   }
 
@@ -346,24 +359,83 @@ export class DialogPlatCarte implements OnInit {
       return;
     }
 
+    const donnees: RequeteVarianteCarte = {
+      article: plat.id,
+      nom,
+      prix_supplement: prixFinalSaisi - this.prixPlatActuel(),
+      ordre: plat.variantes.length,
+      stock,
+    };
+    const image = this.nouvelleVarianteImage();
+    if (image) donnees.image = image;
+
     this.erreurVariantes.set(null);
-    this.service
-      .creerVariante(this.prefixe(), {
-        article: plat.id,
-        nom,
-        prix_supplement: prixFinalSaisi - this.prixPlatActuel(),
-        ordre: plat.variantes.length,
-        stock,
-      })
-      .subscribe({
-        next: () => {
-          this.nouvelleVarianteNom.set('');
-          this.nouvelleVariantePrixFinal.set('');
-          this.nouvelleVarianteStock.set('');
-          this.rafraichirPlat();
-        },
-        error: (erreur: unknown) => this.erreurVariantes.set(extraireMessageErreur(erreur)),
-      });
+    this.service.creerVariante(this.prefixe(), donnees).subscribe({
+      next: () => {
+        this.nouvelleVarianteNom.set('');
+        this.nouvelleVariantePrixFinal.set('');
+        this.nouvelleVarianteStock.set('');
+        this.retirerImageNouvelleVariante();
+        this.rafraichirPlat();
+      },
+      error: (erreur: unknown) => this.erreurVariantes.set(extraireMessageErreur(erreur)),
+    });
+  }
+
+  /** Sélection de la photo de la nouvelle variante (aperçu local, pas encore envoyée). */
+  selectionnerImageNouvelleVariante(evenement: Event): void {
+    const entree = evenement.target as HTMLInputElement;
+    const fichier = entree.files?.[0] ?? null;
+    entree.value = '';
+    if (!fichier) return;
+
+    this.erreurVariantes.set(null);
+    if (!fichier.type.startsWith('image/')) {
+      this.erreurVariantes.set('Le fichier sélectionné doit être une image.');
+      return;
+    }
+    if (fichier.size > TAILLE_MAX_IMAGE_VARIANTE_OCTETS) {
+      this.erreurVariantes.set("L'image ne doit pas dépasser 5 Mo.");
+      return;
+    }
+
+    if (this.urlApercuNouvelleVarianteImage) URL.revokeObjectURL(this.urlApercuNouvelleVarianteImage);
+    this.urlApercuNouvelleVarianteImage = URL.createObjectURL(fichier);
+    this.nouvelleVarianteImage.set(fichier);
+    this.apercuNouvelleVarianteImage.set(this.urlApercuNouvelleVarianteImage);
+  }
+
+  retirerImageNouvelleVariante(): void {
+    if (this.urlApercuNouvelleVarianteImage) {
+      URL.revokeObjectURL(this.urlApercuNouvelleVarianteImage);
+      this.urlApercuNouvelleVarianteImage = null;
+    }
+    this.nouvelleVarianteImage.set(null);
+    this.apercuNouvelleVarianteImage.set(null);
+  }
+
+  /** Remplace (ou ajoute) la photo d'une variante existante. */
+  changerImageVariante(variante: VarianteCarte, evenement: Event): void {
+    const entree = evenement.target as HTMLInputElement;
+    const fichier = entree.files?.[0] ?? null;
+    entree.value = '';
+    if (!fichier) return;
+
+    this.erreurVariantes.set(null);
+    if (!fichier.type.startsWith('image/')) {
+      this.erreurVariantes.set('Le fichier sélectionné doit être une image.');
+      return;
+    }
+    if (fichier.size > TAILLE_MAX_IMAGE_VARIANTE_OCTETS) {
+      this.erreurVariantes.set("L'image ne doit pas dépasser 5 Mo.");
+      return;
+    }
+    this.modifierVarianteEtRafraichir(variante, { image: fichier });
+  }
+
+  retirerImageVariante(variante: VarianteCarte): void {
+    this.erreurVariantes.set(null);
+    this.modifierVarianteEtRafraichir(variante, { image: null });
   }
 
   /** Stock saisi : null si vide (illimité), entier ≥ 0, undefined si invalide. */

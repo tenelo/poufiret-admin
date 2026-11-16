@@ -73,3 +73,86 @@ describe('RestaurantService.listerImagesPlat', () => {
     expect(resultat?.plafond).toBeNull();
   });
 });
+
+/**
+ * L'image d'une variante (format photo, ex. grilleurs) est facultative : sans elle, create/
+ * modifierVariante envoient du JSON brut comme avant (aucun changement de comportement) ; avec
+ * elle (fichier ou null pour retirer), ils basculent en multipart (le backend l'exige).
+ */
+describe('RestaurantService — variantes (image facultative)', () => {
+  let service: RestaurantService;
+  let httpMock: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: ConfigurationService, useValue: { apiUrl: API_URL, production: false } },
+      ],
+    });
+    service = TestBed.inject(RestaurantService);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => httpMock.verify());
+
+  function varianteFlushee() {
+    return {
+      id: 1,
+      article: 9,
+      nom: 'Demi-poulet',
+      prix_supplement: '0.00',
+      est_par_defaut: true,
+      ordre: 0,
+      est_active: true,
+      stock: null,
+      est_epuise: false,
+      image: null,
+    };
+  }
+
+  it('creerVariante sans image envoie du JSON brut', () => {
+    service
+      .creerVariante('mon-espace', { article: 9, nom: 'Demi-poulet', prix_supplement: 0 })
+      .subscribe();
+
+    const requete = httpMock.expectOne(`${API_URL}/restaurants/mon-espace/carte/variantes/`);
+    expect(requete.request.body instanceof FormData).toBeFalse();
+    expect(requete.request.body).toEqual({ article: 9, nom: 'Demi-poulet', prix_supplement: 0 });
+    requete.flush(varianteFlushee());
+  });
+
+  it('creerVariante avec une image bascule en multipart (fichier inclus)', () => {
+    const fichier = new File(['x'], 'photo.jpg', { type: 'image/jpeg' });
+    service
+      .creerVariante('mon-espace', { article: 9, nom: 'Demi-poulet', prix_supplement: 0, image: fichier })
+      .subscribe();
+
+    const requete = httpMock.expectOne(`${API_URL}/restaurants/mon-espace/carte/variantes/`);
+    expect(requete.request.body instanceof FormData).toBeTrue();
+    const corps = requete.request.body as FormData;
+    expect(corps.get('nom')).toBe('Demi-poulet');
+    expect(corps.get('image')).toBe(fichier);
+    requete.flush(varianteFlushee());
+  });
+
+  it('modifierVariante avec image: null retire la photo en multipart (image vide)', () => {
+    service.modifierVariante('mon-espace', 1, { image: null }).subscribe();
+
+    const requete = httpMock.expectOne(`${API_URL}/restaurants/mon-espace/carte/variantes/1/`);
+    expect(requete.request.body instanceof FormData).toBeTrue();
+    const corps = requete.request.body as FormData;
+    expect(corps.get('image')).toBe('');
+    requete.flush(varianteFlushee());
+  });
+
+  it('modifierVariante sans champ image (ex. stock) envoie du JSON brut, comme avant', () => {
+    service.modifierVariante('mon-espace', 1, { stock: 5 }).subscribe();
+
+    const requete = httpMock.expectOne(`${API_URL}/restaurants/mon-espace/carte/variantes/1/`);
+    expect(requete.request.body instanceof FormData).toBeFalse();
+    expect(requete.request.body).toEqual({ stock: 5 });
+    requete.flush(varianteFlushee());
+  });
+});

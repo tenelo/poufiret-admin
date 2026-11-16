@@ -392,3 +392,23 @@ textarea {
   font-size: 0.78rem;
   white-space: nowrap;
 }
+
+// ---- Variantes : photo (ex. formats des grilleurs) ----
+
+.miniature-variante {
+  width: 2rem;
+  height: 2rem;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.bouton-fichier {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+
+  .miniature-variante {
+    margin: -0.1rem 0;
+  }
+}

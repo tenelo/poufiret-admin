@@ -36,6 +36,17 @@ const ENTREES_PARTENAIRE_RESTAURATEUR: EntreeMenuPartenaire[] = [
   { libelle: 'Publicités', lien: '/publicites' },
 ];
 
+// Grilleur (gabarit grillades) : même espace établissement que le restaurateur, carte avec
+// « Formats » (variantes), mais sans "Mes menus" (pas de menus du jour/semaine pour ce gabarit).
+const ENTREES_PARTENAIRE_GRILLEUR: EntreeMenuPartenaire[] = [
+  { libelle: 'Tableau de bord', lien: '/tableau-de-bord' },
+  { libelle: 'Mon profil', lien: '/mon-profil' },
+  { libelle: 'Mon établissement', lien: '/mon-restaurant' },
+  { libelle: 'Ma carte', lien: '/ma-carte' },
+  { libelle: 'Mes commandes', lien: '/mes-commandes' },
+  { libelle: 'Publicités', lien: '/publicites' },
+];
+
 // Boulangerie, pharmacie, mode, librairie : même espace établissement, sans menus (son onglet
 // catalogue porte les libellés du gabarit) ; « Mes catégories » / « Mes produits » (catalogue
 // général) restent dans le menu.
@@ -97,6 +108,7 @@ export class BarreLaterale {
 
   readonly entreesPartenaire = computed<EntreeMenuPartenaire[]>(() => {
     if (this.profilPartenaireContexte.estRestaurateur()) return ENTREES_PARTENAIRE_RESTAURATEUR;
+    if (this.profilPartenaireContexte.estGrilleur()) return ENTREES_PARTENAIRE_GRILLEUR;
     if (this.profilPartenaireContexte.estEtablissement()) return ENTREES_PARTENAIRE_ETABLISSEMENT;
     if (this.profilPartenaireContexte.estLoueur()) return ENTREES_PARTENAIRE_LOUEUR;
     if (this.profilPartenaireContexte.estLoueurVoiture()) return ENTREES_PARTENAIRE_LOUEUR_VOITURE;

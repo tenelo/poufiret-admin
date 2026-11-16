@@ -5,7 +5,15 @@
  * spécifiques des produits (« fiche_specifique »).
  */
 
-export type CodeGabarit = 'restaurant' | 'boulangerie' | 'pharmacie' | 'mode' | 'librairie' | 'elevage' | 'generique';
+export type CodeGabarit =
+  | 'restaurant'
+  | 'boulangerie'
+  | 'pharmacie'
+  | 'mode'
+  | 'librairie'
+  | 'elevage'
+  | 'grillades'
+  | 'generique';
 
 export type TypeChampGabarit = 'texte' | 'entier' | 'booleen' | 'choix';
 
@@ -78,6 +86,7 @@ export const LIBELLES_GABARIT: Record<string, string> = {
   mode: 'Mode',
   librairie: 'Librairie',
   elevage: 'Élevage',
+  grillades: 'Grillades',
   generique: 'Commerce',
 };
 
@@ -86,6 +95,18 @@ export const LIBELLES_GABARIT: Record<string, string> = {
  * (backend développé en parallèle). Dès que la meta les sert, ce sont ses valeurs qui priment.
  */
 export const GABARITS_CONTRAT: Record<string, Gabarit> = {
+  grillades: {
+    code: 'grillades',
+    libelle: 'Grillades',
+    libelle_section: 'Section',
+    libelle_produit: 'Plat',
+    // Libellé « Formats » demandé pour les variantes des grilleurs (ex. demi-poulet, poisson entier…).
+    libelle_variantes: 'Formats',
+    menus_actifs: false,
+    options_actives: false,
+    pagination_publique: true,
+    champs: [],
+  },
   elevage: {
     code: 'elevage',
     libelle: 'Élevage',
@@ -139,6 +160,7 @@ export function gabaritDuTypePartenaire(type: string | null | undefined): string
     boutique_mode: 'mode',
     libraire: 'librairie',
     eleveur: 'elevage',
+    grilleur: 'grillades',
   };
   return (type && correspondance[type]) || null;
 }
@@ -152,6 +174,7 @@ export const OPTIONS_FILTRE_GABARIT: { valeur: string; libelle: string }[] = [
   { valeur: 'mode', libelle: 'Mode' },
   { valeur: 'librairie', libelle: 'Librairies' },
   { valeur: 'elevage', libelle: 'Élevage' },
+  { valeur: 'grillades', libelle: 'Grillades' },
 ];
 
 /**

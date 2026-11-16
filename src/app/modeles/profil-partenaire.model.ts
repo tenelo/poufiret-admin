@@ -109,4 +109,5 @@ export const OPTIONS_TYPE_PARTENAIRE: { valeur: string; libelle: string }[] = [
   { valeur: 'loueur_voiture', libelle: 'Loueur de voiture' },
   { valeur: 'eleveur', libelle: 'Éleveur / Vente à la ferme' },
   { valeur: 'plombier', libelle: 'Plombier' },
+  { valeur: 'grilleur', libelle: 'Grilleur (Grillades / Braisé)' },
 ];

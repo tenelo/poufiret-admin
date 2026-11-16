@@ -23,7 +23,7 @@ export interface DefinitionFamille {
   chargement: string;
 }
 
-const GABARITS_COMMERCES = ['boulangerie', 'pharmacie', 'librairie', 'mode', 'elevage'];
+const GABARITS_COMMERCES = ['boulangerie', 'pharmacie', 'librairie', 'mode', 'elevage', 'grillades'];
 
 export const FAMILLES_ETABLISSEMENTS: Record<FamilleEtablissement, DefinitionFamille> = {
   restaurants: {
