@@ -196,6 +196,80 @@
   }
 }
 
+.encadre-pub-ciblee {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 12px;
+
+  .carte-publicite {
+    border: none;
+    padding: 0;
+    background: transparent;
+  }
+}
+
+.entete-encadre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+
+  h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #4f46e5;
+  }
+}
+
+.bouton-fermer-encadre {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: #ffffff;
+  border: none;
+  border-radius: 999px;
+  color: #4f46e5;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    background: #c7d2fe;
+  }
+}
+
+.bascule-mode {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.bascule-mode button {
+  padding: 0.45rem 0.9rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: #f3f4f6;
+  }
+}
+
+.mode-actif {
+  background: #eef2ff !important;
+  border-color: #4f46e5 !important;
+  color: #4f46e5 !important;
+}
+
 .carte-graphique {
   padding: 1.1rem;
   background: #ffffff;

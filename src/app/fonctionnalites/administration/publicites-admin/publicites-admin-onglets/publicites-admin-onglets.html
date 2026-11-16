@@ -18,6 +18,14 @@
         >
           Statistiques
         </button>
+        <button
+          type="button"
+          class="onglet"
+          [class.onglet-actif]="ongletActif() === 'partenaires'"
+          (click)="changerOnglet('partenaires')"
+        >
+          Par partenaire
+        </button>
       }
       @if (peutGererFormules()) {
         <button
@@ -43,6 +51,12 @@
       <div class="zone-formules">
         <h1>Formules &amp; paramètres</h1>
         <app-formules-parametres-pub />
+      </div>
+    }
+    @case ('partenaires') {
+      <div class="zone-formules">
+        <h1>Publicités par partenaire</h1>
+        <app-partenaires-publicites-admin />
       </div>
     }
     @default {

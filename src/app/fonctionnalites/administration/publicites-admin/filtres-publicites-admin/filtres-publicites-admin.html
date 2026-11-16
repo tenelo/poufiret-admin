@@ -39,4 +39,51 @@
       </option>
     }
   </select>
+
+  <button type="button" class="bouton-reinitialiser" (click)="reinitialiser()">Réinitialiser</button>
 </div>
+
+@if (partenaireActif(); as partenaire) {
+  <div class="pastille-partenaire">
+    <span>Partenaire : {{ partenaire.nom }}</span>
+    <button type="button" (click)="retirerPartenaire()" aria-label="Retirer le filtre partenaire">✕</button>
+  </div>
+}
+
+<details class="plus-de-filtres">
+  <summary>Plus de filtres (période, origine)</summary>
+  <div class="grille-plus-filtres">
+    <div class="champ-periode">
+      <label for="fpa-date-debut">Du</label>
+      <input
+        id="fpa-date-debut"
+        type="date"
+        [value]="dateDebut()"
+        (change)="changerDateDebut($any($event.target).value)"
+      />
+    </div>
+    <div class="champ-periode">
+      <label for="fpa-date-fin">Au</label>
+      <input
+        id="fpa-date-fin"
+        type="date"
+        [value]="dateFin()"
+        (change)="changerDateFin($any($event.target).value)"
+      />
+    </div>
+
+    <fieldset class="choix-origine">
+      <legend>Origine</legend>
+      @for (option of optionsOrigine; track option.valeur) {
+        <label class="option-origine">
+          <input
+            type="checkbox"
+            [checked]="origineCochee(option.valeur)"
+            (change)="basculerOrigine(option.valeur, $any($event.target).checked)"
+          />
+          {{ option.libelle }}
+        </label>
+      }
+    </fieldset>
+  </div>
+</details>

@@ -82,3 +82,130 @@
     min-width: 0;
   }
 }
+
+.bouton-reinitialiser {
+  padding: 0.55rem 1rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    background: #f3f4f6;
+    color: #1a1a1a;
+  }
+}
+
+.pastille-partenaire {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  padding: 0.3rem 0.4rem 0.3rem 0.7rem;
+  background: #eef2ff;
+  border-radius: 999px;
+  color: #4f46e5;
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 999px;
+    color: #4f46e5;
+    font-size: 0.75rem;
+    cursor: pointer;
+
+    &:hover {
+      background: #c7d2fe;
+    }
+  }
+}
+
+.plus-de-filtres {
+  margin-bottom: 1.25rem;
+
+  summary {
+    padding: 0.5rem 0;
+    color: #4f46e5;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::before {
+      content: '▸ ';
+    }
+  }
+
+  &[open] summary::before {
+    content: '▾ ';
+  }
+}
+
+.grille-plus-filtres {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  padding-top: 0.5rem;
+}
+
+.champ-periode {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  label {
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+
+  input[type='date'] {
+    padding: 0.5rem 0.65rem;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.85rem;
+  }
+}
+
+.choix-origine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+
+  legend {
+    width: 100%;
+    margin-bottom: 0.3rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+}
+
+.option-origine {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: #374151;
+  cursor: pointer;
+}

@@ -1,0 +1,73 @@
+<section class="page-partenaires-pub">
+  <input
+    type="search"
+    class="champ-recherche"
+    placeholder="Rechercher un commerce"
+    aria-label="Rechercher un partenaire"
+    [value]="recherche()"
+    (input)="saisirRecherche($any($event.target).value)"
+  />
+
+  @if (chargementEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement des partenaires…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="etat-erreur">
+      <p>{{ erreurChargement() }}</p>
+      <button type="button" (click)="charger()">Réessayer</button>
+    </div>
+  } @else if (reponse(); as r) {
+    @if (r.results.length === 0) {
+      <div class="etat-vide">
+        <p>Aucun partenaire pour ces critères.</p>
+      </div>
+    } @else {
+      <app-pagination-publicites-admin
+        [optionsTri]="optionsTri"
+        [champTri]="filtres().champTri"
+        [triDescendant]="filtres().triDescendant"
+        [page]="filtres().page"
+        [pageSize]="filtres().pageSize"
+        [count]="r.count"
+        (triChange)="surTri($event)"
+        (pageSizeChange)="surPageSize($event)"
+        (pageChange)="surPage($event)"
+      />
+
+      <div class="conteneur-tableau">
+        <table class="tableau-partenaires">
+          <thead>
+            <tr>
+              <th>Commerce</th>
+              <th>Téléphone</th>
+              <th>Pubs</th>
+              <th>Par statut</th>
+              <th>Affichages</th>
+              <th>Clics</th>
+              <th>Dernière pub</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (partenaire of r.results; track partenaire.partenaire_id) {
+              <tr class="ligne-partenaire" (click)="ouvrirPartenaire(partenaire)">
+                <td class="colonne-commerce">{{ partenaire.nom_commerce }}</td>
+                <td>{{ partenaire.telephone ?? '—' }}</td>
+                <td>{{ partenaire.nb_publicites }}</td>
+                <td class="colonne-statuts">
+                  @for (statut of statutsPresents(partenaire); track statut) {
+                    <span class="badge badge-{{ statut }}">{{ libellesStatut[statut] }} {{ partenaire.par_statut![statut] }}</span>
+                  }
+                </td>
+                <td>{{ partenaire.total_affichages ?? '—' }}</td>
+                <td>{{ partenaire.total_clics ?? '—' }}</td>
+                <td>{{ formaterDate(partenaire.derniere_pub_le) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+</section>

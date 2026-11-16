@@ -1,0 +1,76 @@
+<div class="conteneur-tableau">
+  <table class="tableau-pubs">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Titre</th>
+        <th>Partenaire</th>
+        <th>Statut</th>
+        <th>Formule</th>
+        <th>Période</th>
+        <th>Affichages</th>
+        <th>Clics</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (pub of publicites(); track pub.id) {
+        <tr [id]="'pub-' + pub.id" [class.ligne-surlignee]="pub.id === pubMiseEnEvidence()">
+          <td class="colonne-vignette">
+            <div class="vignette" [class.vignette-cliquable]="imageValide()(pub) || !!pub.video" (click)="ouvrirMedia.emit(pub)">
+              @if (imageValide()(pub) && pub.image_couverture; as urlImage) {
+                <img [src]="urlImage" [alt]="pub.titre" (error)="erreurImage.emit(pub.id)" />
+              } @else {
+                <div class="vignette-vide"></div>
+              }
+            </div>
+          </td>
+          <td class="colonne-titre">
+            <span class="titre">{{ pub.titre }}</span>
+            @if (pub.reconduite_depuis_id) {
+              @if (originalDisponible()(pub)) {
+                <button type="button" class="lien-reconduction" (click)="allerVersOriginal()(pub)">↩ Reconduction</button>
+              } @else {
+                <span class="mention-reconduction">↩ Reconduction</span>
+              }
+            }
+            @if (pub.reconduite_le) {
+              <span class="mention-reconduite-le">
+                Reconduite le {{ formaterDate()(pub.reconduite_le) }}
+                @if (pub.reconduction_statut) {
+                  <span class="badge badge-{{ pub.reconduction_statut }}">{{ libellesStatut[pub.reconduction_statut] }}</span>
+                }
+              </span>
+            }
+          </td>
+          <td>{{ pub.partenaire_nom ?? '—' }}</td>
+          <td>
+            <span class="badge badge-{{ pub.statut }}">{{ libellesStatut[pub.statut] }}</span>
+          </td>
+          <td>{{ pub.formule }}</td>
+          <td class="colonne-periode">{{ formaterDate()(pub.debut_diffusion) }} → {{ formaterDate()(pub.fin_diffusion) }}</td>
+          <td>{{ pub.nb_impressions ?? '—' }}</td>
+          <td>{{ pub.nb_clics ?? '—' }}</td>
+          <td class="colonne-actions">
+            @if (peutGererPubsPartenaires() && peutReconduire()(pub)) {
+              <button type="button" class="bouton-action" (click)="reconduire.emit(pub)">Reconduire</button>
+            }
+            @if (peutModerer()) {
+              @for (action of actionsDisponibles()(pub); track action.cible) {
+                <button
+                  type="button"
+                  [class.bouton-danger]="action.dangereuse"
+                  [class.bouton-action]="!action.dangereuse"
+                  [disabled]="transitionEnCoursId() === pub.id"
+                  (click)="demanderAction.emit({ publicite: pub, action })"
+                >
+                  {{ transitionEnCoursId() === pub.id ? '…' : action.libelle }}
+                </button>
+              }
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

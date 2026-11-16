@@ -211,3 +211,141 @@ export function ajouterJours(dateIso: string, jours: number): string {
   const date = new Date(Date.UTC(annee, mois - 1, jour + jours));
   return date.toISOString().slice(0, 10);
 }
+
+// ---- Liste paginée (GET /publicites/admin/liste/), compteurs et vue par partenaire ----
+
+/** Comment la pub a été réglée : payée par le partenaire, offerte, ou créée directement par l'admin. */
+export type OriginePubliciteAdmin = 'payee' | 'offerte' | 'admin';
+
+export const OPTIONS_ORIGINE_PUBLICITE_ADMIN: { valeur: OriginePubliciteAdmin; libelle: string }[] = [
+  { valeur: 'payee', libelle: 'Payée' },
+  { valeur: 'offerte', libelle: 'Offerte' },
+  { valeur: 'admin', libelle: 'Créée par l’admin' },
+];
+
+export type ChampTriPubliciteAdmin =
+  | 'cree_le'
+  | 'debut_diffusion'
+  | 'fin_diffusion'
+  | 'affichages'
+  | 'clics'
+  | 'partenaire'
+  | 'titre';
+
+export const OPTIONS_TRI_PUBLICITE_ADMIN: { valeur: ChampTriPubliciteAdmin; libelle: string }[] = [
+  { valeur: 'cree_le', libelle: 'Plus récentes' },
+  { valeur: 'debut_diffusion', libelle: 'Début de diffusion' },
+  { valeur: 'fin_diffusion', libelle: 'Fin de diffusion' },
+  { valeur: 'affichages', libelle: 'Affichages' },
+  { valeur: 'clics', libelle: 'Clics' },
+  { valeur: 'partenaire', libelle: 'Partenaire' },
+  { valeur: 'titre', libelle: 'Titre' },
+];
+
+export const TAILLES_PAGE_PUBLICITES_ADMIN = [25, 50, 100] as const;
+
+/** Filtres envoyés à GET /publicites/admin/liste/ (chaîne/tableau vide = filtre non appliqué). */
+export interface FiltresListePublicitesAdmin {
+  statut: OngletStatutPubliciteAdmin;
+  recherche: string;
+  formule: string;
+  portee: PorteePublicite | '';
+  partenaireId: number | null;
+  dateDebut: string;
+  dateFin: string;
+  origine: OriginePubliciteAdmin[];
+  champTri: ChampTriPubliciteAdmin;
+  triDescendant: boolean;
+  page: number;
+  pageSize: number;
+}
+
+export const FILTRES_LISTE_PUBLICITES_ADMIN_DEFAUT: FiltresListePublicitesAdmin = {
+  statut: 'en_attente_validation',
+  recherche: '',
+  formule: '',
+  portee: '',
+  partenaireId: null,
+  dateDebut: '',
+  dateFin: '',
+  origine: [],
+  champTri: 'cree_le',
+  triDescendant: true,
+  page: 1,
+  pageSize: 25,
+};
+
+/** Sous-ensemble émis par la barre de filtres (tri/page/pageSize sont gérés par la pagination). */
+export type FiltresRecherchePublicitesAdmin = Pick<
+  FiltresListePublicitesAdmin,
+  'statut' | 'recherche' | 'formule' | 'portee' | 'partenaireId' | 'dateDebut' | 'dateFin' | 'origine'
+>;
+
+/** `ordre` envoyé à l'API : préfixe `-` pour descendant (ex. `-cree_le`, `titre`). */
+export function construireParametreOrdre(champ: string, descendant: boolean): string {
+  return descendant ? `-${champ}` : champ;
+}
+
+export interface ReponseListePublicitesAdmin {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: PubliciteAdmin[];
+  compteurs_statut?: CompteursStatutPubliciteAdmin;
+}
+
+/** Ligne de GET /publicites/admin/partenaires/. */
+export interface PartenairePubliciteAdmin {
+  partenaire_id: number;
+  nom_commerce: string;
+  telephone?: string | null;
+  nb_publicites: number;
+  par_statut?: Partial<Record<StatutPubliciteAdmin, number>>;
+  total_affichages?: number;
+  total_clics?: number;
+  derniere_pub_le?: string | null;
+}
+
+export type ChampTriPartenairePubliciteAdmin = 'nom' | 'nb_publicites' | 'affichages' | 'clics' | 'derniere_pub';
+
+export const OPTIONS_TRI_PARTENAIRE_PUBLICITE_ADMIN: { valeur: ChampTriPartenairePubliciteAdmin; libelle: string }[] = [
+  { valeur: 'derniere_pub', libelle: 'Dernière pub' },
+  { valeur: 'nom', libelle: 'Commerce' },
+  { valeur: 'nb_publicites', libelle: 'Nombre de pubs' },
+  { valeur: 'affichages', libelle: 'Affichages' },
+  { valeur: 'clics', libelle: 'Clics' },
+];
+
+/** Filtres envoyés à GET /publicites/admin/partenaires/ (pas de filtre de statut : vue globale par partenaire). */
+export interface FiltresPartenairesPubliciteAdmin {
+  recherche: string;
+  formule: string;
+  portee: PorteePublicite | '';
+  dateDebut: string;
+  dateFin: string;
+  origine: OriginePubliciteAdmin[];
+  champTri: ChampTriPartenairePubliciteAdmin;
+  triDescendant: boolean;
+  page: number;
+  pageSize: number;
+}
+
+export const FILTRES_PARTENAIRES_PUBLICITE_ADMIN_DEFAUT: FiltresPartenairesPubliciteAdmin = {
+  recherche: '',
+  formule: '',
+  portee: '',
+  dateDebut: '',
+  dateFin: '',
+  origine: [],
+  champTri: 'derniere_pub',
+  triDescendant: true,
+  page: 1,
+  pageSize: 25,
+};
+
+export interface ReponseListePartenairesPubliciteAdmin {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: PartenairePubliciteAdmin[];
+}

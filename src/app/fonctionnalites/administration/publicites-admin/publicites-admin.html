@@ -7,8 +7,13 @@
           + Créer une pub pour un partenaire
         </button>
       }
-      <button type="button" class="bouton-secondaire" [disabled]="chargementEnCours()" (click)="rafraichir()">
-        {{ chargementEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
+      <button
+        type="button"
+        class="bouton-secondaire"
+        [disabled]="chargementListeEnCours() || chargementStatsEnCours()"
+        (click)="rafraichir()"
+      >
+        {{ chargementListeEnCours() || chargementStatsEnCours() ? 'Chargement…' : '↻ Rafraîchir' }}
       </button>
 
       <div class="menu-export">
@@ -48,20 +53,19 @@
     [compteurs]="compteurs()"
     [statutImpose]="statutImpose()"
     [formules]="formulesQuotas()"
+    [filtresInitiaux]="filtres()"
+    [partenaireActif]="partenaireActif()"
     (filtresChange)="surFiltres($event)"
   />
 
-  @if (chargementEnCours()) {
+  @if (chargementStatsEnCours()) {
     <div class="etat-chargement">
       <span class="spinner"></span>
-      <p>Chargement des publicités…</p>
+      <p>Chargement des totaux…</p>
     </div>
-  } @else if (erreurChargement()) {
-    <div class="etat-erreur">
-      <p>{{ erreurChargement() }}</p>
-      <button type="button" (click)="charger()">Réessayer</button>
-    </div>
-  } @else if (donnees(); as d) {
+  } @else if (erreurStats()) {
+    <p class="erreur-generale">{{ erreurStats() }}</p>
+  } @else if (statsEnTete(); as d) {
     <div class="grille-kpi">
       <div class="carte-kpi">
         <span class="valeur">{{ formaterNombre(d.totaux.nb_publicites ?? 0) }}</span>
@@ -85,103 +89,166 @@
       </div>
     </div>
 
-    @if (d.publicites.length > 0) {
+    @if (donneesStatuts().labels!.length > 0) {
       <div class="carte-graphique">
         <h3>Répartition par statut</h3>
         <app-graphique type="doughnut" [data]="donneesStatuts()" [options]="optionsDonut" />
       </div>
     }
+  }
 
-    @if (d.publicites.length === 0) {
+  @if (pubCiblee(); as pub) {
+    <div class="encadre-pub-ciblee">
+      <div class="entete-encadre">
+        <h3>Campagne ciblée</h3>
+        <button type="button" class="bouton-fermer-encadre" (click)="fermerPubCiblee()" aria-label="Fermer">×</button>
+      </div>
+      <ng-container [ngTemplateOutlet]="carteTemplate" [ngTemplateOutletContext]="{ pub: pub }" />
+    </div>
+  }
+
+  <div class="bascule-mode">
+    <button type="button" [class.mode-actif]="modeAffichage() === 'cartes'" (click)="basculerMode('cartes')">
+      ▦ Cartes
+    </button>
+    <button type="button" [class.mode-actif]="modeAffichage() === 'tableau'" (click)="basculerMode('tableau')">
+      ☰ Tableau
+    </button>
+  </div>
+
+  @if (chargementListeEnCours()) {
+    <div class="etat-chargement">
+      <span class="spinner"></span>
+      <p>Chargement des publicités…</p>
+    </div>
+  } @else if (erreurListe()) {
+    <div class="etat-erreur">
+      <p>{{ erreurListe() }}</p>
+      <button type="button" (click)="rafraichir()">Réessayer</button>
+    </div>
+  } @else if (reponseListe(); as r) {
+    @if (r.results.length === 0) {
       <div class="etat-vide">
         <p>Aucune campagne pour ces critères.</p>
       </div>
     } @else {
-      <div class="grille-publicites">
-        @for (pub of d.publicites; track pub.id) {
-          <div class="carte-publicite" [id]="'pub-' + pub.id" [class.carte-surlignee]="pub.id === pubMiseEnEvidence()">
-            <div
-              class="vignette-media"
-              [class.vignette-cliquable]="aUnVisuel(pub)"
-              (click)="ouvrirMedia(pub)"
-            >
-              @if (imageValide(pub) && pub.image_couverture; as urlImage) {
-                <img [src]="urlImage" [alt]="pub.titre" (error)="surErreurImage(pub.id)" />
-              } @else {
-                <div class="vignette-vide">
-                  <span>Aucun visuel</span>
-                </div>
-              }
-              @if (pub.video) {
-                <span class="badge-video">🎬 Vidéo</span>
-              }
-            </div>
+      <app-pagination-publicites-admin
+        [optionsTri]="optionsTri"
+        [champTri]="filtres().champTri"
+        [triDescendant]="filtres().triDescendant"
+        [page]="filtres().page"
+        [pageSize]="filtres().pageSize"
+        [count]="r.count"
+        (triChange)="surTri($event)"
+        (pageSizeChange)="surPageSize($event)"
+        (pageChange)="surPage($event)"
+      />
 
-            <div class="entete-carte">
-              <span class="titre">{{ pub.titre }}</span>
-              <span class="badge badge-{{ pub.statut }}">{{ libellesStatut[pub.statut] }}</span>
-            </div>
-            @if (pub.reconduite_depuis_id) {
-              @if (originalDisponible(pub)) {
-                <button type="button" class="lien-reconduction" (click)="allerVersOriginal(pub)">
-                  ↩ Reconduction
-                </button>
-              } @else {
-                <span class="mention-reconduction">↩ Reconduction</span>
-              }
-            }
-            <p class="formule">Formule : {{ pub.formule }}</p>
-            @if (libellePortee(pub); as portee) {
-              <p class="formule">Portée effective : {{ portee }}</p>
-            }
-            @if (pub.reconduite_le) {
-              <p class="mention-reconduite-le">
-                Reconduite le {{ formaterDate(pub.reconduite_le) }}
-                @if (pub.reconduction_statut) {
-                  <span class="badge badge-{{ pub.reconduction_statut }}">{{ libellesStatut[pub.reconduction_statut] }}</span>
-                }
-              </p>
-            }
-
-            @if (peutBasculerStats(pub)) {
-              <app-stats-publicite [stats]="pub" />
-            }
-
-            @if (peutBasculerStats(pub)) {
-              <app-interrupteur-stats-visibles
-                [visible]="statsVisibles(pub)"
-                [enCours]="statsEnCoursId() === pub.id"
-                (basculer)="demanderBasculeStats(pub, $event)"
-              />
-            }
-
-            @if (peutGererPubsPartenaires() && peutReconduire(pub)) {
-              <div class="actions-publicite">
-                <button type="button" class="bouton-action" (click)="ouvrirReconduction(pub)">Reconduire</button>
-              </div>
-            }
-
-            @if (peutModerer() && actionsDisponibles(pub).length > 0) {
-              <div class="actions-publicite">
-                @for (action of actionsDisponibles(pub); track action.cible) {
-                  <button
-                    type="button"
-                    [class.bouton-danger]="action.dangereuse"
-                    [class.bouton-action]="!action.dangereuse"
-                    [disabled]="transitionEnCoursId() === pub.id"
-                    (click)="demanderAction(pub, action)"
-                  >
-                    {{ transitionEnCoursId() === pub.id ? '…' : action.libelle }}
-                  </button>
-                }
-              </div>
-            }
-          </div>
-        }
-      </div>
+      @if (modeAffichage() === 'tableau') {
+        <app-tableau-publicites-admin
+          [publicites]="r.results"
+          [pubMiseEnEvidence]="pubMiseEnEvidence()"
+          [peutGererPubsPartenaires]="peutGererPubsPartenaires()"
+          [peutModerer]="peutModerer()"
+          [transitionEnCoursId]="transitionEnCoursId()"
+          [peutReconduire]="peutReconduire"
+          [actionsDisponibles]="actionsDisponibles"
+          [formaterDate]="formaterDate"
+          [originalDisponible]="originalDisponible"
+          [imageValide]="imageValide"
+          [allerVersOriginal]="allerVersOriginal"
+          (reconduire)="ouvrirReconduction($event)"
+          (demanderAction)="demanderAction($event.publicite, $event.action)"
+          (ouvrirMedia)="ouvrirMedia($event)"
+          (erreurImage)="surErreurImage($event)"
+        />
+      } @else {
+        <div class="grille-publicites">
+          @for (pub of r.results; track pub.id) {
+            <ng-container [ngTemplateOutlet]="carteTemplate" [ngTemplateOutletContext]="{ pub: pub }" />
+          }
+        </div>
+      }
     }
   }
 </section>
+
+<ng-template #carteTemplate let-pub="pub">
+  <div class="carte-publicite" [id]="'pub-' + pub.id" [class.carte-surlignee]="pub.id === pubMiseEnEvidence()">
+    <div class="vignette-media" [class.vignette-cliquable]="aUnVisuel(pub)" (click)="ouvrirMedia(pub)">
+      @if (imageValide(pub) && pub.image_couverture; as urlImage) {
+        <img [src]="urlImage" [alt]="pub.titre" (error)="surErreurImage(pub.id)" />
+      } @else {
+        <div class="vignette-vide">
+          <span>Aucun visuel</span>
+        </div>
+      }
+      @if (pub.video) {
+        <span class="badge-video">🎬 Vidéo</span>
+      }
+    </div>
+
+    <div class="entete-carte">
+      <span class="titre">{{ pub.titre }}</span>
+      <span class="badge badge-{{ pub.statut }}">{{ statutLibelle(pub.statut) }}</span>
+    </div>
+    @if (pub.reconduite_depuis_id) {
+      @if (originalDisponible(pub)) {
+        <button type="button" class="lien-reconduction" (click)="allerVersOriginal(pub)">
+          ↩ Reconduction
+        </button>
+      } @else {
+        <span class="mention-reconduction">↩ Reconduction</span>
+      }
+    }
+    <p class="formule">Formule : {{ pub.formule }}</p>
+    @if (libellePortee(pub); as portee) {
+      <p class="formule">Portée effective : {{ portee }}</p>
+    }
+    @if (pub.reconduite_le) {
+      <p class="mention-reconduite-le">
+        Reconduite le {{ formaterDate(pub.reconduite_le) }}
+        @if (pub.reconduction_statut) {
+          <span class="badge badge-{{ pub.reconduction_statut }}">{{ statutLibelle(pub.reconduction_statut) }}</span>
+        }
+      </p>
+    }
+
+    @if (peutBasculerStats(pub)) {
+      <app-stats-publicite [stats]="pub" />
+    }
+
+    @if (peutBasculerStats(pub)) {
+      <app-interrupteur-stats-visibles
+        [visible]="statsVisibles(pub)"
+        [enCours]="statsEnCoursId() === pub.id"
+        (basculer)="demanderBasculeStats(pub, $event)"
+      />
+    }
+
+    @if (peutGererPubsPartenaires() && peutReconduire(pub)) {
+      <div class="actions-publicite">
+        <button type="button" class="bouton-action" (click)="ouvrirReconduction(pub)">Reconduire</button>
+      </div>
+    }
+
+    @if (peutModerer() && actionsDisponibles(pub).length > 0) {
+      <div class="actions-publicite">
+        @for (action of actionsDisponibles(pub); track action.cible) {
+          <button
+            type="button"
+            [class.bouton-danger]="action.dangereuse"
+            [class.bouton-action]="!action.dangereuse"
+            [disabled]="transitionEnCoursId() === pub.id"
+            (click)="demanderAction(pub, action)"
+          >
+            {{ transitionEnCoursId() === pub.id ? '…' : action.libelle }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+</ng-template>
 
 @if (dialogPubPartenaire(); as dialog) {
   <app-dialog-pub-partenaire

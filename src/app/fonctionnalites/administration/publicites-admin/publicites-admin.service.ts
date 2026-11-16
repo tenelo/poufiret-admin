@@ -5,8 +5,14 @@ import { Observable, map, tap } from 'rxjs';
 import { ConfigurationService } from '../../../noyau/config/configuration.service';
 import {
   ActionTransitionPubliciteId,
+  construireParametreOrdre,
+  FiltresListePublicitesAdmin,
+  FiltresPartenairesPubliciteAdmin,
   FiltresPublicitesAdmin,
+  PubliciteAdmin,
   QuotaFormule,
+  ReponseListePartenairesPubliciteAdmin,
+  ReponseListePublicitesAdmin,
   ReponseQuotasFormules,
   ReponseTransitionPubliciteAdmin,
   RequeteCreationPubPartenaire,
@@ -64,6 +70,55 @@ export class PublicitesAdminService {
     return this.http.get<StatsPublicitesAdmin>(`${this.configuration.apiUrl}/publicites/admin/stats/`, {
       params,
     });
+  }
+
+  /** GET /publicites/admin/liste/ : liste paginée (tri, recherche, partenaire, dates, origine, portée…). */
+  chargerListe(filtres: FiltresListePublicitesAdmin): Observable<ReponseListePublicitesAdmin> {
+    let params = new HttpParams()
+      .set('page', String(filtres.page))
+      .set('page_size', String(filtres.pageSize))
+      .set('ordre', construireParametreOrdre(filtres.champTri, filtres.triDescendant));
+    if (filtres.statut !== 'toutes') params = params.set('statut', filtres.statut);
+    if (filtres.recherche.trim()) params = params.set('search', filtres.recherche.trim());
+    if (filtres.formule) params = params.set('formule', filtres.formule);
+    if (filtres.portee) params = params.set('portee', filtres.portee);
+    if (filtres.partenaireId !== null) params = params.set('partenaire', String(filtres.partenaireId));
+    if (filtres.dateDebut) params = params.set('date_debut', filtres.dateDebut);
+    if (filtres.dateFin) params = params.set('date_fin', filtres.dateFin);
+    for (const origine of filtres.origine) params = params.append('origine', origine);
+    return this.http.get<ReponseListePublicitesAdmin>(`${this.configuration.apiUrl}/publicites/admin/liste/`, {
+      params,
+    });
+  }
+
+  /**
+   * GET /publicites/admin/liste/?id=<id> : charge une pub précise, quel que soit son statut ou sa
+   * page (ex. clic depuis une notification). `null` si absente (404, ou pas encore trouvée si le
+   * backend ne supporte pas encore ce filtre).
+   */
+  chargerPubParId(id: string): Observable<PubliciteAdmin | null> {
+    const params = new HttpParams().set('id', id).set('page_size', '1');
+    return this.http
+      .get<ReponseListePublicitesAdmin>(`${this.configuration.apiUrl}/publicites/admin/liste/`, { params })
+      .pipe(map((reponse) => reponse.results[0] ?? null));
+  }
+
+  /** GET /publicites/admin/partenaires/ : vue agrégée par partenaire (nb de pubs, affichages, clics…). */
+  chargerPartenaires(filtres: FiltresPartenairesPubliciteAdmin): Observable<ReponseListePartenairesPubliciteAdmin> {
+    let params = new HttpParams()
+      .set('page', String(filtres.page))
+      .set('page_size', String(filtres.pageSize))
+      .set('ordre', construireParametreOrdre(filtres.champTri, filtres.triDescendant));
+    if (filtres.recherche.trim()) params = params.set('search', filtres.recherche.trim());
+    if (filtres.formule) params = params.set('formule', filtres.formule);
+    if (filtres.portee) params = params.set('portee', filtres.portee);
+    if (filtres.dateDebut) params = params.set('date_debut', filtres.dateDebut);
+    if (filtres.dateFin) params = params.set('date_fin', filtres.dateFin);
+    for (const origine of filtres.origine) params = params.append('origine', origine);
+    return this.http.get<ReponseListePartenairesPubliciteAdmin>(
+      `${this.configuration.apiUrl}/publicites/admin/partenaires/`,
+      { params },
+    );
   }
 
   /** GET /publicites/admin/statistiques/ : tableau de bord statistique (défaut backend : 30 jours). */

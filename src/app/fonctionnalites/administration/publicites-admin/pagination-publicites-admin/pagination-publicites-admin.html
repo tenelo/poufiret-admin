@@ -1,0 +1,33 @@
+<div class="barre-pagination">
+  <div class="groupe-tri">
+    <label for="ppa-tri">Trier par</label>
+    <select id="ppa-tri" (change)="choisirChamp($any($event.target).value)">
+      @for (option of optionsTri(); track option.valeur) {
+        <option [value]="option.valeur" [selected]="option.valeur === champTri()">{{ option.libelle }}</option>
+      }
+    </select>
+    <button
+      type="button"
+      class="bouton-direction"
+      [title]="triDescendant() ? 'Décroissant' : 'Croissant'"
+      (click)="basculerDirection()"
+    >
+      {{ triDescendant() ? '↓' : '↑' }}
+    </button>
+  </div>
+
+  <div class="groupe-pager">
+    <span class="total-resultats">{{ count() }} résultat{{ count() > 1 ? 's' : '' }}</span>
+
+    <label for="ppa-taille">Par page</label>
+    <select id="ppa-taille" (change)="choisirTaillePage($any($event.target).value)">
+      @for (taille of taillesPage; track taille) {
+        <option [value]="taille" [selected]="taille === pageSize()">{{ taille }}</option>
+      }
+    </select>
+
+    <button type="button" [disabled]="page() <= 1" (click)="pagePrecedente()">← Précédent</button>
+    <span class="page-courante">Page {{ page() }} / {{ nbPages() }}</span>
+    <button type="button" [disabled]="page() >= nbPages()" (click)="pageSuivante()">Suivant →</button>
+  </div>
+</div>
