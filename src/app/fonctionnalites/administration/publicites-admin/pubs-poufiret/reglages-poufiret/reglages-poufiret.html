@@ -1,0 +1,65 @@
+@if (messageErreur()) {
+  <p class="erreur-generale">{{ messageErreur() }}</p>
+}
+@if (messageSucces()) {
+  <p class="message-succes">{{ messageSucces() }}</p>
+}
+
+@if (chargementEnCours()) {
+  <div class="etat-chargement">
+    <span class="spinner"></span>
+    <p>Chargement des réglages…</p>
+  </div>
+} @else if (erreurChargement()) {
+  <div class="etat-erreur">
+    <p>{{ erreurChargement() }}</p>
+    <button type="button" (click)="charger()">Réessayer</button>
+  </div>
+} @else if (reglages(); as r) {
+  <div class="carte-reglages">
+    <label class="ligne-interrupteur">
+      <input type="checkbox" [checked]="r.pubs_maison_actives" (change)="basculerPubsMaisonActives()" />
+      <span>Pubs Poufiret actives dans le carrousel</span>
+    </label>
+
+    <label class="ligne-interrupteur">
+      <input type="checkbox" [checked]="r.parcours_actif" (change)="basculerParcoursActif()" />
+      <span>Parcours « Découvrir Poufiret » actif (version {{ r.version_parcours }})</span>
+    </label>
+
+    <div class="grille-champs">
+      <div>
+        <label for="rp-frequence">Fréquence (une pub Poufiret toutes les N pubs partenaires)</label>
+        <input
+          id="rp-frequence"
+          type="number"
+          min="1"
+          max="50"
+          [value]="frequence()"
+          (input)="frequence.set(+$any($event.target).value)"
+        />
+        @if (erreurChamps()['frequence']) {
+          <p class="erreur-champ">{{ erreurChamps()['frequence'] }}</p>
+        }
+      </div>
+      <div>
+        <label for="rp-duree">Durée d'affichage d'une pub Poufiret (secondes)</label>
+        <input
+          id="rp-duree"
+          type="number"
+          min="1"
+          max="60"
+          [value]="dureeAffichage()"
+          (input)="dureeAffichage.set(+$any($event.target).value)"
+        />
+        @if (erreurChamps()['duree']) {
+          <p class="erreur-champ">{{ erreurChamps()['duree'] }}</p>
+        }
+      </div>
+    </div>
+
+    <button type="button" class="bouton-principal" [disabled]="enregistrementEnCours()" (click)="enregistrerFrequenceEtDuree()">
+      {{ enregistrementEnCours() ? 'Enregistrement…' : 'Enregistrer' }}
+    </button>
+  </div>
+}

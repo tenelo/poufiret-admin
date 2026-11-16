@@ -1,0 +1,117 @@
+<div class="entete-onglet">
+  <div class="actions-entete">
+    <button type="button" class="bouton-principal" (click)="ouvrirCreation()">+ Nouvelle pub</button>
+    <select aria-label="Filtrer par statut" (change)="surFiltreActif($any($event.target).value)">
+      <option value="" [selected]="filtreActif() === ''">Toutes</option>
+      <option value="true" [selected]="filtreActif() === 'true'">Actives</option>
+      <option value="false" [selected]="filtreActif() === 'false'">Inactives</option>
+    </select>
+    <button type="button" class="bouton-secondaire" [disabled]="exportEnCours()" (click)="exporter()">
+      {{ exportEnCours() ? 'Export en cours…' : '⭳ Exporter CSV' }}
+    </button>
+  </div>
+</div>
+
+@if (erreurCategories()) {
+  <p class="avertissement">Catégories indisponibles : {{ erreurCategories() }}</p>
+}
+@if (erreurGeo()) {
+  <p class="avertissement">Régions/départements indisponibles : {{ erreurGeo() }}</p>
+}
+@if (messageErreur()) {
+  <p class="erreur-generale">{{ messageErreur() }}</p>
+}
+@if (messageSucces()) {
+  <p class="message-succes">{{ messageSucces() }}</p>
+}
+
+@if (chargementEnCours()) {
+  <div class="etat-chargement">
+    <span class="spinner"></span>
+    <p>Chargement des pubs…</p>
+  </div>
+} @else if (erreurChargement()) {
+  <div class="etat-erreur">
+    <p>{{ erreurChargement() }}</p>
+    <button type="button" (click)="charger()">Réessayer</button>
+  </div>
+} @else if (pubs().length === 0) {
+  <div class="etat-vide">
+    <p>Aucune pub Poufiret pour ces critères.</p>
+  </div>
+} @else {
+  <div class="grille-pubs" cdkDropList (cdkDropListDropped)="surDepot($event)">
+    @for (pub of pubs(); track pub.id) {
+      <div class="carte-pub" cdkDrag>
+        <div class="vignette-media">
+          @if (pub.image_couverture) {
+            <img [src]="pub.image_couverture" [alt]="pub.titre" />
+          } @else {
+            <div class="vignette-vide"><span>Aucun visuel</span></div>
+          }
+          <span class="poignee" cdkDragHandle title="Glisser pour réordonner">⠿</span>
+        </div>
+
+        <div class="entete-carte">
+          <span class="titre">{{ pub.titre }}</span>
+          <span class="badge" [class.badge-actif]="pub.est_active" [class.badge-inactif]="!pub.est_active">
+            {{ pub.est_active ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+
+        <p class="categorie">
+          Catégorie : {{ pub.categorie_nom ?? '—' }}
+          @if (!pub.categorie_disponible) {
+            <span class="alerte-categorie" title="Catégorie désactivée, archivée ou supprimée">⚠ indisponible</span>
+          }
+        </p>
+
+        @if (pub.date_debut || pub.date_fin) {
+          <p class="periode">Du {{ formaterDate(pub.date_debut) }} au {{ formaterDate(pub.date_fin) }}</p>
+        }
+        <p class="portee">Portée : {{ libellePortee(pub) }}</p>
+
+        <div class="grille-stats">
+          <div><span class="valeur">{{ pub.nb_impressions }}</span><span class="libelle">Affichages</span></div>
+          <div><span class="valeur">{{ pub.nb_clics }}</span><span class="libelle">Clics</span></div>
+          <div><span class="valeur">{{ pub.taux_clic }}%</span><span class="libelle">Taux</span></div>
+        </div>
+
+        <div class="actions-carte">
+          <button type="button" class="bouton-secondaire" (click)="basculerActive(pub)">
+            {{ pub.est_active ? 'Désactiver' : 'Activer' }}
+          </button>
+          <button type="button" class="bouton-secondaire" (click)="ouvrirModification(pub)">Modifier</button>
+          <button type="button" class="bouton-danger" (click)="demanderSuppression(pub)">Supprimer</button>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+@if (dialogPub(); as dialog) {
+  <app-dialog-pub-maison
+    [pub]="dialog.pub"
+    [categories]="categoriesActives()"
+    [regions]="regions()"
+    [departements]="departements()"
+    (annule)="fermerDialog()"
+    (reussi)="surReussite($event)"
+  />
+}
+
+@if (pubASupprimer(); as pub) {
+  <div class="voile-confirmation" (click)="annulerSuppression()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>Supprimer définitivement la pub « <strong>{{ pub.titre }}</strong> » ?</p>
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" [disabled]="suppressionEnCours()" (click)="annulerSuppression()">
+          Annuler
+        </button>
+        <button type="button" class="bouton-danger" [disabled]="suppressionEnCours()" (click)="confirmerSuppression()">
+          {{ suppressionEnCours() ? 'Suppression…' : 'Supprimer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

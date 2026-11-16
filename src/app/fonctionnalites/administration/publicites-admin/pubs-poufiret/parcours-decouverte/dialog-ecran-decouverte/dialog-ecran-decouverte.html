@@ -1,0 +1,54 @@
+<div class="voile-modale" (click)="annule.emit()">
+  <div class="modale" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <h2>{{ enEdition() ? "Modifier l'écran" : 'Nouvel écran du parcours' }}</h2>
+
+    <form (submit)="$event.preventDefault(); soumettre()">
+      <label for="ded-titre">Titre</label>
+      <input id="ded-titre" type="text" [value]="titre()" (input)="titre.set($any($event.target).value)" />
+      @if (erreursChamps()['titre']) {
+        <p class="erreur-champ">{{ erreursChamps()['titre'] }}</p>
+      }
+
+      <label for="ded-texte">Texte court</label>
+      <textarea id="ded-texte" rows="3" [value]="texte()" (input)="texte.set($any($event.target).value)"></textarea>
+
+      <label for="ded-image">Image{{ enEdition() ? ' (facultative : sinon inchangée)' : '' }}</label>
+      <input id="ded-image" type="file" accept="image/*" (change)="selectionnerImage($event)" />
+      @if (erreursChamps()['image']) {
+        <p class="erreur-champ">{{ erreursChamps()['image'] }}</p>
+      }
+
+      <label for="ded-bouton-libelle">Libellé du bouton (facultatif)</label>
+      <input
+        id="ded-bouton-libelle"
+        type="text"
+        [value]="boutonLibelle()"
+        (input)="boutonLibelle.set($any($event.target).value)"
+      />
+
+      <label for="ded-bouton-categorie">Catégorie du bouton</label>
+      <select id="ded-bouton-categorie" (change)="boutonCategorieId.set(+$any($event.target).value || null)">
+        <option value="" [selected]="boutonCategorieId() === null">— Aucune —</option>
+        @for (cat of categories(); track cat.id) {
+          <option [value]="cat.id" [selected]="cat.id === boutonCategorieId()">
+            {{ cat.parent_nom ? cat.parent_nom + ' › ' + cat.nom : cat.nom }}
+          </option>
+        }
+      </select>
+      @if (erreursChamps()['bouton_libelle']) {
+        <p class="erreur-champ">{{ erreursChamps()['bouton_libelle'] }}</p>
+      }
+
+      @if (erreurGenerale()) {
+        <p class="erreur-generale">{{ erreurGenerale() }}</p>
+      }
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" [disabled]="envoiEnCours()" (click)="annule.emit()">Annuler</button>
+        <button type="submit" class="bouton-principal" [disabled]="envoiEnCours()">
+          {{ envoiEnCours() ? 'Envoi…' : enEdition() ? 'Enregistrer' : "Créer l'écran" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

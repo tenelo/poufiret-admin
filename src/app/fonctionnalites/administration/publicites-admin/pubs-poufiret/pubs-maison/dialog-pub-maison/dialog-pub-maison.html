@@ -1,0 +1,93 @@
+<div class="voile-modale" (click)="annule.emit()">
+  <div class="modale" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <h2>{{ enEdition() ? 'Modifier la pub' : 'Nouvelle pub Poufiret' }}</h2>
+
+    <form (submit)="$event.preventDefault(); soumettre()">
+      <label for="dpm-titre">Titre</label>
+      <input id="dpm-titre" type="text" [value]="titre()" (input)="titre.set($any($event.target).value)" />
+      @if (erreursChamps()['titre']) {
+        <p class="erreur-champ">{{ erreursChamps()['titre'] }}</p>
+      }
+
+      <label for="dpm-texte">Texte court</label>
+      <textarea id="dpm-texte" rows="2" [value]="texte()" (input)="texte.set($any($event.target).value)"></textarea>
+
+      <label for="dpm-image">Image{{ enEdition() ? ' (facultative : sinon inchangée)' : '' }}</label>
+      <input id="dpm-image" type="file" accept="image/*" (change)="selectionnerImage($event)" />
+      @if (erreursChamps()['image_couverture']) {
+        <p class="erreur-champ">{{ erreursChamps()['image_couverture'] }}</p>
+      }
+
+      <label for="dpm-categorie">Catégorie cible</label>
+      <select id="dpm-categorie" (change)="categorieId.set(+$any($event.target).value || null)">
+        <option value="" [selected]="categorieId() === null">— Choisir —</option>
+        @for (cat of categories(); track cat.id) {
+          <option [value]="cat.id" [selected]="cat.id === categorieId()">
+            {{ cat.parent_nom ? cat.parent_nom + ' › ' + cat.nom : cat.nom }}
+          </option>
+        }
+      </select>
+      @if (erreursChamps()['categorie']) {
+        <p class="erreur-champ">{{ erreursChamps()['categorie'] }}</p>
+      }
+
+      <div class="grille-champs">
+        <div>
+          <label for="dpm-debut">Date de début (facultative)</label>
+          <input id="dpm-debut" type="date" [value]="dateDebut()" (change)="dateDebut.set($any($event.target).value)" />
+        </div>
+        <div>
+          <label for="dpm-fin">Date de fin (facultative)</label>
+          <input id="dpm-fin" type="date" [value]="dateFin()" (change)="dateFin.set($any($event.target).value)" />
+        </div>
+      </div>
+      @if (erreursChamps()['date_fin']) {
+        <p class="erreur-champ">{{ erreursChamps()['date_fin'] }}</p>
+      }
+
+      <label for="dpm-portee">Portée</label>
+      <select id="dpm-portee" (change)="changerPortee($any($event.target).value)">
+        @for (option of optionsPortee; track option.valeur) {
+          <option [value]="option.valeur" [selected]="option.valeur === portee()">{{ option.libelle }}</option>
+        }
+      </select>
+
+      @if (portee() === 'region') {
+        <label for="dpm-region">Région</label>
+        <select id="dpm-region" (change)="regionId.set(+$any($event.target).value || null)">
+          <option value="" [selected]="regionId() === null">— Choisir —</option>
+          @for (r of regions(); track r.id) {
+            <option [value]="r.id" [selected]="r.id === regionId()">{{ r.nom }}</option>
+          }
+        </select>
+        @if (erreursChamps()['region']) {
+          <p class="erreur-champ">{{ erreursChamps()['region'] }}</p>
+        }
+      }
+
+      @if (portee() === 'departement') {
+        <label for="dpm-departement">Département</label>
+        <select id="dpm-departement" (change)="departementId.set(+$any($event.target).value || null)">
+          <option value="" [selected]="departementId() === null">— Choisir —</option>
+          @for (d of departements(); track d.id) {
+            <option [value]="d.id" [selected]="d.id === departementId()">{{ d.nom }}</option>
+          }
+        </select>
+        @if (erreursChamps()['departement']) {
+          <p class="erreur-champ">{{ erreursChamps()['departement'] }}</p>
+        }
+      }
+
+      @if (erreurGenerale()) {
+        <p class="erreur-generale">{{ erreurGenerale() }}</p>
+      }
+
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" [disabled]="envoiEnCours()" (click)="annule.emit()">Annuler</button>
+        <button type="submit" class="bouton-principal" [disabled]="envoiEnCours()">
+          {{ envoiEnCours() ? 'Envoi…' : enEdition() ? 'Enregistrer' : 'Créer la pub' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

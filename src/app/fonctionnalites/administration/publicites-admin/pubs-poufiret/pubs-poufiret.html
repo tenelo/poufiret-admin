@@ -1,0 +1,33 @@
+<nav class="barre-sous-onglets" aria-label="Sections Pubs Poufiret">
+  <button type="button" class="onglet" [class.onglet-actif]="sousOngletActif() === 'pubs'" (click)="changerSousOnglet('pubs')">
+    Pubs maison
+  </button>
+  <button
+    type="button"
+    class="onglet"
+    [class.onglet-actif]="sousOngletActif() === 'parcours'"
+    (click)="changerSousOnglet('parcours')"
+  >
+    Parcours « Découvrir Poufiret »
+  </button>
+  <button
+    type="button"
+    class="onglet"
+    [class.onglet-actif]="sousOngletActif() === 'reglages'"
+    (click)="changerSousOnglet('reglages')"
+  >
+    Réglages
+  </button>
+</nav>
+
+@switch (sousOngletActif()) {
+  @case ('parcours') {
+    <app-parcours-decouverte />
+  }
+  @case ('reglages') {
+    <app-reglages-poufiret />
+  }
+  @default {
+    <app-pubs-maison />
+  }
+}

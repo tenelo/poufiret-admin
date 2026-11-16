@@ -42,10 +42,10 @@ export interface RequeteModifierCapacites {
 export interface CapaciteDescriptor {
   nom: NomCapacite;
   libelle: string;
-  // true pour `gerer_admins`, `gerer_geographie`, `gerer_formules_pub`, `gerer_commandes`,
-  // `gerer_restaurants`, `modifier_identifiant_partenaire`, `gerer_parametres`, `gerer_locations`,
-  // `gerer_reservations`, `gerer_interventions` et `gerer_avis` : non modifiable par un admin
-  // non-superuser.
+  // true pour `gerer_admins`, `gerer_geographie`, `gerer_formules_pub`, `gerer_pubs_poufiret`,
+  // `gerer_commandes`, `gerer_restaurants`, `modifier_identifiant_partenaire`, `gerer_parametres`,
+  // `gerer_locations`, `gerer_reservations`, `gerer_interventions` et `gerer_avis` : non
+  // modifiable par un admin non-superuser.
   privilegiee?: boolean;
 }
 
@@ -54,7 +54,7 @@ export interface GroupeCapacites {
   capacites: CapaciteDescriptor[];
 }
 
-// Structure d'affichage groupé des 33 capacités, réutilisée par le formulaire
+// Structure d'affichage groupé des 34 capacités, réutilisée par le formulaire
 // de création (capacités initiales) et l'éditeur de capacités.
 export const GROUPES_CAPACITES: GroupeCapacites[] = [
   {
@@ -114,6 +114,11 @@ export const GROUPES_CAPACITES: GroupeCapacites[] = [
       { nom: 'gerer_pubs_partenaires', libelle: 'Créer et reconduire des pubs pour un partenaire' },
       // Privilégiée : seul un super-admin peut la modifier (case verrouillée pour les autres).
       { nom: 'gerer_formules_pub', libelle: 'Gérer les formules et paramètres pub', privilegiee: true },
+      {
+        nom: 'gerer_pubs_poufiret',
+        libelle: 'Gérer les pubs Poufiret et le parcours « Découvrir Poufiret »',
+        privilegiee: true,
+      },
     ],
   },
   {

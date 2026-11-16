@@ -1,0 +1,110 @@
+<div class="entete-onglet">
+  <div class="actions-entete">
+    <button type="button" class="bouton-principal" (click)="ouvrirCreation()">+ Nouvel écran</button>
+    <button type="button" class="bouton-publier" [disabled]="publicationEnCours()" (click)="publier()">
+      {{ publicationEnCours() ? 'Publication…' : 'Publier le parcours' }}
+    </button>
+  </div>
+  <div class="info-version">
+    @if (versionParcours() !== null) {
+      <span>Version actuelle : {{ versionParcours() }}</span>
+      <span>Parcours {{ parcoursActif() ? 'actif' : 'inactif' }}</span>
+    }
+    <span>{{ nbEcransActifs() }} écran(s) actif(s) sur {{ ecrans().length }}</span>
+  </div>
+</div>
+
+@if (erreurCategories()) {
+  <p class="avertissement">Catégories indisponibles : {{ erreurCategories() }}</p>
+}
+@if (erreurPublication()) {
+  <p class="erreur-generale">{{ erreurPublication() }}</p>
+}
+@if (messageErreur()) {
+  <p class="erreur-generale">{{ messageErreur() }}</p>
+}
+@if (messageSucces()) {
+  <p class="message-succes">{{ messageSucces() }}</p>
+}
+
+@if (chargementEnCours()) {
+  <div class="etat-chargement">
+    <span class="spinner"></span>
+    <p>Chargement des écrans…</p>
+  </div>
+} @else if (erreurChargement()) {
+  <div class="etat-erreur">
+    <p>{{ erreurChargement() }}</p>
+    <button type="button" (click)="charger()">Réessayer</button>
+  </div>
+} @else if (ecrans().length === 0) {
+  <div class="etat-vide">
+    <p>Aucun écran pour le moment. Le parcours doit compter entre 3 et 8 écrans actifs.</p>
+  </div>
+} @else {
+  <div class="liste-ecrans" cdkDropList (cdkDropListDropped)="surDepot($event)">
+    @for (ecran of ecrans(); track ecran.id) {
+      <div class="ligne-ecran" cdkDrag>
+        <span class="poignee" cdkDragHandle title="Glisser pour réordonner">⠿</span>
+
+        <div class="vignette-media">
+          @if (ecran.image) {
+            <img [src]="ecran.image" [alt]="ecran.titre" />
+          } @else {
+            <div class="vignette-vide"></div>
+          }
+        </div>
+
+        <div class="corps-ligne">
+          <div class="entete-ligne">
+            <span class="titre">{{ ecran.titre }}</span>
+            <span class="badge" [class.badge-actif]="ecran.est_actif" [class.badge-inactif]="!ecran.est_actif">
+              {{ ecran.est_actif ? 'Actif' : 'Inactif' }}
+            </span>
+          </div>
+          @if (ecran.bouton_libelle) {
+            <p class="bouton-info">
+              Bouton : « {{ ecran.bouton_libelle }} » → {{ ecran.bouton_categorie_nom ?? '—' }}
+              @if (ecran.bouton_categorie_disponible === false) {
+                <span class="alerte-categorie" title="Catégorie désactivée, archivée ou supprimée">⚠ indisponible</span>
+              }
+            </p>
+          }
+        </div>
+
+        <div class="actions-ligne">
+          <button type="button" class="bouton-secondaire" (click)="basculerActif(ecran)">
+            {{ ecran.est_actif ? 'Désactiver' : 'Activer' }}
+          </button>
+          <button type="button" class="bouton-secondaire" (click)="ouvrirModification(ecran)">Modifier</button>
+          <button type="button" class="bouton-danger" (click)="demanderSuppression(ecran)">Supprimer</button>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+@if (dialogEcran(); as dialog) {
+  <app-dialog-ecran-decouverte
+    [ecran]="dialog.ecran"
+    [categories]="categoriesActives()"
+    (annule)="fermerDialog()"
+    (reussi)="surReussite($event)"
+  />
+}
+
+@if (ecranASupprimer(); as ecran) {
+  <div class="voile-confirmation" (click)="annulerSuppression()">
+    <div class="boite-confirmation" (click)="$event.stopPropagation()">
+      <p>Supprimer définitivement l'écran « <strong>{{ ecran.titre }}</strong> » ?</p>
+      <div class="actions-modale">
+        <button type="button" class="bouton-secondaire" [disabled]="suppressionEnCours()" (click)="annulerSuppression()">
+          Annuler
+        </button>
+        <button type="button" class="bouton-danger" [disabled]="suppressionEnCours()" (click)="confirmerSuppression()">
+          {{ suppressionEnCours() ? 'Suppression…' : 'Supprimer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

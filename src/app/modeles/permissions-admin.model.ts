@@ -5,10 +5,10 @@
 
 // Les capacités possibles de la grille admin, pour l'autocomplétion lors
 // de la déclaration des entrées de menu / des routes protégées.
-// `gerer_admins`, `gerer_geographie`, `gerer_formules_pub`, `gerer_commandes`, `gerer_restaurants`,
-// `modifier_identifiant_partenaire`, `gerer_parametres`, `gerer_locations`, `gerer_reservations`,
-// `gerer_interventions` et `gerer_avis` sont privilégiées : seul un super-admin peut la poser à true
-// (le backend ignore silencieusement toute tentative d'un non-superuser).
+// `gerer_admins`, `gerer_geographie`, `gerer_formules_pub`, `gerer_pubs_poufiret`, `gerer_commandes`,
+// `gerer_restaurants`, `modifier_identifiant_partenaire`, `gerer_parametres`, `gerer_locations`,
+// `gerer_reservations`, `gerer_interventions` et `gerer_avis` sont privilégiées : seul un super-admin
+// peut la poser à true (le backend ignore silencieusement toute tentative d'un non-superuser).
 export type NomCapacite =
   | 'suspendre_client'
   | 'suspendre_partenaire'
@@ -49,6 +49,7 @@ export type NomCapacite =
   | 'gerer_admins'
   | 'gerer_geographie'
   | 'gerer_formules_pub'
+  | 'gerer_pubs_poufiret'
   | 'gerer_commandes'
   | 'gerer_restaurants'
   | 'modifier_identifiant_partenaire'
@@ -118,6 +119,7 @@ export const LIBELLES_CAPACITE: Record<NomCapacite, string> = {
   gerer_admins: 'Gérer les administrateurs',
   gerer_geographie: 'Gérer la géographie',
   gerer_formules_pub: 'Gérer les formules et paramètres pub',
+  gerer_pubs_poufiret: 'Gérer les pubs Poufiret et le parcours « Découvrir Poufiret »',
   gerer_commandes: 'Gérer le centre des commandes',
   gerer_restaurants: 'Gérer les établissements',
   modifier_identifiant_partenaire: "Modifier le numéro de connexion d'un partenaire",

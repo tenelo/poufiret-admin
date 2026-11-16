@@ -6,19 +6,21 @@ import { PublicitesAdmin } from '../publicites-admin';
 import { FormulesParametresPub } from '../formules-parametres-pub/formules-parametres-pub';
 import { StatistiquesPub } from '../statistiques-pub/statistiques-pub';
 import { PartenairesPublicitesAdmin } from '../partenaires-publicites-admin/partenaires-publicites-admin';
+import { PubsPoufiret } from '../pubs-poufiret/pubs-poufiret';
 import { PermissionsService } from '../../../../noyau/permissions/permissions.service';
 
-type OngletPublicitesAdmin = 'campagnes' | 'statistiques' | 'formules' | 'partenaires';
+type OngletPublicitesAdmin = 'campagnes' | 'statistiques' | 'formules' | 'partenaires' | 'poufiret';
 
 /**
  * Page admin "Publicités" : onglet « Campagnes » (l'écran historique), onglet « Statistiques »
- * et « Par partenaire » (capacité voir_stats ou super-admin) et onglet « Formules & paramètres »
- * (capacité gerer_formules_pub ou super-admin). Sans droit sur les onglets supplémentaires, la
- * page s'affiche comme avant, sans barre d'onglets.
+ * et « Par partenaire » (capacité voir_stats ou super-admin), onglet « Formules & paramètres »
+ * (capacité gerer_formules_pub ou super-admin) et onglet « Pubs Poufiret » (capacité
+ * gerer_pubs_poufiret ou super-admin). Sans droit sur les onglets supplémentaires, la page
+ * s'affiche comme avant, sans barre d'onglets.
  */
 @Component({
   selector: 'app-publicites-admin-onglets',
-  imports: [PublicitesAdmin, FormulesParametresPub, StatistiquesPub, PartenairesPublicitesAdmin],
+  imports: [PublicitesAdmin, FormulesParametresPub, StatistiquesPub, PartenairesPublicitesAdmin, PubsPoufiret],
   templateUrl: './publicites-admin-onglets.html',
   styleUrl: './publicites-admin-onglets.scss',
 })
@@ -40,7 +42,13 @@ export class PublicitesAdminOnglets {
     () => this.estSuperAdmin() || this.permissionsService.aLaCapacite('gerer_formules_pub'),
   );
 
-  readonly barreVisible = computed(() => this.peutVoirStatistiques() || this.peutGererFormules());
+  readonly peutGererPubsPoufiret = computed(
+    () => this.estSuperAdmin() || this.permissionsService.aLaCapacite('gerer_pubs_poufiret'),
+  );
+
+  readonly barreVisible = computed(
+    () => this.peutVoirStatistiques() || this.peutGererFormules() || this.peutGererPubsPoufiret(),
+  );
 
   constructor() {
     // Arrivée depuis une notification, le top des campagnes ou l'onglet Partenaires

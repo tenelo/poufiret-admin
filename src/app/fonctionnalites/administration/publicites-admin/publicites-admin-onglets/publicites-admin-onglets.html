@@ -37,6 +37,16 @@
           Formules &amp; paramètres
         </button>
       }
+      @if (peutGererPubsPoufiret()) {
+        <button
+          type="button"
+          class="onglet"
+          [class.onglet-actif]="ongletActif() === 'poufiret'"
+          (click)="changerOnglet('poufiret')"
+        >
+          Pubs Poufiret
+        </button>
+      }
     </nav>
   </div>
 
@@ -57,6 +67,12 @@
       <div class="zone-formules">
         <h1>Publicités par partenaire</h1>
         <app-partenaires-publicites-admin />
+      </div>
+    }
+    @case ('poufiret') {
+      <div class="zone-formules">
+        <h1>Pubs Poufiret</h1>
+        <app-pubs-poufiret />
       </div>
     }
     @default {
