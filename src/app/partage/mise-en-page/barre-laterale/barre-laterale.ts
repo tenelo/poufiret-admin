@@ -14,7 +14,7 @@ interface EntreeMenuPartenaire {
 
 // EntreeMenuAdmin et ENTREES_ADMIN vivent désormais dans noyau/permissions/entrees-admin.ts
 // (partagé avec tableauDeBordAdminGuard) — plus de définition locale ici.
-// Commun à tous les partenaires. Pour un restaurateur (ou fast-food), "Ma carte"/"Mes menus" remplacent
+// Commun à tous les partenaires. Pour un restaurateur, "Ma carte"/"Mes menus" remplacent
 // "Mes catégories"/"Mes produits" (voir ENTREES_PARTENAIRE_RESTAURATEUR) — même donnée, interface
 // restaurant dédiée (espace restaurant, voir fonctionnalites/restaurants/).
 const ENTREES_PARTENAIRE_STANDARD: EntreeMenuPartenaire[] = [
@@ -36,9 +36,9 @@ const ENTREES_PARTENAIRE_RESTAURATEUR: EntreeMenuPartenaire[] = [
   { libelle: 'Publicités', lien: '/publicites' },
 ];
 
-// Grilleur (gabarit grillades) : même espace établissement que le restaurateur, carte avec
-// « Formats » (variantes), mais sans "Mes menus" (pas de menus du jour/semaine pour ce gabarit).
-const ENTREES_PARTENAIRE_GRILLEUR: EntreeMenuPartenaire[] = [
+// Grilleur (gabarit grillades) et fast-food (gabarit fast_food) : même espace établissement que
+// le restaurateur, carte (« Formats »/« Tailles »), mais sans "Mes menus" (menus_actifs: false).
+const ENTREES_PARTENAIRE_SANS_MENUS: EntreeMenuPartenaire[] = [
   { libelle: 'Tableau de bord', lien: '/tableau-de-bord' },
   { libelle: 'Mon profil', lien: '/mon-profil' },
   { libelle: 'Mon établissement', lien: '/mon-restaurant' },
@@ -108,7 +108,7 @@ export class BarreLaterale {
 
   readonly entreesPartenaire = computed<EntreeMenuPartenaire[]>(() => {
     if (this.profilPartenaireContexte.estRestaurateur()) return ENTREES_PARTENAIRE_RESTAURATEUR;
-    if (this.profilPartenaireContexte.estGrilleur()) return ENTREES_PARTENAIRE_GRILLEUR;
+    if (this.profilPartenaireContexte.estSansMenus()) return ENTREES_PARTENAIRE_SANS_MENUS;
     if (this.profilPartenaireContexte.estEtablissement()) return ENTREES_PARTENAIRE_ETABLISSEMENT;
     if (this.profilPartenaireContexte.estLoueur()) return ENTREES_PARTENAIRE_LOUEUR;
     if (this.profilPartenaireContexte.estLoueurVoiture()) return ENTREES_PARTENAIRE_LOUEUR_VOITURE;

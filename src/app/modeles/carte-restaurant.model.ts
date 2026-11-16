@@ -74,6 +74,8 @@ export interface RequetePlatCarte {
   est_disponible?: boolean;
   est_reserve_aux_menus?: boolean;
   ordre?: number;
+  // 0 à 600, ou null (non renseigné) ; modifiable pour tous les gabarits du moteur restaurant.
+  temps_preparation_min?: number | null;
   fiche_specifique?: Record<string, unknown>;
 }
 

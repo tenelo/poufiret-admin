@@ -13,6 +13,7 @@ export type CodeGabarit =
   | 'librairie'
   | 'elevage'
   | 'grillades'
+  | 'fast_food'
   | 'generique';
 
 export type TypeChampGabarit = 'texte' | 'entier' | 'booleen' | 'choix';
@@ -86,7 +87,8 @@ export const LIBELLES_GABARIT: Record<string, string> = {
   mode: 'Mode',
   librairie: 'Librairie',
   elevage: 'Élevage',
-  grillades: 'Grillades',
+  grillades: 'Grillades & Braisés',
+  fast_food: 'Fast-food',
   generique: 'Commerce',
 };
 
@@ -95,17 +97,35 @@ export const LIBELLES_GABARIT: Record<string, string> = {
  * (backend développé en parallèle). Dès que la meta les sert, ce sont ses valeurs qui priment.
  */
 export const GABARITS_CONTRAT: Record<string, Gabarit> = {
+  // Grillades et fast-food partagent le moteur restaurant complet (commandes, horaires) avec le
+  // restaurant classique : seuls menus_actifs et les libellés changent (voir gabarits.py backend).
   grillades: {
     code: 'grillades',
-    libelle: 'Grillades',
+    libelle: 'Grillades & Braisés',
     libelle_section: 'Section',
-    libelle_produit: 'Plat',
-    // Libellé « Formats » demandé pour les variantes des grilleurs (ex. demi-poulet, poisson entier…).
+    libelle_produit: 'Article',
     libelle_variantes: 'Formats',
     menus_actifs: false,
-    options_actives: false,
-    pagination_publique: true,
+    options_actives: true,
+    pagination_publique: false,
     champs: [],
+  },
+  fast_food: {
+    code: 'fast_food',
+    libelle: 'Fast-food',
+    libelle_section: 'Rubrique',
+    libelle_produit: 'Produit',
+    libelle_variantes: 'Tailles',
+    menus_actifs: false,
+    options_actives: true,
+    pagination_publique: false,
+    // Combo : article « Menu » + groupes d'options (accompagnement, boisson, sauces, min/max
+    // réglés par le partenaire) ; prix_reference = prix « au lieu de » (barré sur l'app, affiché
+    // seulement s'il dépasse le prix réel — voir dialog-plat-carte).
+    champs: [
+      { cle: 'est_combo', libelle: 'Formule / combo', type: 'booleen', obligatoire: false },
+      { cle: 'prix_reference', libelle: 'Prix « au lieu de » (FCFA)', type: 'entier', obligatoire: false },
+    ],
   },
   elevage: {
     code: 'elevage',
@@ -154,7 +174,7 @@ export const GABARITS_CONTRAT: Record<string, Gabarit> = {
 export function gabaritDuTypePartenaire(type: string | null | undefined): string | null {
   const correspondance: Record<string, string> = {
     restaurateur: 'restaurant',
-    fast_food: 'restaurant',
+    fast_food: 'fast_food',
     boulanger: 'boulangerie',
     pharmacien: 'pharmacie',
     boutique_mode: 'mode',
@@ -174,7 +194,8 @@ export const OPTIONS_FILTRE_GABARIT: { valeur: string; libelle: string }[] = [
   { valeur: 'mode', libelle: 'Mode' },
   { valeur: 'librairie', libelle: 'Librairies' },
   { valeur: 'elevage', libelle: 'Élevage' },
-  { valeur: 'grillades', libelle: 'Grillades' },
+  { valeur: 'grillades', libelle: 'Grillades & Braisés' },
+  { valeur: 'fast_food', libelle: 'Fast-food' },
 ];
 
 /**

@@ -77,42 +77,61 @@
             </label>
           }
 
+          <label for="dp-temps-preparation">Temps de préparation (min)</label>
+          <input
+            id="dp-temps-preparation"
+            type="number"
+            min="0"
+            max="600"
+            placeholder="Vide = non renseigné"
+            [value]="tempsPreparationMin()"
+            (input)="tempsPreparationMin.set($any($event.target).value)"
+          />
+          @if (erreursChamps()['tempsPreparationMin']) {
+            <p class="erreur-champ">{{ erreursChamps()['tempsPreparationMin'] }}</p>
+          }
+
           @if (champsFiche().length > 0) {
             <fieldset class="bloc-details">
               <legend>Détails {{ gabarit().libelle_produit.toLowerCase() }}</legend>
               @for (champ of champsFiche(); track champ.cle) {
-                @if (champ.type === 'booleen') {
-                  <label class="ligne-case">
-                    <input
-                      type="checkbox"
-                      [checked]="valeurFiche(champ)"
-                      (change)="changerValeurFiche(champ.cle, $any($event.target).checked)"
-                    />
-                    {{ champ.libelle }}@if (champ.obligatoire) { <span class="obligatoire">*</span> }
-                  </label>
-                } @else {
-                  <label [for]="'dp-fiche-' + champ.cle">
-                    {{ champ.libelle }}@if (champ.obligatoire) { <span class="obligatoire">*</span> }
-                  </label>
-                  @if (champ.type === 'choix') {
-                    <select [id]="'dp-fiche-' + champ.cle" (change)="changerValeurFiche(champ.cle, $any($event.target).value)">
-                      <option value="" [selected]="valeurFiche(champ) === ''">— Choisir —</option>
-                      @for (choix of champ.choix ?? []; track choix.valeur) {
-                        <option [value]="choix.valeur" [selected]="choix.valeur === valeurFiche(champ)">{{ choix.libelle }}</option>
-                      }
-                    </select>
+                @if (estChampVisible(champ)) {
+                  @if (champ.type === 'booleen') {
+                    <label class="ligne-case">
+                      <input
+                        type="checkbox"
+                        [checked]="valeurFiche(champ)"
+                        (change)="changerValeurFiche(champ.cle, $any($event.target).checked)"
+                      />
+                      {{ champ.libelle }}@if (champ.obligatoire) { <span class="obligatoire">*</span> }
+                    </label>
                   } @else {
-                    <input
-                      [id]="'dp-fiche-' + champ.cle"
-                      [type]="champ.type === 'entier' ? 'number' : 'text'"
-                      [attr.step]="champ.type === 'entier' ? 1 : null"
-                      [value]="valeurFiche(champ)"
-                      (input)="changerValeurFiche(champ.cle, $any($event.target).value)"
-                    />
+                    <label [for]="'dp-fiche-' + champ.cle">
+                      {{ champ.libelle }}@if (champ.obligatoire) { <span class="obligatoire">*</span> }
+                    </label>
+                    @if (champ.type === 'choix') {
+                      <select [id]="'dp-fiche-' + champ.cle" (change)="changerValeurFiche(champ.cle, $any($event.target).value)">
+                        <option value="" [selected]="valeurFiche(champ) === ''">— Choisir —</option>
+                        @for (choix of champ.choix ?? []; track choix.valeur) {
+                          <option [value]="choix.valeur" [selected]="choix.valeur === valeurFiche(champ)">{{ choix.libelle }}</option>
+                        }
+                      </select>
+                    } @else {
+                      <input
+                        [id]="'dp-fiche-' + champ.cle"
+                        [type]="champ.type === 'entier' ? 'number' : 'text'"
+                        [attr.step]="champ.type === 'entier' ? 1 : null"
+                        [value]="valeurFiche(champ)"
+                        (input)="changerValeurFiche(champ.cle, $any($event.target).value)"
+                      />
+                    }
+                    @if (champ.cle === 'prix_reference') {
+                      <p class="aide">N'est affiché sur l'app que s'il dépasse le prix de vente actuel.</p>
+                    }
                   }
-                }
-                @if (erreursFiche()[champ.cle]) {
-                  <p class="erreur-champ">{{ erreursFiche()[champ.cle] }}</p>
+                  @if (erreursFiche()[champ.cle]) {
+                    <p class="erreur-champ">{{ erreursFiche()[champ.cle] }}</p>
+                  }
                 }
               }
               <p class="aide">* obligatoire</p>
@@ -231,6 +250,10 @@
       }
 
       @case ('options') {
+        <p class="aide">
+          Ex. accompagnement, boisson, sauces : réglez le minimum et le maximum de choix de chaque
+          groupe. Un groupe est obligatoire dès que son minimum est ≥ 1.
+        </p>
         @if (platCourant(); as plat) {
           @for (groupe of plat.groupes_options; track groupe.id) {
             <div class="groupe-options">
@@ -239,6 +262,7 @@
                 <span class="aide-inline">
                   Choisir
                   {{ groupe.min_choix === groupe.max_choix ? 'exactement ' + groupe.min_choix : 'entre ' + groupe.min_choix + ' et ' + groupe.max_choix }}
+                  ({{ (groupe.min_choix ?? 0) >= 1 ? 'obligatoire' : 'optionnel' }})
                 </span>
                 <button type="button" class="bouton-icone" (click)="supprimerGroupe(groupe)" aria-label="Supprimer le groupe">🗑</button>
               </div>

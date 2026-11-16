@@ -53,7 +53,11 @@ interface ContextePrix {
  * Gabarit (voir gabarit.model.ts) : libellés produit/section/variantes, bloc « Détails » généré
  * depuis gabarit.champs (envoyé dans fiche_specifique, erreurs 400 "fiche_specifique.<cle>" sous
  * chaque champ), groupes d'options masqués si options_actives est faux, « Réservé aux menus »
- * seulement si menus_actifs. Variantes : stock (vide = illimité) et case Épuisé.
+ * seulement si menus_actifs. Variantes : stock (vide = illimité), case Épuisé et photo facultative.
+ * Temps de préparation (0-600 min, vide = non renseigné) : commun à tous les gabarits. Champ
+ * « Prix au lieu de » (fast-food, fiche_specifique.prix_reference) : visible seulement si
+ * « Formule / combo » est cochée (voir estChampVisible) — forcé à null côté client sinon, pour ne
+ * jamais laisser une valeur orpheline visible côté serveur une fois la case décochée.
  */
 @Component({
   selector: 'app-dialog-plat-carte',
@@ -90,6 +94,8 @@ export class DialogPlatCarte implements OnInit, OnDestroy {
   readonly estActif = signal(true);
   readonly estDisponible = signal(true);
   readonly estReserveAuxMenus = signal(false);
+  // Minutes (0 à 600), vide = non renseigné ; modifiable pour tous les gabarits.
+  readonly tempsPreparationMin = signal('');
 
   // ---- Fiche spécifique au gabarit (clé = ChampGabarit.cle) ----
   readonly valeursFiche = signal<Record<string, ValeurChampFiche>>({});
@@ -155,6 +161,7 @@ export class DialogPlatCarte implements OnInit, OnDestroy {
     this.estActif.set(plat.est_actif);
     this.estDisponible.set(plat.est_disponible);
     this.estReserveAuxMenus.set(plat.est_reserve_aux_menus);
+    this.tempsPreparationMin.set(plat.temps_preparation_min === null ? '' : String(plat.temps_preparation_min));
 
     const fiche = plat.fiche_specifique ?? {};
     const valeurs: Record<string, ValeurChampFiche> = {};
@@ -180,6 +187,10 @@ export class DialogPlatCarte implements OnInit, OnDestroy {
     if (this.prix().trim() === '' || Number.isNaN(prix) || prix < 0) {
       erreurs['prix'] = 'Le prix doit être un nombre positif ou nul.';
     }
+    const tempsPreparation = this.tempsPreparationSaisi();
+    if (tempsPreparation === undefined) {
+      erreurs['tempsPreparationMin'] = 'Doit être un entier entre 0 et 600 minutes (ou vide).';
+    }
     this.erreursChamps.set(erreurs);
     const erreursFiche = this.validerFiche();
     this.erreursFiche.set(erreursFiche);
@@ -194,6 +205,7 @@ export class DialogPlatCarte implements OnInit, OnDestroy {
       est_disponible: this.estDisponible(),
       est_reserve_aux_menus: this.estReserveAuxMenus(),
       ordre: this.platCourant()?.ordre ?? this.ordreParDefaut(),
+      temps_preparation_min: tempsPreparation,
     };
     if (this.champsFiche().length > 0) {
       donnees.fiche_specifique = this.construireFiche();
@@ -220,6 +232,14 @@ export class DialogPlatCarte implements OnInit, OnDestroy {
     }
 
     this.enregistrerPlat(donnees);
+  }
+
+  /** Temps de préparation saisi : null si vide, entier 0-600, undefined si invalide. */
+  private tempsPreparationSaisi(): number | null | undefined {
+    const texte = this.tempsPreparationMin().trim();
+    if (texte === '') return null;
+    const nombre = Number(texte);
+    return Number.isInteger(nombre) && nombre >= 0 && nombre <= 600 ? nombre : undefined;
   }
 
   private enregistrerPlat(donnees: RequetePlatCarte): void {
@@ -255,25 +275,44 @@ export class DialogPlatCarte implements OnInit, OnDestroy {
     this.valeursFiche.update((v) => ({ ...v, [cle]: valeur }));
   }
 
-  /** Champs obligatoires vides et entiers invalides, avant tout envoi. */
+  /**
+   * Visibilité d'un champ de fiche spécifique : tous visibles, sauf « Prix au lieu de »
+   * (fast-food), affiché seulement si « Formule / combo » est cochée.
+   */
+  estChampVisible(champ: ChampGabarit): boolean {
+    if (champ.cle === 'prix_reference') return !!this.valeursFiche()['est_combo'];
+    return true;
+  }
+
+  /** Champs obligatoires vides et entiers invalides (négatifs refusés, comme le backend), avant tout envoi. */
   private validerFiche(): Record<string, string> {
     const erreurs: Record<string, string> = {};
     for (const champ of this.champsFiche()) {
-      if (champ.type === 'booleen') continue;
+      if (champ.type === 'booleen' || !this.estChampVisible(champ)) continue;
       const texte = String(this.valeurFiche(champ)).trim();
       if (!texte) {
         if (champ.obligatoire) erreurs[champ.cle] = 'Ce champ est obligatoire.';
-      } else if (champ.type === 'entier' && !Number.isInteger(Number(texte))) {
-        erreurs[champ.cle] = 'Nombre entier attendu.';
+      } else if (champ.type === 'entier') {
+        const nombre = Number(texte);
+        if (!Number.isInteger(nombre)) erreurs[champ.cle] = 'Nombre entier attendu.';
+        else if (nombre < 0) erreurs[champ.cle] = 'Doit être positif ou nul.';
       }
     }
     return erreurs;
   }
 
-  /** fiche_specifique typée selon les champs : entier → nombre, vide → null, booléen → bool. */
+  /**
+   * fiche_specifique typée selon les champs : entier → nombre, vide → null, booléen → bool.
+   * Un champ masqué (ex. « Prix au lieu de » sans la formule/combo) est forcé à null : pas de
+   * valeur orpheline conservée côté serveur une fois la case décochée.
+   */
   private construireFiche(): Record<string, unknown> {
     const fiche: Record<string, unknown> = {};
     for (const champ of this.champsFiche()) {
+      if (!this.estChampVisible(champ)) {
+        fiche[champ.cle] = null;
+        continue;
+      }
       const valeur = this.valeurFiche(champ);
       if (champ.type === 'booleen') {
         fiche[champ.cle] = !!valeur;

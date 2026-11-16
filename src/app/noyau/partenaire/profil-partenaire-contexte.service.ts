@@ -10,9 +10,11 @@ import { ProfilPartenaire } from '../../modeles/profil-partenaire.model';
  * place de « Mes produits »/« Mes catégories »), sans rappeler l'API à chaque navigation.
  * Pendant du `PermissionsService` côté admin.
  */
-const TYPES_RESTAURATION = ['restaurateur', 'fast_food'];
+const TYPES_RESTAURATION = ['restaurateur'];
 const TYPES_ETABLISSEMENT = ['boulanger', 'pharmacien', 'boutique_mode', 'libraire', 'eleveur'];
-const TYPES_GRILLEUR = ['grilleur'];
+// Grilleur et fast-food : même moteur restaurant (carte, commandes) que le restaurateur, mais sans
+// menus programmés (gabarits grillades / fast_food, menus_actifs: false — voir gabarit.model.ts).
+const TYPES_SANS_MENUS = ['grilleur', 'fast_food'];
 
 @Injectable({ providedIn: 'root' })
 export class ProfilPartenaireContexteService {
@@ -22,7 +24,7 @@ export class ProfilPartenaireContexteService {
   private requeteEnCours$: Observable<ProfilPartenaire> | null = null;
 
   readonly profil = this.profilInterne.asReadonly();
-  /** Restauration (restaurateur, fast-food) : espace établissement avec carte et menus. */
+  /** Restaurateur : espace établissement avec carte et menus. */
   readonly estRestaurateur = computed(() =>
     TYPES_RESTAURATION.includes(this.profilInterne()?.type_partenaire ?? ''),
   );
@@ -30,9 +32,9 @@ export class ProfilPartenaireContexteService {
   readonly estEtablissement = computed(() =>
     TYPES_ETABLISSEMENT.includes(this.profilInterne()?.type_partenaire ?? ''),
   );
-  /** Grilleur : espace établissement avec carte (Formats), sans menus. */
-  readonly estGrilleur = computed(() =>
-    TYPES_GRILLEUR.includes(this.profilInterne()?.type_partenaire ?? ''),
+  /** Grilleur / fast-food : espace établissement avec carte, sans menus. */
+  readonly estSansMenus = computed(() =>
+    TYPES_SANS_MENUS.includes(this.profilInterne()?.type_partenaire ?? ''),
   );
   readonly estLoueur = computed(() => this.profilInterne()?.type_partenaire === 'loueur_maison');
   readonly estLoueurVoiture = computed(() => this.profilInterne()?.type_partenaire === 'loueur_voiture');
