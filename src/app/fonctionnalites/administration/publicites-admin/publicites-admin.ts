@@ -479,15 +479,18 @@ export class PublicitesAdmin implements OnInit, OnDestroy {
 
   // ---- Reconduction ----
 
-  /** Bouton « Reconduire » : campagne terminée, et le backend ne l'interdit pas déjà (copie en cours). */
-  peutReconduire(publicite: PubliciteAdmin): boolean {
-    return publicite.statut === 'terminee' && publicite.peut_etre_reconduite !== false;
-  }
+  /**
+   * Bouton « Reconduire » : campagne terminée, et le backend ne l'interdit pas déjà (copie en
+   * cours). Champ fléché (et non méthode de prototype) : passé tel quel en entrée au tableau
+   * (`app-tableau-publicites-admin`), un simple `this.peutReconduire` perdrait son `this`.
+   */
+  readonly peutReconduire = (publicite: PubliciteAdmin): boolean =>
+    publicite.statut === 'terminee' && publicite.peut_etre_reconduite !== false;
 
-  formaterDate(iso: string | null | undefined): string {
+  readonly formaterDate = (iso: string | null | undefined): string => {
     if (!iso) return '—';
     return new Date(iso).toLocaleDateString('fr-FR');
-  }
+  };
 
   /** Libellé français d'un statut (helper plutôt qu'un index direct : évite un `any` implicite
    *  côté template, `pub` n'étant pas fortement typé dans le contexte du `#carteTemplate`). */
@@ -496,18 +499,18 @@ export class PublicitesAdmin implements OnInit, OnDestroy {
   }
 
   /** Vrai si l'original d'une copie est présent dans la liste actuellement chargée (clic possible). */
-  originalDisponible(publicite: PubliciteAdmin): boolean {
+  readonly originalDisponible = (publicite: PubliciteAdmin): boolean => {
     const id = publicite.reconduite_depuis_id;
     return !!id && (this.reponseListe()?.results.some((p) => p.id === id) ?? false);
-  }
+  };
 
   /** Amène l'original de cette copie dans la vue, s'il est dans la liste actuellement chargée. */
-  allerVersOriginal(publicite: PubliciteAdmin): void {
+  readonly allerVersOriginal = (publicite: PubliciteAdmin): void => {
     const id = publicite.reconduite_depuis_id;
     if (id) {
       document.getElementById('pub-' + id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }
+  };
 
   // ---- Pub créée ou reconduite pour un partenaire ----
 
@@ -584,16 +587,14 @@ export class PublicitesAdmin implements OnInit, OnDestroy {
     });
   }
 
-  actionsDisponibles(publicite: PubliciteAdmin): ActionTransitionPubliciteAdmin[] {
-    return TRANSITIONS_ADMIN_PUBLICITE[publicite.statut];
-  }
+  readonly actionsDisponibles = (publicite: PubliciteAdmin): ActionTransitionPubliciteAdmin[] =>
+    TRANSITIONS_ADMIN_PUBLICITE[publicite.statut];
 
   // ---- Visuel (image/vidéo) ----
 
   /** Image utilisable : présente et pas déjà signalée en échec de chargement. */
-  imageValide(publicite: PubliciteAdmin): boolean {
-    return !!publicite.image_couverture && !this.imagesEnErreur().has(publicite.id);
-  }
+  readonly imageValide = (publicite: PubliciteAdmin): boolean =>
+    !!publicite.image_couverture && !this.imagesEnErreur().has(publicite.id);
 
   aUnVisuel(publicite: PubliciteAdmin): boolean {
     return this.imageValide(publicite) || !!publicite.video;

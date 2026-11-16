@@ -258,6 +258,37 @@ describe('PublicitesAdmin — liste paginée', () => {
     expect(fixture.nativeElement.querySelector('.grille-publicites')).toBeNull();
   });
 
+  it(
+    'mode Tableau : les lignes affichent titre/partenaire/statut, et la pagination affiche ' +
+      'total/page/listes remplies (même avec ?mode=tableau dès le chargement)',
+    async () => {
+      const publicites: PubliciteAdmin[] = [
+        { id: 'p1', titre: 'Campagne A', partenaire_nom: 'Boulangerie Ferke', formule: 'Or', statut: 'terminee' },
+        { id: 'p2', titre: 'Campagne B', partenaire_nom: 'Pizzeria Koné', formule: 'Argent', statut: 'active' },
+      ];
+      const { fixture } = await creer({ publicites, count: 48, queryParams: { mode: 'tableau' } });
+
+      // Lignes du tableau : pas de composant hôte vide — le contenu de chaque ligne doit être présent.
+      const table = fixture.nativeElement.querySelector('app-tableau-publicites-admin') as HTMLElement;
+      expect(table).not.toBeNull();
+      const ligne1 = table.querySelector('#pub-p1') as HTMLElement;
+      expect(ligne1.textContent).toContain('Campagne A');
+      expect(ligne1.textContent).toContain('Boulangerie Ferke');
+      expect(ligne1.textContent).toContain('Terminée');
+      const ligne2 = table.querySelector('#pub-p2') as HTMLElement;
+      expect(ligne2.textContent).toContain('Campagne B');
+      expect(ligne2.textContent).toContain('Pizzeria Koné');
+
+      // Barre de pagination : sélecteurs remplis, total et page affichés.
+      const pagination = fixture.nativeElement.querySelector('app-pagination-publicites-admin') as HTMLElement;
+      expect(pagination).not.toBeNull();
+      expect(pagination.querySelectorAll('#ppa-tri option').length).toBeGreaterThan(0);
+      expect(pagination.querySelectorAll('#ppa-taille option').length).toBeGreaterThan(0);
+      expect(pagination.textContent).toContain('48 résultats');
+      expect(pagination.textContent).toContain('Page 1 /');
+    },
+  );
+
   it('pub ciblée trouvée sur la page chargée : pas d’encadré, simple surlignage', async () => {
     const { fixture } = await creer({ queryParams: { pub: 'p-terminee' } });
     expect(fixture.componentInstance.pubCiblee()).toBeNull();

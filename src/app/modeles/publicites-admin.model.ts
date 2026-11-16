@@ -232,8 +232,10 @@ export type ChampTriPubliciteAdmin =
   | 'partenaire'
   | 'titre';
 
+// Libellés neutres (sans sens implicite) : la direction (↑/↓) est affichée séparément, à côté du
+// sélecteur — un libellé du type « Plus récentes » mentirait dès que le tri est inversé.
 export const OPTIONS_TRI_PUBLICITE_ADMIN: { valeur: ChampTriPubliciteAdmin; libelle: string }[] = [
-  { valeur: 'cree_le', libelle: 'Plus récentes' },
+  { valeur: 'cree_le', libelle: 'Date de création' },
   { valeur: 'debut_diffusion', libelle: 'Début de diffusion' },
   { valeur: 'fin_diffusion', libelle: 'Fin de diffusion' },
   { valeur: 'affichages', libelle: 'Affichages' },
@@ -308,8 +310,9 @@ export interface PartenairePubliciteAdmin {
 
 export type ChampTriPartenairePubliciteAdmin = 'nom' | 'nb_publicites' | 'affichages' | 'clics' | 'derniere_pub';
 
+// Même remarque que OPTIONS_TRI_PUBLICITE_ADMIN : libellés neutres, direction affichée séparément.
 export const OPTIONS_TRI_PARTENAIRE_PUBLICITE_ADMIN: { valeur: ChampTriPartenairePubliciteAdmin; libelle: string }[] = [
-  { valeur: 'derniere_pub', libelle: 'Dernière pub' },
+  { valeur: 'derniere_pub', libelle: 'Date de la dernière pub' },
   { valeur: 'nom', libelle: 'Commerce' },
   { valeur: 'nb_publicites', libelle: 'Nombre de pubs' },
   { valeur: 'affichages', libelle: 'Affichages' },
