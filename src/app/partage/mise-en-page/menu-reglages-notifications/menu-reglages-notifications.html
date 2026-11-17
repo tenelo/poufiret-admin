@@ -1,0 +1,29 @@
+@if (visible()) {
+  <div class="menu-reglages">
+    <button
+      type="button"
+      class="bouton-cloche bouton-reglages"
+      aria-haspopup="true"
+      [attr.aria-expanded]="ouvert()"
+      title="Réglages notifications"
+      (click)="basculer()"
+    >
+      <span class="icone-cloche" aria-hidden="true">⚙️</span>
+      @if (besoinAttention()) {
+        <span class="pastille-alerte" aria-hidden="true"></span>
+      }
+    </button>
+
+    @if (ouvert()) {
+      <div class="panneau-reglages">
+        <h3>Réglages</h3>
+
+        @if (sonBloque()) {
+          <button type="button" class="bouton-activer-son" (click)="activerSon.emit()">🔇 Activer le son</button>
+        }
+
+        <app-etat-notifications-push />
+      </div>
+    }
+  </div>
+}

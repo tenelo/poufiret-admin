@@ -50,9 +50,5 @@
     (ouvrir)="ouvrirNotification($event)"
   />
 
-  @if (sonBloque()) {
-    <button type="button" class="bouton-activer-son" (click)="activerSon()">🔇 Activer le son</button>
-  }
-
-  <app-etat-notifications-push class="bloc-push" />
+  <app-menu-reglages-notifications [sonBloque]="sonBloque()" (activerSon)="activerSon()" />
 </div>

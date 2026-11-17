@@ -148,10 +148,16 @@ describe('ClocheNotificationsAdmin', () => {
     expect(declencher).toHaveBeenCalledTimes(1);
   });
 
-  it('affiche « Activer le son » tant que la lecture est bloquée (par défaut, avant tout déblocage), et appelle debloquer() au clic', async () => {
+  it('affiche « Activer le son » dans le menu de réglages tant que la lecture est bloquée (par défaut, avant tout déblocage), et appelle debloquer() au clic', async () => {
     await creer();
 
-    // bloque = audioContext.state !== 'running' : vrai par défaut, aucun contexte n'existe encore.
+    // bloque = audioContext.state !== 'running' : vrai par défaut, aucun contexte n'existe encore
+    // -> le bouton de réglages (MenuReglagesNotifications) est donc visible dès le départ.
+    const boutonReglages = fixture.nativeElement.querySelector('.bouton-reglages') as HTMLButtonElement;
+    expect(boutonReglages).not.toBeNull();
+    boutonReglages.click();
+    fixture.detectChanges();
+
     const bouton = fixture.nativeElement.querySelector('.bouton-activer-son') as HTMLButtonElement;
     expect(bouton).not.toBeNull();
 
@@ -160,8 +166,10 @@ describe('ClocheNotificationsAdmin', () => {
     expect(debloquer).toHaveBeenCalled();
   });
 
-  it('masque « Activer le son » une fois la lecture débloquée (bloqueInterne à jour)', async () => {
+  it('masque « Activer le son » dans le menu une fois la lecture débloquée (bloqueInterne à jour)', async () => {
     await creer();
+    (fixture.nativeElement.querySelector('.bouton-reglages') as HTMLButtonElement).click();
+    fixture.detectChanges();
 
     // bloqueInterne est privé côté TypeScript seulement : accessible à l'exécution, comme Angular
     // le permet depuis un template (sonBloque = son.bloque est la même vue en lecture seule).

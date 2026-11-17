@@ -1,0 +1,79 @@
+// Réutilise .bouton-cloche/.icone-cloche (même gabarit que les cloches, voir cloche-canal.html) :
+// garantit la même hauteur, pour ne jamais faire déborder l'en-tête.
+@use '../cloche-notifications/cloche-commune';
+
+.menu-reglages {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+// Icône neutre (ni couleur d'alerte, ni couleur des cloches) : ce n'est pas une notification.
+.bouton-reglages .icone-cloche {
+  color: #6b7280;
+}
+
+// Point d'alerte discret (pas de texte, contrairement à .badge-cloche) : signale qu'une action est utile.
+.pastille-alerte {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 9px;
+  height: 9px;
+  background: #dc2626;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+.panneau-reglages {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 201;
+
+  h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #1a1a1a;
+  }
+}
+
+// Repris tel quel du bouton « Activer le son » précédent (admin) : chip discret, pas un bouton
+// plein en pleine largeur.
+.bouton-activer-son {
+  align-self: flex-start;
+  padding: 0.3rem 0.6rem;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 999px;
+  color: #92400e;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    background: #fde68a;
+  }
+}
+
+// Mobile : panneau calé sur la largeur de l'écran (sous l'en-tête de 56px), même convention que
+// les panneaux des cloches.
+@media (max-width: 575.98px) {
+  .panneau-reglages {
+    position: fixed;
+    top: 60px;
+    left: 0.5rem;
+    right: 0.5rem;
+    width: auto;
+  }
+}

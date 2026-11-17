@@ -11,7 +11,7 @@ import { NotificationsPushEtatService } from '../../../noyau/notifications/notif
 import { destinationEcranAdmin } from '../../../noyau/notifications/navigation-notification-admin';
 import { SonNotification } from '../../../noyau/notifications/son-notification';
 import { ClocheCanal } from './cloche-canal/cloche-canal';
-import { EtatNotificationsPush } from '../../notifications-push/etat-notifications-push/etat-notifications-push';
+import { MenuReglagesNotifications } from '../menu-reglages-notifications/menu-reglages-notifications';
 import { extraireMessageErreur } from '../../../fonctionnalites/administration/tableau-de-bord-admin/extraire-message-erreur';
 import {
   CanalNotificationAdmin,
@@ -54,12 +54,14 @@ function creerEtatCanalAdmin(): EtatCanalAdmin {
  * son — sonne en continu, y compris en arrière-plan (élection par navigator.locks, voir
  * CoordinateurSonAdmin) ; les compteurs, eux, se mettent à jour dans tous les onglets. Chaque
  * cloche a son propre panneau, sa propre liste et son propre « Tout marquer comme lu »
- * (POST tout-lire/?canal=). Un seul bouton « Activer le son » et un seul bloc Web Push, communs
- * aux trois cloches (voir le gabarit). Même son que la cloche partenaire.
+ * (POST tout-lire/?canal=). Un seul bouton « Activer le son » et un seul bloc Web Push, dans un
+ * petit menu de réglages discret à côté des cloches (MenuReglagesNotifications, masqué tant
+ * qu'aucune action n'est utile — évite de faire déborder l'en-tête, voir le gabarit). Même son que
+ * la cloche partenaire.
  */
 @Component({
   selector: 'app-cloche-notifications-admin',
-  imports: [ClocheCanal, EtatNotificationsPush],
+  imports: [ClocheCanal, MenuReglagesNotifications],
   providers: [DetecteurCompteur, NotificationsAdminWebSocket],
   templateUrl: './cloche-notifications-admin.html',
   styleUrl: './cloche-notifications-admin.scss',
