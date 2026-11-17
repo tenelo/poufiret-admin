@@ -7,7 +7,6 @@ import { DemandePanneauNotificationsService } from '../../../noyau/notifications
 import { DetecteurCompteur } from '../../../noyau/notifications/detecteur-compteur';
 import { NotificationsAdminService } from '../../../noyau/notifications/notifications-admin.service';
 import { NotificationsAdminWebSocket } from '../../../noyau/notifications/notifications-admin-websocket';
-import { NotificationsPushEtatService } from '../../../noyau/notifications/notifications-push-etat.service';
 import { destinationEcranAdmin } from '../../../noyau/notifications/navigation-notification-admin';
 import { SonNotification } from '../../../noyau/notifications/son-notification';
 import { ClocheCanal } from './cloche-canal/cloche-canal';
@@ -73,7 +72,6 @@ export class ClocheNotificationsAdmin implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly notificationsPush = inject(NotificationsPushEtatService);
   private readonly demandePanneau = inject(DemandePanneauNotificationsService);
 
   private readonly son = new SonNotification(this.destroyRef);
@@ -332,9 +330,8 @@ export class ClocheNotificationsAdmin implements OnInit {
   private declencherNotification(): void {
     this.enAnimation.set(true);
     setTimeout(() => this.enAnimation.set(false), DUREE_ANIMATION_MS);
-    // Push activé et autorisé sur cet appareil : la notification système sonne déjà, pas de double son.
-    if (!this.notificationsPush.actifEtAutorise()) {
-      this.coordinateurSon.proposerSonner(() => this.son.jouer());
-    }
+    // Sonne toujours, même si le push est actif sur cet appareil (décision explicite : le double
+    // son système + Poufiret est accepté).
+    this.coordinateurSon.proposerSonner(() => this.son.jouer());
   }
 }

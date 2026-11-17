@@ -3,7 +3,6 @@ import { Router } from '@angular/router';
 
 import { DemandePanneauNotificationsService } from '../../../noyau/notifications/demande-panneau-notifications.service';
 import { DetecteurCompteur } from '../../../noyau/notifications/detecteur-compteur';
-import { NotificationsPushEtatService } from '../../../noyau/notifications/notifications-push-etat.service';
 import { CHEMIN_SON_NOTIFICATION, SonNotification } from '../../../noyau/notifications/son-notification';
 import { AuthService } from '../../../noyau/auth/auth.service';
 import { MesCommandesService } from '../../../fonctionnalites/partenaire/mes-commandes/mes-commandes.service';
@@ -32,7 +31,6 @@ export class ClocheNotifications implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly notificationsPush = inject(NotificationsPushEtatService);
   private readonly demandePanneau = inject(DemandePanneauNotificationsService);
 
   private readonly lecteurAudio = viewChild<ElementRef<HTMLAudioElement>>('lecteurAudio');
@@ -105,10 +103,9 @@ export class ClocheNotifications implements OnInit {
     // Une nouvelle notification "dé-consulte" le badge, même si le panneau
     // avait déjà été ouvert avant cette hausse.
     this.badgeVu.set(false);
-    // Push activé et autorisé sur cet appareil : la notification système sonne déjà, pas de double son.
-    if (!this.notificationsPush.actifEtAutorise()) {
-      this.son.jouer();
-    }
+    // Sonne toujours, même si le push est actif sur cet appareil (décision explicite : le double
+    // son système + Poufiret est accepté).
+    this.son.jouer();
     this.detecteur.accuserAugmentation();
   }
 }

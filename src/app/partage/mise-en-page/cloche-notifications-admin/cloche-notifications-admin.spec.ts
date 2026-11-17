@@ -11,7 +11,6 @@ import { DemandePanneauNotificationsService } from '../../../noyau/notifications
 import { DetecteurCompteur } from '../../../noyau/notifications/detecteur-compteur';
 import { NotificationsAdminService } from '../../../noyau/notifications/notifications-admin.service';
 import { NotificationsAdminWebSocket } from '../../../noyau/notifications/notifications-admin-websocket';
-import { NotificationsPushEtatService } from '../../../noyau/notifications/notifications-push-etat.service';
 import { MessageCompteursAdmin, ReponseCompteurNotificationsAdmin } from '../../../modeles/notification-admin.model';
 
 interface OptionsDetecteurCapturees {
@@ -25,22 +24,14 @@ describe('ClocheNotificationsAdmin', () => {
   let derniereReponse: ReturnType<typeof signal<ReponseCompteurNotificationsAdmin | null>>;
   let optionsDetecteur: OptionsDetecteurCapturees | null;
   let wsFaux: { dernierMessage: typeof dernierMessage; connecte: typeof connecte; demarrer: jasmine.Spy };
-  let notificationsPushFaux: ReturnType<typeof creerNotificationsPushFaux>;
   let fixture: ComponentFixture<ClocheNotificationsAdmin>;
   let component: ClocheNotificationsAdmin;
-
-  /** Fake minimal : seul actifEtAutorise() est lu par ce composant (gating du double son, voir
-   *  declencherNotification) — EtatNotificationsPush ne vit plus que dans Mon profil. */
-  function creerNotificationsPushFaux() {
-    return { actifEtAutorise: signal(false) };
-  }
 
   async function creer(): Promise<void> {
     dernierMessage = signal<MessageCompteursAdmin | null>(null);
     connecte = signal(false);
     derniereReponse = signal<ReponseCompteurNotificationsAdmin | null>(null);
     optionsDetecteur = null;
-    notificationsPushFaux = creerNotificationsPushFaux();
 
     const detecteurFaux = {
       derniereReponse,
@@ -69,9 +60,6 @@ describe('ClocheNotificationsAdmin', () => {
             lister: () => of({ results: [], nb_non_lues: 0 }),
           },
         },
-        // Gating du double son (voir declencherNotification) : fake minimal, pas besoin de SwPush
-        // réel (provideServiceWorker) puisque le composant n'injecte jamais SwPush directement.
-        { provide: NotificationsPushEtatService, useValue: notificationsPushFaux },
       ],
     })
       .overrideComponent(ClocheNotificationsAdmin, {
@@ -147,18 +135,7 @@ describe('ClocheNotificationsAdmin', () => {
     expect(fixture.nativeElement.querySelector('app-etat-notifications-push')).toBeNull();
   });
 
-  it('ne sonne pas si le push est activé et autorisé sur cet appareil (évite le double son)', async () => {
-    await creer();
-    notificationsPushFaux.actifEtAutorise.set(true);
-    const proposerSonner = spyOn<any>((component as any).coordinateurSon, 'proposerSonner');
-
-    dernierMessage.set({ type: 'compteurs', restaurant: 1, service: 0, general: 0, nb_non_lues: 1, nouvelle: true });
-    fixture.detectChanges();
-
-    expect(proposerSonner).not.toHaveBeenCalled();
-  });
-
-  it('sonne normalement si le push n’est pas activé sur cet appareil (comportement actuel)', async () => {
+  it('sonne toujours sur une nouvelle notification, même si le push est actif sur cet appareil (double son accepté)', async () => {
     await creer();
     const proposerSonner = spyOn<any>((component as any).coordinateurSon, 'proposerSonner');
 
