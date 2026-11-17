@@ -8,7 +8,6 @@ import { CHEMIN_SON_NOTIFICATION, SonNotification } from '../../../noyau/notific
 import { AuthService } from '../../../noyau/auth/auth.service';
 import { MesCommandesService } from '../../../fonctionnalites/partenaire/mes-commandes/mes-commandes.service';
 import { ResumeCommandes } from '../../../modeles/commande.model';
-import { EtatNotificationsPush } from '../../notifications-push/etat-notifications-push/etat-notifications-push';
 
 const INTERVALLE_POLLING_MS = 10000;
 const DUREE_ANIMATION_MS = 1200;
@@ -22,7 +21,7 @@ const DUREE_ANIMATION_MS = 1200;
  */
 @Component({
   selector: 'app-cloche-notifications',
-  imports: [EtatNotificationsPush],
+  imports: [],
   providers: [DetecteurCompteur],
   templateUrl: './cloche-notifications.html',
   styleUrl: './cloche-notifications.scss',

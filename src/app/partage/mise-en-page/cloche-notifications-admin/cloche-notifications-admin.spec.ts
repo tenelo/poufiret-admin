@@ -29,19 +29,10 @@ describe('ClocheNotificationsAdmin', () => {
   let fixture: ComponentFixture<ClocheNotificationsAdmin>;
   let component: ClocheNotificationsAdmin;
 
-  /** Fake minimal couvrant tout ce que lit le template de EtatNotificationsPush (imbriqué dans la cloche). */
+  /** Fake minimal : seul actifEtAutorise() est lu par ce composant (gating du double son, voir
+   *  declencherNotification) — EtatNotificationsPush ne vit plus que dans Mon profil. */
   function creerNotificationsPushFaux() {
-    return {
-      support: signal<'supporte' | 'ios_non_installe' | 'non_supporte'>('non_supporte'),
-      permission: signal<'activee' | 'bloquee' | 'en_attente'>('en_attente'),
-      actifEtAutorise: signal(false),
-      enCours: signal(false),
-      messageErreur: signal<string | null>(null),
-      messageSucces: signal<string | null>(null),
-      activer: () => undefined,
-      desactiverSurCetAppareil: () => undefined,
-      envoyerTest: () => undefined,
-    };
+    return { actifEtAutorise: signal(false) };
   }
 
   async function creer(): Promise<void> {
@@ -148,36 +139,12 @@ describe('ClocheNotificationsAdmin', () => {
     expect(declencher).toHaveBeenCalledTimes(1);
   });
 
-  it('affiche « Activer le son » dans le menu de réglages tant que la lecture est bloquée (par défaut, avant tout déblocage), et appelle debloquer() au clic', async () => {
+  it("n'affiche aucun bouton « Activer le son » ou de réglages dans l'en-tête (le son se débloque tout seul à la première interaction)", async () => {
     await creer();
-
-    // bloque = audioContext.state !== 'running' : vrai par défaut, aucun contexte n'existe encore
-    // -> le bouton de réglages (MenuReglagesNotifications) est donc visible dès le départ.
-    const boutonReglages = fixture.nativeElement.querySelector('.bouton-reglages') as HTMLButtonElement;
-    expect(boutonReglages).not.toBeNull();
-    boutonReglages.click();
-    fixture.detectChanges();
-
-    const bouton = fixture.nativeElement.querySelector('.bouton-activer-son') as HTMLButtonElement;
-    expect(bouton).not.toBeNull();
-
-    const debloquer = spyOn<any>((component as any).son, 'debloquer');
-    bouton.click();
-    expect(debloquer).toHaveBeenCalled();
-  });
-
-  it('masque « Activer le son » dans le menu une fois la lecture débloquée (bloqueInterne à jour)', async () => {
-    await creer();
-    (fixture.nativeElement.querySelector('.bouton-reglages') as HTMLButtonElement).click();
-    fixture.detectChanges();
-
-    // bloqueInterne est privé côté TypeScript seulement : accessible à l'exécution, comme Angular
-    // le permet depuis un template (sonBloque = son.bloque est la même vue en lecture seule).
-    const bloqueInterne = (component as any).son.bloqueInterne as ReturnType<typeof signal<boolean>>;
-    bloqueInterne.set(false);
-    fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.bouton-activer-son')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.bouton-reglages')).toBeNull();
+    expect(fixture.nativeElement.querySelector('app-etat-notifications-push')).toBeNull();
   });
 
   it('ne sonne pas si le push est activé et autorisé sur cet appareil (évite le double son)', async () => {

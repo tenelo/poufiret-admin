@@ -1,6 +1,6 @@
-// Range les trois cloches + le bouton de réglages (son/push, voir MenuReglagesNotifications) côte
-// à côte dans la zone utilisateur de l'en-tête. Tient sur une seule ligne, même hauteur que
-// l'en-tête (56px) : plus aucun bloc à largeur variable n'est affiché en ligne (voir le gabarit).
+// Range les trois cloches côte à côte dans la zone utilisateur de l'en-tête. Rien d'autre à côté
+// (aucun bouton son/push dans l'en-tête, voir le gabarit) : tient sur une seule ligne, même
+// hauteur que l'en-tête (56px).
 .trois-cloches {
   display: flex;
   align-items: center;

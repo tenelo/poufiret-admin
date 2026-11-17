@@ -17,9 +17,13 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
+    // 'registerImmediately' plutôt que 'registerWhenStable' : le WebSocket des notifications admin
+    // (NotificationsAdminWebSocket) maintient l'app en activité permanente, donc elle n'est jamais
+    // « stable » — le service worker (SwPush, bandeau de mise à jour) ne s'enregistrait qu'après le
+    // délai de secours de 30 s.
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:30000',
+      registrationStrategy: 'registerImmediately',
     }),
   ],
 };

@@ -23,19 +23,10 @@ describe('ClocheNotifications (partenaire)', () => {
   let fixture: ComponentFixture<ClocheNotifications>;
   let component: ClocheNotifications;
 
-  /** Fake minimal couvrant tout ce que lit le template de EtatNotificationsPush (imbriqué dans la cloche). */
+  /** Fake minimal : seul actifEtAutorise() est lu par ce composant (gating du double son, voir
+   *  declencherNotification) — EtatNotificationsPush ne vit plus que dans Mon profil. */
   function creerNotificationsPushFaux() {
-    return {
-      support: signal<'supporte' | 'ios_non_installe' | 'non_supporte'>('non_supporte'),
-      permission: signal<'activee' | 'bloquee' | 'en_attente'>('en_attente'),
-      actifEtAutorise: signal(false),
-      enCours: signal(false),
-      messageErreur: signal<string | null>(null),
-      messageSucces: signal<string | null>(null),
-      activer: () => undefined,
-      desactiverSurCetAppareil: () => undefined,
-      envoyerTest: () => undefined,
-    };
+    return { actifEtAutorise: signal(false) };
   }
 
   async function creer(): Promise<void> {
@@ -87,6 +78,15 @@ describe('ClocheNotifications (partenaire)', () => {
     fixture.detectChanges();
 
     expect(jouer).toHaveBeenCalled();
+  });
+
+  it("n'affiche aucun réglage Web Push dans le panneau Commandes (vit uniquement dans Mon profil)", async () => {
+    await creer();
+    component.basculerPanneau();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('app-etat-notifications-push')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.bouton-activer-son')).toBeNull();
   });
 
   it('ouvre le panneau quand une notification push sans écran cible le demande', async () => {

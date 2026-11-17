@@ -25,6 +25,28 @@ export const LIRE_PERMISSION_NOTIFICATION = new InjectionToken<() => Notificatio
   { providedIn: 'root', factory: () => () => ('Notification' in window ? Notification.permission : 'default') },
 );
 
+/** Délai maximum d'attente de l'état réel de l'abonnement (voir `prete` ci-dessous) : passé ce délai,
+ *  on affiche l'état déduit de SwPush.subscription tel quel plutôt que de faire tourner un bouton
+ *  ou un message de chargement indéfiniment. */
+const DELAI_MAX_ETAT_INITIAL_MS = 5000;
+
+/**
+ * Attend que l'état réel de l'abonnement push de cet appareil soit connu (service worker prêt,
+ * puis abonnement actuel lu), derrière un jeton injectable : un vrai `ServiceWorkerContainer.ready`
+ * ne se résout jamais dans les tests (aucun service worker enregistré sur la page de test) — même
+ * pattern que RECHARGER_PAGE/LIRE_PERMISSION_NOTIFICATION.
+ */
+export const ATTENDRE_ABONNEMENT_PUSH_INITIAL = new InjectionToken<() => Promise<unknown>>(
+  'ATTENDRE_ABONNEMENT_PUSH_INITIAL',
+  {
+    providedIn: 'root',
+    factory: () => () =>
+      'serviceWorker' in navigator
+        ? navigator.serviceWorker.ready.then((enregistrement) => enregistrement.pushManager.getSubscription())
+        : Promise.resolve(null),
+  },
+);
+
 /** Query params de l'URL cible d'une notification (.../notifications/ouvrir?ecran=&id=). */
 function extraireParamsUrlNotification(url: string | undefined): { ecran: string | null; id: string | null } {
   if (!url) {
@@ -58,11 +80,21 @@ export class NotificationsPushEtatService {
   private readonly demandePanneau = inject(DemandePanneauNotificationsService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly lirePermissionNavigateur = inject(LIRE_PERMISSION_NOTIFICATION);
+  private readonly attendreAbonnementInitial = inject(ATTENDRE_ABONNEMENT_PUSH_INITIAL);
 
   /** Abonnement courant de cet appareil (null si aucun), tenu à jour par SwPush lui-même. */
   private readonly abonnementActuel = toSignal(this.swPush.subscription, { initialValue: null });
 
   readonly abonneSurCetAppareil = computed(() => !!this.abonnementActuel());
+
+  private readonly preteInterne = signal(false);
+  /**
+   * Vrai dès que l'état réel de l'abonnement de cet appareil est connu (ou après ~5 s de délai
+   * maximum) : tant que faux, `abonneSurCetAppareil`/`actifEtAutorise` peuvent encore refléter la
+   * valeur synthétique `null` de `toSignal` plutôt que la vraie réponse du service worker — ne
+   * jamais afficher « non activé » dans l'intervalle (voir EtatNotificationsPush).
+   */
+  readonly prete = this.preteInterne.asReadonly();
 
   private readonly permissionInterne = signal<PermissionNotificationsPush>(this.lirePermission());
   readonly permission = this.permissionInterne.asReadonly();
@@ -100,6 +132,30 @@ export class NotificationsPushEtatService {
     // Vit dans un service racine (jamais détruit en pratique) : surveille les révocations de
     // permission faites depuis les réglages du navigateur, en dehors de cette app.
     this.ecouterChangementsPermission();
+
+    this.initialiserPrete();
+  }
+
+  /**
+   * Détermine `prete` : immédiat si le push n'est de toute façon pas utilisable (rien à attendre),
+   * sinon dès que l'abonnement réel est lu ou après le délai maximum (selon le premier des deux).
+   */
+  private initialiserPrete(): void {
+    if (!this.swPush.isEnabled) {
+      this.preteInterne.set(true);
+      return;
+    }
+
+    let minuteurId: ReturnType<typeof setTimeout>;
+    const delaiMaximum = new Promise<void>((resolve) => {
+      minuteurId = setTimeout(resolve, DELAI_MAX_ETAT_INITIAL_MS);
+    });
+    this.destroyRef.onDestroy(() => clearTimeout(minuteurId));
+
+    Promise.race([this.attendreAbonnementInitial().catch(() => undefined), delaiMaximum]).then(() => {
+      clearTimeout(minuteurId);
+      this.preteInterne.set(true);
+    });
   }
 
   /** Active les notifications sur cet appareil : clé publique, abonnement SwPush, enregistrement backend. */

@@ -11,7 +11,6 @@ import { NotificationsPushEtatService } from '../../../noyau/notifications/notif
 import { destinationEcranAdmin } from '../../../noyau/notifications/navigation-notification-admin';
 import { SonNotification } from '../../../noyau/notifications/son-notification';
 import { ClocheCanal } from './cloche-canal/cloche-canal';
-import { MenuReglagesNotifications } from '../menu-reglages-notifications/menu-reglages-notifications';
 import { extraireMessageErreur } from '../../../fonctionnalites/administration/tableau-de-bord-admin/extraire-message-erreur';
 import {
   CanalNotificationAdmin,
@@ -54,14 +53,14 @@ function creerEtatCanalAdmin(): EtatCanalAdmin {
  * son — sonne en continu, y compris en arrière-plan (élection par navigator.locks, voir
  * CoordinateurSonAdmin) ; les compteurs, eux, se mettent à jour dans tous les onglets. Chaque
  * cloche a son propre panneau, sa propre liste et son propre « Tout marquer comme lu »
- * (POST tout-lire/?canal=). Un seul bouton « Activer le son » et un seul bloc Web Push, dans un
- * petit menu de réglages discret à côté des cloches (MenuReglagesNotifications, masqué tant
- * qu'aucune action n'est utile — évite de faire déborder l'en-tête, voir le gabarit). Même son que
- * la cloche partenaire.
+ * (POST tout-lire/?canal=). Aucun bouton « Activer le son » ni réglage Web Push dans l'en-tête :
+ * le son se débloque tout seul à la première interaction (SonNotification) et l'activation des
+ * notifications Web Push ne vit que dans Mon profil (EtatNotificationsPush). Même son que la
+ * cloche partenaire.
  */
 @Component({
   selector: 'app-cloche-notifications-admin',
-  imports: [ClocheCanal, MenuReglagesNotifications],
+  imports: [ClocheCanal],
   providers: [DetecteurCompteur, NotificationsAdminWebSocket],
   templateUrl: './cloche-notifications-admin.html',
   styleUrl: './cloche-notifications-admin.scss',
@@ -82,8 +81,6 @@ export class ClocheNotificationsAdmin implements OnInit {
   private dernierJetonPanneauTraite = 0;
 
   readonly formaterDateRelative = formaterDateRelative;
-  /** Affiche « Activer le son » près des cloches tant que le navigateur bloque la lecture. */
-  readonly sonBloque = this.son.bloque;
 
   readonly enAnimation = signal(false);
 
@@ -197,11 +194,6 @@ export class ClocheNotificationsAdmin implements OnInit {
       actif: () => this.authService.role() === 'admin' && !this.wsAdmin.connecte(),
       pauseSiOngletMasque: true,
     });
-  }
-
-  /** Débloque la lecture du son (clic sur « Activer le son »). */
-  activerSon(): void {
-    this.son.debloquer();
   }
 
   /** Texte du badge d'une cloche : masqué à 0 (voir le template), « 99+ » au-delà de 99. */

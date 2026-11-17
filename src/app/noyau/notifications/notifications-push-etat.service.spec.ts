@@ -5,7 +5,11 @@ import { Subject, of, throwError } from 'rxjs';
 
 import { AuthService } from '../auth/auth.service';
 import { DemandePanneauNotificationsService } from './demande-panneau-notifications.service';
-import { LIRE_PERMISSION_NOTIFICATION, NotificationsPushEtatService } from './notifications-push-etat.service';
+import {
+  ATTENDRE_ABONNEMENT_PUSH_INITIAL,
+  LIRE_PERMISSION_NOTIFICATION,
+  NotificationsPushEtatService,
+} from './notifications-push-etat.service';
 import { NotificationsPushService } from './notifications-push.service';
 
 /** PushSubscription minimale (seul .toJSON() est utilisé par le service). */
@@ -36,9 +40,17 @@ describe('NotificationsPushEtatService', () => {
   // 'default' tant qu'un test ne le change pas explicitement AVANT d'appeler creer() : creer() ne
   // doit jamais l'écraser lui-même, sous peine d'effacer la valeur voulue par l'appelant.
   let permissionActuelle: NotificationPermission;
+  // Idem : lu par creer() au lieu d'un `isEnabled: true` en dur, pour pouvoir tester le cas
+  // "SwPush désactivé" sans que creer() ne l'écrase.
+  let swPushActiveInitialement: boolean;
+  // Idem : résolution de l'état initial de l'abonnement (voir ATTENDRE_ABONNEMENT_PUSH_INITIAL /
+  // `prete`) — par défaut immédiate, pour ne pas ralentir les tests qui ne s'y intéressent pas.
+  let attendreAbonnementInitial: () => Promise<unknown>;
 
   beforeEach(() => {
     permissionActuelle = 'default';
+    swPushActiveInitialement = true;
+    attendreAbonnementInitial = () => Promise.resolve(null);
     // navigator.permissions.query est un vrai appel navigateur (hors contrôle du test) : neutralisé
     // pour éviter qu'une résolution asynchrone imprévisible ne pollue un test voisin (Chrome
     // Headless, utilisé par la suite, le supporte toujours).
@@ -49,7 +61,7 @@ describe('NotificationsPushEtatService', () => {
     subscription$ = new Subject<PushSubscription | null>();
     notificationClicks$ = new Subject();
     swPushFaux = {
-      isEnabled: true,
+      isEnabled: swPushActiveInitialement,
       subscription: subscription$,
       notificationClicks: notificationClicks$,
       requestSubscription: jasmine.createSpy('requestSubscription'),
@@ -70,6 +82,7 @@ describe('NotificationsPushEtatService', () => {
         { provide: Router, useValue: router },
         { provide: AuthService, useValue: { role: () => 'admin' } },
         { provide: LIRE_PERMISSION_NOTIFICATION, useValue: () => permissionActuelle },
+        { provide: ATTENDRE_ABONNEMENT_PUSH_INITIAL, useValue: () => attendreAbonnementInitial() },
         DemandePanneauNotificationsService,
       ],
     });
@@ -203,6 +216,37 @@ describe('NotificationsPushEtatService', () => {
     expect(serviceFaux.envoyerTest).toHaveBeenCalled();
     expect(etat.messageSucces()).toBe('Notification de test envoyée.');
   }));
+
+  it('prete() : faux tant que l’état réel de l’abonnement n’est pas connu, vrai dès qu’il l’est', fakeAsync(() => {
+    let resoudre!: (valeur: unknown) => void;
+    attendreAbonnementInitial = () => new Promise((resolve) => (resoudre = resolve));
+    const etat = creer();
+
+    expect(etat.prete()).toBeFalse();
+
+    resoudre(null);
+    tick();
+    expect(etat.prete()).toBeTrue();
+  }));
+
+  it('prete() : devient vrai après le délai maximum (~5 s) même si l’état initial ne répond jamais', fakeAsync(() => {
+    attendreAbonnementInitial = () => new Promise(() => undefined); // ne se résout jamais.
+    const etat = creer();
+
+    expect(etat.prete()).toBeFalse();
+    tick(4999);
+    expect(etat.prete()).toBeFalse();
+    tick(1);
+    expect(etat.prete()).toBeTrue();
+  }));
+
+  it('prete() : déjà vrai dès la création si SwPush est désactivé (rien à attendre)', () => {
+    swPushActiveInitialement = false;
+    attendreAbonnementInitial = () => new Promise(() => undefined); // jamais appelé dans ce cas.
+    const etat = creer();
+
+    expect(etat.prete()).toBeTrue();
+  });
 
   it('clic sur une notification (app déjà ouverte) : navigue avec la même logique que /notifications/ouvrir', () => {
     creer();
