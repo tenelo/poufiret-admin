@@ -2,7 +2,15 @@
 .deux-cloches {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.25rem;
+}
+
+// Toujours visible (comme .bouton-activer-son) : passe à la ligne si la place manque (mobile),
+// pour ne jamais faire déborder l'en-tête une fois les notifications activées (bouton de test +
+// bouton de désactivation en plus du message d'état).
+.bloc-push {
+  flex-basis: 100%;
 }
 
 // Visible seulement tant que le navigateur bloque la lecture automatique (voir SonNotification.bloque).

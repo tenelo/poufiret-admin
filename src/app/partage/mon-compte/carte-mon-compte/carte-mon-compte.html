@@ -93,6 +93,11 @@
       <h2>Sécurité</h2>
       <button type="button" class="bouton-secondaire" (click)="ouvrirDialoguePin()">🔒 Changer mon PIN</button>
     </section>
+
+    <section class="section">
+      <h2>Notifications</h2>
+      <app-etat-notifications-push />
+    </section>
   }
 
   @if (pinDialogueOuvert()) {

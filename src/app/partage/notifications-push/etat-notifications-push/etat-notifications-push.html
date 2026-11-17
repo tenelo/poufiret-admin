@@ -1,0 +1,51 @@
+<div class="etat-notifications-push">
+  @switch (etat.support()) {
+    @case ('non_supporte') {
+      <p class="message-info">Notifications non prises en charge par ce navigateur.</p>
+    }
+    @case ('ios_non_installe') {
+      <p class="message-info">
+        Sur iPhone/iPad : installez l'app sur l'écran d'accueil (iOS 16.4 ou plus) pour activer les
+        notifications.
+      </p>
+    }
+    @case ('supporte') {
+      @if (etat.permission() === 'bloquee') {
+        <p class="message-info">
+          Notifications bloquées — réactivez-les dans les réglages de ce navigateur.
+        </p>
+      } @else if (etat.actifEtAutorise()) {
+        <p class="message-actif">✅ Notifications activées sur cet appareil.</p>
+        <div class="actions-push">
+          <button
+            type="button"
+            class="bouton-secondaire"
+            [disabled]="etat.enCours()"
+            (click)="envoyerTest()"
+          >
+            {{ etat.enCours() ? 'Envoi…' : 'Envoyer une notification de test' }}
+          </button>
+          <button
+            type="button"
+            class="bouton-secondaire"
+            [disabled]="etat.enCours()"
+            (click)="desactiver()"
+          >
+            Désactiver sur cet appareil
+          </button>
+        </div>
+      } @else {
+        <button type="button" class="bouton-principal" [disabled]="etat.enCours()" (click)="activer()">
+          {{ etat.enCours() ? 'Activation…' : '🔔 Activer les notifications' }}
+        </button>
+      }
+    }
+  }
+
+  @if (etat.messageErreur()) {
+    <p class="erreur-generale">{{ etat.messageErreur() }}</p>
+  }
+  @if (etat.messageSucces()) {
+    <p class="message-succes">{{ etat.messageSucces() }}</p>
+  }
+</div>

@@ -7,9 +7,11 @@ import { of } from 'rxjs';
 
 import { ClocheNotificationsAdmin } from './cloche-notifications-admin';
 import { AuthService } from '../../../noyau/auth/auth.service';
+import { DemandePanneauNotificationsService } from '../../../noyau/notifications/demande-panneau-notifications.service';
 import { DetecteurCompteur } from '../../../noyau/notifications/detecteur-compteur';
 import { NotificationsAdminService } from '../../../noyau/notifications/notifications-admin.service';
 import { NotificationsAdminWebSocket } from '../../../noyau/notifications/notifications-admin-websocket';
+import { NotificationsPushEtatService } from '../../../noyau/notifications/notifications-push-etat.service';
 import { MessageCompteursAdmin, ReponseCompteurNotificationsAdmin } from '../../../modeles/notification-admin.model';
 
 interface OptionsDetecteurCapturees {
@@ -23,14 +25,31 @@ describe('ClocheNotificationsAdmin', () => {
   let derniereReponse: ReturnType<typeof signal<ReponseCompteurNotificationsAdmin | null>>;
   let optionsDetecteur: OptionsDetecteurCapturees | null;
   let wsFaux: { dernierMessage: typeof dernierMessage; connecte: typeof connecte; demarrer: jasmine.Spy };
+  let notificationsPushFaux: ReturnType<typeof creerNotificationsPushFaux>;
   let fixture: ComponentFixture<ClocheNotificationsAdmin>;
   let component: ClocheNotificationsAdmin;
+
+  /** Fake minimal couvrant tout ce que lit le template de EtatNotificationsPush (imbriqué dans la cloche). */
+  function creerNotificationsPushFaux() {
+    return {
+      support: signal<'supporte' | 'ios_non_installe' | 'non_supporte'>('non_supporte'),
+      permission: signal<'activee' | 'bloquee' | 'en_attente'>('en_attente'),
+      actifEtAutorise: signal(false),
+      enCours: signal(false),
+      messageErreur: signal<string | null>(null),
+      messageSucces: signal<string | null>(null),
+      activer: () => undefined,
+      desactiverSurCetAppareil: () => undefined,
+      envoyerTest: () => undefined,
+    };
+  }
 
   async function creer(): Promise<void> {
     dernierMessage = signal<MessageCompteursAdmin | null>(null);
     connecte = signal(false);
     derniereReponse = signal<ReponseCompteurNotificationsAdmin | null>(null);
     optionsDetecteur = null;
+    notificationsPushFaux = creerNotificationsPushFaux();
 
     const detecteurFaux = {
       derniereReponse,
@@ -52,7 +71,16 @@ describe('ClocheNotificationsAdmin', () => {
         provideHttpClientTesting(),
         provideRouter([]),
         { provide: AuthService, useValue: { role: () => 'admin' } },
-        { provide: NotificationsAdminService, useValue: { compteur: () => of({ restaurant: 0, general: 0, nb_non_lues: 0 }) } },
+        {
+          provide: NotificationsAdminService,
+          useValue: {
+            compteur: () => of({ restaurant: 0, general: 0, nb_non_lues: 0 }),
+            lister: () => of({ results: [], nb_non_lues: 0 }),
+          },
+        },
+        // Gating du double son (voir declencherNotification) : fake minimal, pas besoin de SwPush
+        // réel (provideServiceWorker) puisque le composant n'injecte jamais SwPush directement.
+        { provide: NotificationsPushEtatService, useValue: notificationsPushFaux },
       ],
     })
       .overrideComponent(ClocheNotificationsAdmin, {
@@ -141,5 +169,36 @@ describe('ClocheNotificationsAdmin', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.bouton-activer-son')).toBeNull();
+  });
+
+  it('ne sonne pas si le push est activé et autorisé sur cet appareil (évite le double son)', async () => {
+    await creer();
+    notificationsPushFaux.actifEtAutorise.set(true);
+    const proposerSonner = spyOn<any>((component as any).coordinateurSon, 'proposerSonner');
+
+    dernierMessage.set({ type: 'compteurs', restaurant: 1, general: 0, nb_non_lues: 1, nouvelle: true });
+    fixture.detectChanges();
+
+    expect(proposerSonner).not.toHaveBeenCalled();
+  });
+
+  it('sonne normalement si le push n’est pas activé sur cet appareil (comportement actuel)', async () => {
+    await creer();
+    const proposerSonner = spyOn<any>((component as any).coordinateurSon, 'proposerSonner');
+
+    dernierMessage.set({ type: 'compteurs', restaurant: 1, general: 0, nb_non_lues: 1, nouvelle: true });
+    fixture.detectChanges();
+
+    expect(proposerSonner).toHaveBeenCalled();
+  });
+
+  it('ouvre le panneau général quand une notification push sans écran cible le demande', async () => {
+    await creer();
+    const demandePanneau = TestBed.inject(DemandePanneauNotificationsService);
+
+    demandePanneau.demander();
+    fixture.detectChanges();
+
+    expect(component.canalOuvert()).toBe('general');
   });
 });

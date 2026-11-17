@@ -5,17 +5,20 @@ import { AuthService } from '../../../noyau/auth/auth.service';
 import { DialogueChangerPin } from '../dialogue-changer-pin/dialogue-changer-pin';
 import { extraireMessageErreur } from '../../../fonctionnalites/partenaire/mes-produits/extraire-message-erreur';
 import { Utilisateur } from '../../../modeles/utilisateur.model';
+import { EtatNotificationsPush } from '../../notifications-push/etat-notifications-push/etat-notifications-push';
 
 /**
  * Carte "Mon compte" : identité du compte connecté (prénom/nom/email,
- * téléphone et rôle en lecture seule) + section Sécurité (changement de PIN).
+ * téléphone et rôle en lecture seule) + section Sécurité (changement de PIN)
+ * + section Notifications (état du Web Push sur cet appareil, voir
+ * EtatNotificationsPush — mêmes contrôles que dans les cloches).
  * Partagée entre les pages "Mon profil" partenaire et admin/super-admin — ne
  * connaît rien de la vitrine partenaire ni des droits admin, entièrement
  * autonome (charge et met à jour elle-même GET/PATCH /auth/moi/).
  */
 @Component({
   selector: 'app-carte-mon-compte',
-  imports: [ReactiveFormsModule, DialogueChangerPin],
+  imports: [ReactiveFormsModule, DialogueChangerPin, EtatNotificationsPush],
   templateUrl: './carte-mon-compte.html',
   styleUrl: './carte-mon-compte.scss',
 })

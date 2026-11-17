@@ -1,0 +1,71 @@
+.etat-notifications-push {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.message-info {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.message-actif {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #15803d;
+  font-weight: 600;
+}
+
+.actions-push {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.bouton-principal,
+.bouton-secondaire {
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.bouton-principal {
+  background: #4f46e5;
+  border: none;
+  color: #ffffff;
+}
+
+.bouton-secondaire {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #374151;
+}
+
+.message-succes {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #15803d;
+  font-size: 0.78rem;
+}
+
+.erreur-generale {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.78rem;
+}

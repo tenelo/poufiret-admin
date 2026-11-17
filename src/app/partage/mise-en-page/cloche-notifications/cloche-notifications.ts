@@ -1,11 +1,14 @@
 import { Component, DestroyRef, ElementRef, OnInit, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 
+import { DemandePanneauNotificationsService } from '../../../noyau/notifications/demande-panneau-notifications.service';
 import { DetecteurCompteur } from '../../../noyau/notifications/detecteur-compteur';
+import { NotificationsPushEtatService } from '../../../noyau/notifications/notifications-push-etat.service';
 import { CHEMIN_SON_NOTIFICATION, SonNotification } from '../../../noyau/notifications/son-notification';
 import { AuthService } from '../../../noyau/auth/auth.service';
 import { MesCommandesService } from '../../../fonctionnalites/partenaire/mes-commandes/mes-commandes.service';
 import { ResumeCommandes } from '../../../modeles/commande.model';
+import { EtatNotificationsPush } from '../../notifications-push/etat-notifications-push/etat-notifications-push';
 
 const INTERVALLE_POLLING_MS = 10000;
 const DUREE_ANIMATION_MS = 1200;
@@ -19,7 +22,7 @@ const DUREE_ANIMATION_MS = 1200;
  */
 @Component({
   selector: 'app-cloche-notifications',
-  imports: [],
+  imports: [EtatNotificationsPush],
   providers: [DetecteurCompteur],
   templateUrl: './cloche-notifications.html',
   styleUrl: './cloche-notifications.scss',
@@ -30,6 +33,8 @@ export class ClocheNotifications implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly notificationsPush = inject(NotificationsPushEtatService);
+  private readonly demandePanneau = inject(DemandePanneauNotificationsService);
 
   private readonly lecteurAudio = viewChild<ElementRef<HTMLAudioElement>>('lecteurAudio');
 
@@ -43,6 +48,7 @@ export class ClocheNotifications implements OnInit {
   readonly enAnimation = signal(false);
   readonly panneauOuvert = signal(false);
   readonly badgeVu = signal(false);
+  private dernierJetonPanneauTraite = 0;
 
   readonly badgeVisible = computed(() => this.nbNouvelles() > 0 && !this.badgeVu());
 
@@ -52,6 +58,17 @@ export class ClocheNotifications implements OnInit {
     effect(() => {
       if (this.detecteur.aAugmente()) {
         this.declencherNotification();
+      }
+    });
+
+    // Notification push cliquée sans écran cible exploitable (voir naviguer-depuis-notification.ts) :
+    // ouvre le panneau. Jeton consommé une seule fois (comparé au dernier traité).
+    effect(() => {
+      const jeton = this.demandePanneau.jeton();
+      if (jeton !== 0 && jeton !== this.dernierJetonPanneauTraite) {
+        this.dernierJetonPanneauTraite = jeton;
+        this.panneauOuvert.set(true);
+        this.badgeVu.set(true);
       }
     });
   }
@@ -89,7 +106,10 @@ export class ClocheNotifications implements OnInit {
     // Une nouvelle notification "dé-consulte" le badge, même si le panneau
     // avait déjà été ouvert avant cette hausse.
     this.badgeVu.set(false);
-    this.son.jouer();
+    // Push activé et autorisé sur cet appareil : la notification système sonne déjà, pas de double son.
+    if (!this.notificationsPush.actifEtAutorise()) {
+      this.son.jouer();
+    }
     this.detecteur.accuserAugmentation();
   }
 }

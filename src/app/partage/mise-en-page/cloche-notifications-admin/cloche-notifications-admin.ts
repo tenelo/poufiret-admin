@@ -3,11 +3,15 @@ import { Router } from '@angular/router';
 
 import { AuthService } from '../../../noyau/auth/auth.service';
 import { CoordinateurSonAdmin } from '../../../noyau/notifications/coordinateur-son-admin';
+import { DemandePanneauNotificationsService } from '../../../noyau/notifications/demande-panneau-notifications.service';
 import { DetecteurCompteur } from '../../../noyau/notifications/detecteur-compteur';
 import { NotificationsAdminService } from '../../../noyau/notifications/notifications-admin.service';
 import { NotificationsAdminWebSocket } from '../../../noyau/notifications/notifications-admin-websocket';
+import { NotificationsPushEtatService } from '../../../noyau/notifications/notifications-push-etat.service';
+import { destinationEcranAdmin } from '../../../noyau/notifications/navigation-notification-admin';
 import { SonNotification } from '../../../noyau/notifications/son-notification';
 import { ClocheCanal } from './cloche-canal/cloche-canal';
+import { EtatNotificationsPush } from '../../notifications-push/etat-notifications-push/etat-notifications-push';
 import { extraireMessageErreur } from '../../../fonctionnalites/administration/tableau-de-bord-admin/extraire-message-erreur';
 import {
   CanalNotificationAdmin,
@@ -39,7 +43,7 @@ const NB_NOTIFICATIONS_AFFICHEES = 10;
  */
 @Component({
   selector: 'app-cloche-notifications-admin',
-  imports: [ClocheCanal],
+  imports: [ClocheCanal, EtatNotificationsPush],
   providers: [DetecteurCompteur, NotificationsAdminWebSocket],
   templateUrl: './cloche-notifications-admin.html',
   styleUrl: './cloche-notifications-admin.scss',
@@ -52,9 +56,12 @@ export class ClocheNotificationsAdmin implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly notificationsPush = inject(NotificationsPushEtatService);
+  private readonly demandePanneau = inject(DemandePanneauNotificationsService);
 
   private readonly son = new SonNotification(this.destroyRef);
   private readonly coordinateurSon = new CoordinateurSonAdmin(this.destroyRef);
+  private dernierJetonPanneauTraite = 0;
 
   readonly formaterDateRelative = formaterDateRelative;
   /** Affiche « Activer le son » près des cloches tant que le navigateur bloque la lecture. */
@@ -92,6 +99,17 @@ export class ClocheNotificationsAdmin implements OnInit {
     effect(() => {
       if (!this.son.bloque()) {
         this.coordinateurSon.demanderElection();
+      }
+    });
+
+    // Notification push cliquée sans écran cible exploitable (voir naviguer-depuis-notification.ts) :
+    // ouvre le panneau général. Jeton consommé une seule fois (comparé au dernier traité).
+    effect(() => {
+      const jeton = this.demandePanneau.jeton();
+      if (jeton !== 0 && jeton !== this.dernierJetonPanneauTraite) {
+        this.dernierJetonPanneauTraite = jeton;
+        this.canalOuvert.set('general');
+        this.chargerNotifications('general');
       }
     });
 
@@ -232,42 +250,26 @@ export class ClocheNotificationsAdmin implements OnInit {
   /**
    * `cible` pilote la navigation quand le backend la fournit ; sinon repli sur le type et les
    * anciens champs plats (commande_id, demande_id, publicite_id…), pour ne jamais rester sans
-   * destination si un type de notification ne la peuple pas encore.
+   * destination si un type de notification ne la peuple pas encore. Chemin/queryParams calculés
+   * par destinationEcranAdmin (noyau/notifications), partagée avec le clic sur une notification
+   * push (OuvrirNotification / SwPush.notificationClicks), qui ne connaît que ecran+id.
    */
   private naviguerVers(notification: NotificationAdmin): void {
     const cible = notification.cible;
     const ecran = cible?.ecran ?? this.ecranReplisurType(notification.type);
+    const id =
+      cible?.id ??
+      (ecran === 'commandes'
+        ? notification.commande_id
+        : ecran === 'demandes_location'
+          ? notification.demande_id
+          : notification.publicite_id);
 
-    if (ecran === 'commandes') {
-      this.router.navigate(['/administration/commandes'], {
-        queryParams: {
-          commande: cible?.id ?? notification.commande_id ?? undefined,
-          // Canal restaurant : pré-filtre le centre des commandes sur la catégorie Restaurants
-          // (résolue dynamiquement côté CommandesAdmin, l'id de catégorie n'est pas fixe).
-          categorie: notification.canal === 'restaurant' ? 'restaurants' : undefined,
-        },
-      });
-      return;
-    }
-    if (ecran === 'interventions') {
-      this.router.navigate(['/administration/interventions'], {
-        queryParams: { intervention: cible?.id ?? undefined },
-      });
-      return;
-    }
-    if (ecran === 'demandes_location') {
-      this.router.navigate(['/administration/demandes-location'], {
-        queryParams: { demande: cible?.id ?? notification.demande_id ?? undefined },
-      });
-      return;
-    }
-    // Campagnes de publicité : comportement actuel, inchangé (onglet dérivé du type de notification).
-    this.router.navigate(['/administration/publicites'], {
-      queryParams: {
-        statut: STATUT_CAMPAGNE_PAR_TYPE[notification.type],
-        pub: cible?.id ?? notification.publicite_id ?? undefined,
-      },
+    const destination = destinationEcranAdmin(ecran, id ?? undefined, {
+      canal: notification.canal,
+      statutPublicite: STATUT_CAMPAGNE_PAR_TYPE[notification.type],
     });
+    this.router.navigate(destination.chemin, { queryParams: destination.queryParams });
   }
 
   /** Repli quand le backend ne renvoie pas (encore) `cible` pour ce type de notification. */
@@ -305,6 +307,9 @@ export class ClocheNotificationsAdmin implements OnInit {
   private declencherNotification(): void {
     this.enAnimation.set(true);
     setTimeout(() => this.enAnimation.set(false), DUREE_ANIMATION_MS);
-    this.coordinateurSon.proposerSonner(() => this.son.jouer());
+    // Push activé et autorisé sur cet appareil : la notification système sonne déjà, pas de double son.
+    if (!this.notificationsPush.actifEtAutorise()) {
+      this.coordinateurSon.proposerSonner(() => this.son.jouer());
+    }
   }
 }

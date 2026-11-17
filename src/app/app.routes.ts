@@ -85,6 +85,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./fonctionnalites/partenaire/publicites/publicites').then((m) => m.Publicites),
       },
+      // Destination unique de toute notification push (admin ou partenaire) : voir OuvrirNotification.
+      // Pas de roleGuard ici, le composant retombe sur le panneau de notifications pour un rôle
+      // non concerné (ex. client) — jamais d'écran blanc ou d'accès refusé sur un clic de notification.
+      {
+        path: 'notifications/ouvrir',
+        loadComponent: () =>
+          import('./fonctionnalites/notifications/ouvrir-notification/ouvrir-notification').then(
+            (m) => m.OuvrirNotification,
+          ),
+      },
       // Espace établissement (ex-espace restaurant : restaurateur, fast-food, boulanger, pharmacien,
       // mode, libraire — selon le gabarit) : un seul composant hôte à onglets (voir
       // fonctionnalites/restaurants/espace-restaurant), 3 entrées de menu pointant vers son

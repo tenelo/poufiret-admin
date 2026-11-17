@@ -6,6 +6,7 @@ import { BarreLaterale } from '../barre-laterale/barre-laterale';
 import { AuthService } from '../../../noyau/auth/auth.service';
 import { PermissionsService } from '../../../noyau/permissions/permissions.service';
 import { ProfilPartenaireContexteService } from '../../../noyau/partenaire/profil-partenaire-contexte.service';
+import { NotificationsPushEtatService } from '../../../noyau/notifications/notifications-push-etat.service';
 
 // Largeur à partir de laquelle la sidebar redevient fixe (doit rester alignée avec le SCSS).
 const LARGEUR_BUREAU_PX = 992;
@@ -28,6 +29,9 @@ export class CoquilleApplication implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly permissionsService = inject(PermissionsService);
   private readonly profilPartenaireContexte = inject(ProfilPartenaireContexteService);
+  // Jamais utilisé directement ici : l'injection suffit à démarrer l'écoute de
+  // SwPush.notificationClicks dès la connexion (voir le constructeur du service).
+  private readonly notificationsPush = inject(NotificationsPushEtatService);
 
   readonly menuOuvert = signal(false);
 
