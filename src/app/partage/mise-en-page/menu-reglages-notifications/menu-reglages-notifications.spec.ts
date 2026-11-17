@@ -71,6 +71,18 @@ describe('MenuReglagesNotifications', () => {
     expect(fixture.nativeElement.querySelector('.bouton-reglages')).toBeNull();
   });
 
+  it('push actif et autorisé + son bloqué : roue masquée, pas de point rouge (le son bloqué n’a aucune importance dans ce cas)', async () => {
+    await creer(true); // son bloqué.
+    notificationsPushFaux.support.set('supporte');
+    notificationsPushFaux.actifEtAutorise.set(true);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.bouton-reglages')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.pastille-alerte')).toBeNull();
+    expect(component.besoinAttention()).toBeFalse();
+    expect(component.necessiteSon()).toBeFalse();
+  });
+
   it("ouvre le panneau au clic et relaie activerSon lors d'un clic sur « Activer le son »", async () => {
     await creer(true);
     let nbEmissions = 0;

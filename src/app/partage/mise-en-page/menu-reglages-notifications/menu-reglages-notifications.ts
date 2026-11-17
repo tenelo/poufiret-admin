@@ -9,11 +9,12 @@ import { EtatNotificationsPush } from '../../notifications-push/etat-notificatio
  * (EtatNotificationsPush, inchangé) dans un panneau déroulant, plutôt que de les afficher en
  * permanence dans l'en-tête (cause du bug de mise en page — débordement, voir ClocheNotificationsAdmin).
  *
- * Masqué entièrement tant qu'aucune action n'est utile (son débloqué ET push déjà activé/non
- * supporté) : rien n'est ajouté à l'en-tête dans l'état « tout va bien ». Dès qu'une action est
- * possible (son bloqué, ou push supporté mais pas encore activé), un point rouge apparaît sur
- * l'icône. Une fois ouvert, reste affiché jusqu'à fermeture explicite (re-clic, clic extérieur,
- * Échap) même si l'action se résout entre-temps, pour laisser le temps de lire le résultat.
+ * Masqué entièrement tant qu'aucune action n'est utile : push déjà activé et autorisé sur cet
+ * appareil (le son Web Audio bloqué n'a alors aucune importance, voir necessiteSon ci-dessous), ou
+ * sinon son débloqué ET push non supporté. Dès qu'une action est possible (son bloqué sans push
+ * actif, ou push supporté mais pas encore activé), un point rouge apparaît sur l'icône. Une fois
+ * ouvert, reste affiché jusqu'à fermeture explicite (re-clic, clic extérieur, Échap) même si
+ * l'action se résout entre-temps, pour laisser le temps de lire le résultat.
  *
  * Partagé par les cloches admin et partenaire (un seul bouton, jamais un par cloche) ; les mêmes
  * réglages restent accessibles en permanence dans Mon profil (CarteMonCompte), via
@@ -37,9 +38,14 @@ export class MenuReglagesNotifications {
   private readonly ouvertInterne = signal(false);
   readonly ouvert = this.ouvertInterne.asReadonly();
 
+  // Push actif et autorisé sur cet appareil : la notification système sonne déjà (voir
+  // declencherNotification des cloches), le son Web Audio bloqué par le navigateur n'a alors
+  // AUCUNE importance — ne jamais le compter comme une action utile dans ce cas.
+  readonly necessiteSon = computed(() => !this.notificationsPush.actifEtAutorise() && this.sonBloque());
+
   readonly besoinAttention = computed(
     () =>
-      this.sonBloque() ||
+      this.necessiteSon() ||
       (this.notificationsPush.support() === 'supporte' && !this.notificationsPush.actifEtAutorise()),
   );
 

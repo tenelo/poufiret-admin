@@ -18,7 +18,7 @@
       <div class="panneau-reglages">
         <h3>Réglages</h3>
 
-        @if (sonBloque()) {
+        @if (necessiteSon()) {
           <button type="button" class="bouton-activer-son" (click)="activerSon.emit()">🔇 Activer le son</button>
         }
 
