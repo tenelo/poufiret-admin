@@ -74,7 +74,7 @@ describe('ClocheNotificationsAdmin', () => {
         {
           provide: NotificationsAdminService,
           useValue: {
-            compteur: () => of({ restaurant: 0, general: 0, nb_non_lues: 0 }),
+            compteur: () => of({ restaurant: 0, service: 0, general: 0, nb_non_lues: 0 }),
             lister: () => of({ results: [], nb_non_lues: 0 }),
           },
         },
@@ -110,13 +110,14 @@ describe('ClocheNotificationsAdmin', () => {
     expect(optionsDetecteur?.actif?.()).toBeFalse();
   });
 
-  it('met à jour les deux compteurs dès la réception d’un message WebSocket', async () => {
+  it('met à jour les trois compteurs dès la réception d’un message WebSocket', async () => {
     await creer();
 
-    dernierMessage.set({ type: 'compteurs', restaurant: 3, general: 4, nb_non_lues: 7, nouvelle: false });
+    dernierMessage.set({ type: 'compteurs', restaurant: 3, service: 2, general: 4, nb_non_lues: 9, nouvelle: false });
     fixture.detectChanges();
 
     expect(component.nbNonLuesRestaurant()).toBe(3);
+    expect(component.nbNonLuesService()).toBe(2);
     expect(component.nbNonLuesGeneral()).toBe(4);
   });
 
@@ -124,25 +125,25 @@ describe('ClocheNotificationsAdmin', () => {
     await creer();
     const declencher = spyOn<any>(component, 'declencherNotification').and.callThrough();
 
-    dernierMessage.set({ type: 'compteurs', restaurant: 1, general: 0, nb_non_lues: 1, nouvelle: false });
+    dernierMessage.set({ type: 'compteurs', restaurant: 1, service: 0, general: 0, nb_non_lues: 1, nouvelle: false });
     fixture.detectChanges();
     expect(declencher).not.toHaveBeenCalled();
 
-    dernierMessage.set({ type: 'compteurs', restaurant: 2, general: 0, nb_non_lues: 2, nouvelle: true });
+    dernierMessage.set({ type: 'compteurs', restaurant: 2, service: 0, general: 0, nb_non_lues: 2, nouvelle: true });
     fixture.detectChanges();
     expect(declencher).toHaveBeenCalledTimes(1);
   });
 
-  it('secours REST : sonne sur une hausse d’UN SEUL des deux canaux même si le total ne bouge pas', async () => {
+  it('secours REST : sonne sur une hausse d’UN SEUL des trois canaux même si le total ne bouge pas', async () => {
     await creer();
     const declencher = spyOn<any>(component, 'declencherNotification').and.callThrough();
 
-    derniereReponse.set({ restaurant: 2, general: 5, nb_non_lues: 7 });
+    derniereReponse.set({ restaurant: 2, service: 1, general: 5, nb_non_lues: 8 });
     fixture.detectChanges();
     expect(declencher).not.toHaveBeenCalled(); // 1er relevé : pas de référence antérieure.
 
-    // Restaurant +1, général -1 : le total reste à 7, mais une notification restaurant est bien arrivée.
-    derniereReponse.set({ restaurant: 3, general: 4, nb_non_lues: 7 });
+    // Service +1, général -1 : le total reste à 8, mais une notification Services est bien arrivée.
+    derniereReponse.set({ restaurant: 2, service: 2, general: 4, nb_non_lues: 8 });
     fixture.detectChanges();
     expect(declencher).toHaveBeenCalledTimes(1);
   });
@@ -176,7 +177,7 @@ describe('ClocheNotificationsAdmin', () => {
     notificationsPushFaux.actifEtAutorise.set(true);
     const proposerSonner = spyOn<any>((component as any).coordinateurSon, 'proposerSonner');
 
-    dernierMessage.set({ type: 'compteurs', restaurant: 1, general: 0, nb_non_lues: 1, nouvelle: true });
+    dernierMessage.set({ type: 'compteurs', restaurant: 1, service: 0, general: 0, nb_non_lues: 1, nouvelle: true });
     fixture.detectChanges();
 
     expect(proposerSonner).not.toHaveBeenCalled();
@@ -186,7 +187,7 @@ describe('ClocheNotificationsAdmin', () => {
     await creer();
     const proposerSonner = spyOn<any>((component as any).coordinateurSon, 'proposerSonner');
 
-    dernierMessage.set({ type: 'compteurs', restaurant: 1, general: 0, nb_non_lues: 1, nouvelle: true });
+    dernierMessage.set({ type: 'compteurs', restaurant: 1, service: 0, general: 0, nb_non_lues: 1, nouvelle: true });
     fixture.detectChanges();
 
     expect(proposerSonner).toHaveBeenCalled();
@@ -200,5 +201,15 @@ describe('ClocheNotificationsAdmin', () => {
     fixture.detectChanges();
 
     expect(component.canalOuvert()).toBe('general');
+  });
+
+  it('bascule bien sur le panneau "service" (troisième cloche)', async () => {
+    await creer();
+    component.basculerPanneau('service');
+    fixture.detectChanges();
+
+    expect(component.panneauOuvertService()).toBeTrue();
+    expect(component.panneauOuvertRestaurant()).toBeFalse();
+    expect(component.panneauOuvertGeneral()).toBeFalse();
   });
 });

@@ -8,6 +8,7 @@
     aria-haspopup="true"
     [attr.aria-expanded]="panneauOuvert()"
     [attr.aria-label]="nbNonLues() > 0 ? nbNonLues() + ' ' + libelleAccessibilite() + ' non lue(s)' : libelleAccessibilite()"
+    [title]="titrePanneau()"
     (click)="bascule.emit()"
   >
     <!-- Icône cloche en SVG (coloriable via currentColor) : couleur pilotée par classeCouleur sur le bouton -->

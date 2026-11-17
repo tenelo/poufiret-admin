@@ -1,4 +1,4 @@
-import { Component, DestroyRef, HostListener, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, OnInit, WritableSignal, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { AuthService } from '../../../noyau/auth/auth.service';
@@ -28,18 +28,34 @@ const INTERVALLE_SECOURS_MS = 60000;
 const DUREE_ANIMATION_MS = 1200;
 const NB_NOTIFICATIONS_AFFICHEES = 10;
 
+/** État (compteur/chargement/erreur/liste) d'un seul canal — voir `etatsParCanal` ci-dessous. */
+interface EtatCanalAdmin {
+  nonLues: WritableSignal<number>;
+  chargement: WritableSignal<boolean>;
+  erreur: WritableSignal<string | null>;
+  notifications: WritableSignal<NotificationAdmin[]>;
+}
+
+function creerEtatCanalAdmin(): EtatCanalAdmin {
+  return { nonLues: signal(0), chargement: signal(false), erreur: signal(null), notifications: signal([]) };
+}
+
 /**
- * Deux cloches de notifications de l'en-tête admin / super-admin, chacune pour son canal : même
- * icône 🔔 pour les deux, jaune pour Restaurants (commandes restaurant), bleue pour Général
- * (campagnes de pub, autres commandes, demandes de location, demandes d'intervention).
+ * Trois cloches de notifications de l'en-tête admin / super-admin, chacune pour son canal, dans
+ * l'ordre Restaurants / Services / Autres : même icône (couleur standard jaune orangé) pour les
+ * trois, seule la pastille change (rouge / bleue / verte, voir cloche-canal.scss). Restaurants =
+ * commandes restaurant, fast-foods, grilleurs, boulangeries ; Services = interventions et
+ * réservations ; Autres = tout le reste (campagnes de pub, autres commandes, changements de
+ * numéro…).
  * Compteurs en temps réel via WebSocket (NotificationsAdminWebSocket) : son/animation dès qu'un
- * message porte `nouvelle: true`, au même instant que la mise à jour du chiffre. Secours REST
+ * message porte `nouvelle: true`, au même instant que la mise à jour des chiffres. Secours REST
  * (DetecteurCompteur, GET compteur/) toutes les 60 s tant que le WebSocket est coupé, son sur une
- * hausse du total OU de l'un des deux canaux. Un seul onglet admin — le premier à débloquer son
+ * hausse du total OU de l'un des trois canaux. Un seul onglet admin — le premier à débloquer son
  * son — sonne en continu, y compris en arrière-plan (élection par navigator.locks, voir
  * CoordinateurSonAdmin) ; les compteurs, eux, se mettent à jour dans tous les onglets. Chaque
  * cloche a son propre panneau, sa propre liste et son propre « Tout marquer comme lu »
- * (POST tout-lire/?canal=). Même son que la cloche partenaire.
+ * (POST tout-lire/?canal=). Un seul bouton « Activer le son » et un seul bloc Web Push, communs
+ * aux trois cloches (voir le gabarit). Même son que la cloche partenaire.
  */
 @Component({
   selector: 'app-cloche-notifications-admin',
@@ -73,22 +89,37 @@ export class ClocheNotificationsAdmin implements OnInit {
   // canal côté secours REST (qui ne porte pas de `nouvelle` — voir l'effet correspondant).
   private precedent: ReponseCompteurNotificationsAdmin | null = null;
 
-  // Au plus un panneau ouvert à la fois : null = les deux fermés, sinon le canal ouvert.
+  // Au plus un panneau ouvert à la fois : null = les trois fermés, sinon le canal ouvert.
   readonly canalOuvert = signal<CanalNotificationAdmin | null>(null);
   readonly panneauOuvertRestaurant = computed(() => this.canalOuvert() === 'restaurant');
+  readonly panneauOuvertService = computed(() => this.canalOuvert() === 'service');
   readonly panneauOuvertGeneral = computed(() => this.canalOuvert() === 'general');
 
-  // ---- Canal "restaurant" (🍽️) ----
-  readonly nbNonLuesRestaurant = signal(0);
-  readonly chargementRestaurant = signal(false);
-  readonly erreurRestaurant = signal<string | null>(null);
-  readonly notificationsRestaurant = signal<NotificationAdmin[]>([]);
+  // Un jeu de signaux par canal (nb non lues/chargement/erreur/liste) : évite de tripler chaque
+  // méthode ci-dessous en trois branches quasi identiques.
+  private readonly etatsParCanal: Record<CanalNotificationAdmin, EtatCanalAdmin> = {
+    restaurant: creerEtatCanalAdmin(),
+    service: creerEtatCanalAdmin(),
+    general: creerEtatCanalAdmin(),
+  };
 
-  // ---- Canal "general" (🔔) ----
-  readonly nbNonLuesGeneral = signal(0);
-  readonly chargementGeneral = signal(false);
-  readonly erreurGeneral = signal<string | null>(null);
-  readonly notificationsGeneral = signal<NotificationAdmin[]>([]);
+  // ---- Canal "restaurant" ----
+  readonly nbNonLuesRestaurant = this.etatsParCanal.restaurant.nonLues.asReadonly();
+  readonly chargementRestaurant = this.etatsParCanal.restaurant.chargement.asReadonly();
+  readonly erreurRestaurant = this.etatsParCanal.restaurant.erreur.asReadonly();
+  readonly notificationsRestaurant = this.etatsParCanal.restaurant.notifications.asReadonly();
+
+  // ---- Canal "service" ----
+  readonly nbNonLuesService = this.etatsParCanal.service.nonLues.asReadonly();
+  readonly chargementService = this.etatsParCanal.service.chargement.asReadonly();
+  readonly erreurService = this.etatsParCanal.service.erreur.asReadonly();
+  readonly notificationsService = this.etatsParCanal.service.notifications.asReadonly();
+
+  // ---- Canal "general" (Autres) ----
+  readonly nbNonLuesGeneral = this.etatsParCanal.general.nonLues.asReadonly();
+  readonly chargementGeneral = this.etatsParCanal.general.chargement.asReadonly();
+  readonly erreurGeneral = this.etatsParCanal.general.erreur.asReadonly();
+  readonly notificationsGeneral = this.etatsParCanal.general.notifications.asReadonly();
 
   constructor() {
     // effect() doit être appelé dans un contexte d'injection (constructeur).
@@ -113,15 +144,16 @@ export class ClocheNotificationsAdmin implements OnInit {
       }
     });
 
-    // WebSocket (temps réel) : met à jour les deux compteurs immédiatement ; son/animation au
+    // WebSocket (temps réel) : met à jour les trois compteurs immédiatement ; son/animation au
     // même instant si le message porte `nouvelle: true` (signal explicite du serveur).
     effect(() => {
       const message = this.wsAdmin.dernierMessage();
       if (!message) {
         return;
       }
-      this.nbNonLuesRestaurant.set(message.restaurant);
-      this.nbNonLuesGeneral.set(message.general);
+      this.etatsParCanal.restaurant.nonLues.set(message.restaurant);
+      this.etatsParCanal.service.nonLues.set(message.service);
+      this.etatsParCanal.general.nonLues.set(message.general);
       this.precedent = message;
       if (message.nouvelle) {
         this.declencherNotification();
@@ -129,20 +161,22 @@ export class ClocheNotificationsAdmin implements OnInit {
     });
 
     // Secours REST (WebSocket coupé, voir ngOnInit) : recale les compteurs à chaque contrôle ;
-    // sonne sur une vraie hausse du total OU de l'un des deux canaux (jamais l'inverse, pour ne
-    // pas manquer une hausse sur un canal compensée par une lecture sur l'autre).
+    // sonne sur une vraie hausse du total OU de l'un des trois canaux (jamais l'inverse, pour ne
+    // pas manquer une hausse sur un canal compensée par une lecture sur un autre).
     effect(() => {
       const reponse = this.detecteur.derniereReponse();
       if (!reponse) {
         return;
       }
       const avant = this.precedent;
-      this.nbNonLuesRestaurant.set(reponse.restaurant);
-      this.nbNonLuesGeneral.set(reponse.general);
+      this.etatsParCanal.restaurant.nonLues.set(reponse.restaurant);
+      this.etatsParCanal.service.nonLues.set(reponse.service);
+      this.etatsParCanal.general.nonLues.set(reponse.general);
       this.precedent = reponse;
       const hausse =
         !!avant &&
         (reponse.restaurant > avant.restaurant ||
+          reponse.service > avant.service ||
           reponse.general > avant.general ||
           reponse.nb_non_lues > avant.nb_non_lues);
       if (hausse) {
@@ -188,9 +222,7 @@ export class ClocheNotificationsAdmin implements OnInit {
   }
 
   private chargerNotifications(canal: CanalNotificationAdmin): void {
-    const chargement = canal === 'restaurant' ? this.chargementRestaurant : this.chargementGeneral;
-    const erreur = canal === 'restaurant' ? this.erreurRestaurant : this.erreurGeneral;
-    const notifications = canal === 'restaurant' ? this.notificationsRestaurant : this.notificationsGeneral;
+    const { chargement, erreur, notifications } = this.etatsParCanal[canal];
 
     chargement.set(true);
     erreur.set(null);
@@ -209,8 +241,7 @@ export class ClocheNotificationsAdmin implements OnInit {
   }
 
   toutMarquerCommeLu(canal: CanalNotificationAdmin): void {
-    const erreur = canal === 'restaurant' ? this.erreurRestaurant : this.erreurGeneral;
-    const notifications = canal === 'restaurant' ? this.notificationsRestaurant : this.notificationsGeneral;
+    const { erreur, notifications } = this.etatsParCanal[canal];
 
     this.service.toutLire(canal).subscribe({
       next: (reponse) => {
@@ -227,15 +258,14 @@ export class ClocheNotificationsAdmin implements OnInit {
    * > Campagnes sur l'onglet de statut correspondant — comportement inchangé pour ce dernier cas.
    */
   ouvrirNotification(notification: NotificationAdmin): void {
-    const notifications = notification.canal === 'restaurant' ? this.notificationsRestaurant : this.notificationsGeneral;
+    const { notifications, nonLues } = this.etatsParCanal[notification.canal];
     if (!notification.lue) {
       this.service.lire(notification.id).subscribe({
         next: () => {
           notifications.update((liste) =>
             liste.map((n) => (n.id === notification.id ? { ...n, lue: true } : n)),
           );
-          const nbActuel = notification.canal === 'restaurant' ? this.nbNonLuesRestaurant() : this.nbNonLuesGeneral();
-          this.definirCompteurCanal(notification.canal, Math.max(0, nbActuel - 1));
+          this.definirCompteurCanal(notification.canal, Math.max(0, nonLues() - 1));
         },
         error: () => {
           // Non bloquant : la navigation a lieu quand même, le compteur se recalera au prochain polling.
@@ -292,16 +322,17 @@ export class ClocheNotificationsAdmin implements OnInit {
    * WebSocket confirmera ensuite avec `nouvelle: false`, y compris dans les autres onglets.
    */
   private definirCompteurCanal(canal: CanalNotificationAdmin, valeur: number): void {
-    if (canal === 'restaurant') {
-      this.nbNonLuesRestaurant.set(valeur);
-    } else {
-      this.nbNonLuesGeneral.set(valeur);
-    }
-    const total = this.nbNonLuesRestaurant() + this.nbNonLuesGeneral();
+    this.etatsParCanal[canal].nonLues.set(valeur);
+    const total = this.nbNonLuesRestaurant() + this.nbNonLuesService() + this.nbNonLuesGeneral();
     this.detecteur.definirCompteur(total);
     // Resynchronise `precedent` : sinon le prochain contrôle (secours REST) verrait une hausse
     // illusoire par rapport à une valeur devenue obsolète.
-    this.precedent = { restaurant: this.nbNonLuesRestaurant(), general: this.nbNonLuesGeneral(), nb_non_lues: total };
+    this.precedent = {
+      restaurant: this.nbNonLuesRestaurant(),
+      service: this.nbNonLuesService(),
+      general: this.nbNonLuesGeneral(),
+      nb_non_lues: total,
+    };
   }
 
   private declencherNotification(): void {

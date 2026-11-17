@@ -1,5 +1,5 @@
-<div class="deux-cloches">
-  <!-- Cloche "Restaurants" (canal restaurant) : commandes de restaurants uniquement -->
+<div class="trois-cloches">
+  <!-- Cloche "Restaurants" (canal restaurant) : commandes de restaurants, fast-foods, grilleurs, boulangeries -->
   <app-cloche-canal
     classeCouleur="cloche-restaurant"
     libelleAccessibilite="notification Restaurants"
@@ -16,11 +16,28 @@
     (ouvrir)="ouvrirNotification($event)"
   />
 
-  <!-- Cloche "Général" (canal general) : tout le reste (pub, autres commandes, locations, interventions) -->
+  <!-- Cloche "Services" (canal service) : demandes d'intervention et de location -->
+  <app-cloche-canal
+    classeCouleur="cloche-service"
+    libelleAccessibilite="notification Services"
+    titrePanneau="Services"
+    [nbNonLues]="nbNonLuesService()"
+    [texteBadge]="texteBadge(nbNonLuesService())"
+    [enAnimation]="enAnimation()"
+    [panneauOuvert]="panneauOuvertService()"
+    [chargementEnCours]="chargementService()"
+    [erreur]="erreurService()"
+    [notifications]="notificationsService()"
+    (bascule)="basculerPanneau('service')"
+    (toutLire)="toutMarquerCommeLu('service')"
+    (ouvrir)="ouvrirNotification($event)"
+  />
+
+  <!-- Cloche "Autres" (canal general) : tout le reste (pub, autres commandes, changements de numéro) -->
   <app-cloche-canal
     classeCouleur="cloche-generale"
-    libelleAccessibilite="notification générale"
-    titrePanneau="Général"
+    libelleAccessibilite="notification Autres"
+    titrePanneau="Autres"
     [nbNonLues]="nbNonLuesGeneral()"
     [texteBadge]="texteBadge(nbNonLuesGeneral())"
     [enAnimation]="enAnimation()"

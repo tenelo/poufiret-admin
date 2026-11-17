@@ -1,7 +1,8 @@
 /**
- * Reflète /notifications/admin/... (deux cloches de l'espace admin, comptes is_staff /
- * is_superuser) : canal "restaurant" (commandes restaurant) ou "general" (tout le reste), chacun
- * filtré/marqué-lu séparément via ?canal=.
+ * Reflète /notifications/admin/... (trois cloches de l'espace admin, comptes is_staff /
+ * is_superuser) : canal "restaurant" (commandes restaurant), "service" (interventions et
+ * réservations) ou "general" (tout le reste — autres commandes, pubs, changements de numéro),
+ * chacun filtré/marqué-lu séparément via ?canal=.
  */
 
 // pub_soumise : campagne soumise, en attente de paiement.
@@ -17,8 +18,8 @@ export type TypeNotificationAdmin =
   | 'reservation_nouvelle'
   | 'intervention_nouvelle';
 
-// Canal d'une notification : pilote dans quelle cloche elle apparaît (🍽️ restaurant / 🔔 general).
-export type CanalNotificationAdmin = 'restaurant' | 'general';
+// Canal d'une notification : pilote dans quelle cloche elle apparaît (Restaurants / Services / Autres).
+export type CanalNotificationAdmin = 'restaurant' | 'service' | 'general';
 
 // Écran cible sur lequel cliquer une notification doit naviguer (voir ClocheNotificationsAdmin).
 export type EcranCibleNotificationAdmin = 'commandes' | 'interventions' | 'demandes_location' | 'publicites';
@@ -62,6 +63,7 @@ export interface ReponseNotificationsAdmin {
 /** GET admin/compteur/ (secours REST tant que le WebSocket est coupé, voir NotificationsAdminWebSocket). */
 export interface ReponseCompteurNotificationsAdmin {
   restaurant: number;
+  service: number;
   general: number;
   nb_non_lues: number;
 }
@@ -75,6 +77,7 @@ export interface ReponseCompteurNotificationsAdmin {
 export interface MessageCompteursAdmin {
   type: 'compteurs';
   restaurant: number;
+  service: number;
   general: number;
   nb_non_lues: number;
   nouvelle: boolean;

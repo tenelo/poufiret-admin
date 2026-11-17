@@ -1,5 +1,6 @@
-// Range les deux cloches (Restaurants + Général) côte à côte dans la zone utilisateur de l'en-tête.
-.deux-cloches {
+// Range les trois cloches (Restaurants + Services + Autres) côte à côte dans la zone utilisateur
+// de l'en-tête ; passent à la ligne si la place manque (mobile, voir point 4 du ticket).
+.trois-cloches {
   display: flex;
   align-items: center;
   flex-wrap: wrap;

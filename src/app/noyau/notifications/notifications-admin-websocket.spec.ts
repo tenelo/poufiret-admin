@@ -82,13 +82,14 @@ describe('NotificationsAdminWebSocket', () => {
     expect(service.connecte()).toBeTrue();
 
     socket.emettre('message', {
-      data: JSON.stringify({ type: 'compteurs', restaurant: 2, general: 5, nb_non_lues: 7, nouvelle: true }),
+      data: JSON.stringify({ type: 'compteurs', restaurant: 2, service: 1, general: 5, nb_non_lues: 8, nouvelle: true }),
     });
     expect(service.dernierMessage()).toEqual({
       type: 'compteurs',
       restaurant: 2,
+      service: 1,
       general: 5,
-      nb_non_lues: 7,
+      nb_non_lues: 8,
       nouvelle: true,
     });
   });
