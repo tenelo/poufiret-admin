@@ -290,10 +290,19 @@
 
         <div class="ligne-ajout-groupe">
           <input type="text" placeholder="Libellé du groupe" [value]="nouveauGroupeLibelle()" (input)="nouveauGroupeLibelle.set($any($event.target).value)" />
-          <input type="number" min="0" placeholder="Min" [value]="nouveauGroupeMin()" (input)="nouveauGroupeMin.set($any($event.target).value)" />
-          <input type="number" min="0" placeholder="Max" [value]="nouveauGroupeMax()" (input)="nouveauGroupeMax.set($any($event.target).value)" />
+          <div class="champ-min-max">
+            <label for="dp-groupe-min">Choix minimum (0 = facultatif)</label>
+            <input id="dp-groupe-min" type="number" min="0" [value]="nouveauGroupeMin()" (input)="nouveauGroupeMin.set($any($event.target).value)" />
+          </div>
+          <div class="champ-min-max">
+            <label for="dp-groupe-max">Choix maximum</label>
+            <input id="dp-groupe-max" type="number" min="1" [value]="nouveauGroupeMax()" (input)="nouveauGroupeMax.set($any($event.target).value)" />
+          </div>
           <button type="button" class="bouton-secondaire" (click)="ajouterGroupe()">+ Groupe</button>
         </div>
+        @if (apercuNouveauGroupe()) {
+          <p class="aide-inline">{{ apercuNouveauGroupe() }}</p>
+        }
         @if (erreurGroupes()) {
           <p class="erreur-champ">{{ erreurGroupes() }}</p>
         }

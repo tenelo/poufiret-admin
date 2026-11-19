@@ -134,3 +134,108 @@ describe('DialogPlatCarte — temps de préparation et champs fast-food', () => 
     requete.flush(platFlushe());
   });
 });
+
+/**
+ * Formulaire « + Groupe » de l'onglet Groupes d'options : pré-remplissage min=0/max=1 (facultatif
+ * par défaut), aperçu en direct, et validation (min ≥ 0, max ≥ 1, min ≤ max).
+ */
+describe('DialogPlatCarte — groupes d’options (formulaire « + Groupe »)', () => {
+  let fixture: ComponentFixture<DialogPlatCarte>;
+  let component: DialogPlatCarte;
+  let httpMock: HttpTestingController;
+
+  async function creer(): Promise<void> {
+    await TestBed.configureTestingModule({
+      imports: [DialogPlatCarte],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: ConfigurationService, useValue: { apiUrl: API_URL, production: false } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(DialogPlatCarte);
+    component = fixture.componentInstance;
+    fixture.componentRef.setInput('prefixe', 'mon-restaurant');
+    fixture.componentRef.setInput('sections', []);
+    fixture.componentRef.setInput('gabarit', GABARIT_FAST_FOOD);
+    fixture.componentRef.setInput('plat', platFlushe());
+    fixture.detectChanges();
+    httpMock = TestBed.inject(HttpTestingController);
+  }
+
+  afterEach(() => httpMock.verify());
+
+  it('pré-remplit min=0 (facultatif) et max=1 pour un nouveau groupe', async () => {
+    await creer();
+    expect(component.nouveauGroupeMin()).toBe('0');
+    expect(component.nouveauGroupeMax()).toBe('1');
+  });
+
+  it('aperçu en direct : « Facultatif · jusqu’à N choix » quand min = 0', async () => {
+    await creer();
+    component.nouveauGroupeMax.set('3');
+    expect(component.apercuNouveauGroupe()).toBe('Facultatif · jusqu\'à 3 choix');
+  });
+
+  it('aperçu en direct : « Obligatoire · N au choix » quand min ≥ 1', async () => {
+    await creer();
+    component.nouveauGroupeMin.set('2');
+    component.nouveauGroupeMax.set('3');
+    expect(component.apercuNouveauGroupe()).toBe('Obligatoire · 2 au choix');
+  });
+
+  it('refuse un minimum négatif, sans appeler le service', async () => {
+    await creer();
+    component.nouveauGroupeLibelle.set('Sauces');
+    component.nouveauGroupeMin.set('-1');
+
+    component.ajouterGroupe();
+
+    expect(component.erreurGroupes()).toBeTruthy();
+    httpMock.expectNone(`${API_URL}/restaurants/mon-restaurant/carte/groupes-options/`);
+  });
+
+  it('refuse un maximum inférieur à 1, sans appeler le service', async () => {
+    await creer();
+    component.nouveauGroupeLibelle.set('Sauces');
+    component.nouveauGroupeMax.set('0');
+
+    component.ajouterGroupe();
+
+    expect(component.erreurGroupes()).toBeTruthy();
+    httpMock.expectNone(`${API_URL}/restaurants/mon-restaurant/carte/groupes-options/`);
+  });
+
+  it('refuse un minimum supérieur au maximum, sans appeler le service', async () => {
+    await creer();
+    component.nouveauGroupeLibelle.set('Sauces');
+    component.nouveauGroupeMin.set('3');
+    component.nouveauGroupeMax.set('2');
+
+    component.ajouterGroupe();
+
+    expect(component.erreurGroupes()).toBeTruthy();
+    httpMock.expectNone(`${API_URL}/restaurants/mon-restaurant/carte/groupes-options/`);
+  });
+
+  it('crée le groupe avec un min/max valides, puis réinitialise le formulaire à min=0/max=1', async () => {
+    await creer();
+    component.nouveauGroupeLibelle.set('Sauces');
+    component.nouveauGroupeMin.set('0');
+    component.nouveauGroupeMax.set('2');
+
+    component.ajouterGroupe();
+
+    const requeteCreation = httpMock.expectOne(`${API_URL}/restaurants/mon-restaurant/carte/groupes-options/`);
+    expect(requeteCreation.request.body).toEqual({ article: 1, libelle: 'Sauces', min_choix: 0, max_choix: 2 });
+    requeteCreation.flush({ id: 10, article: 1, libelle: 'Sauces', min_choix: 0, max_choix: 2, ordre: 0, est_actif: true, options: [] });
+
+    expect(component.erreurGroupes()).toBeNull();
+    expect(component.nouveauGroupeMin()).toBe('0');
+    expect(component.nouveauGroupeMax()).toBe('1');
+
+    // rafraichirPlat() relit le plat après la création.
+    httpMock.expectOne(`${API_URL}/restaurants/mon-restaurant/carte/plats/1/`).flush(platFlushe());
+  });
+});

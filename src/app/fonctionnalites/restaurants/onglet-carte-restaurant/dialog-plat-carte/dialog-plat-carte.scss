@@ -273,11 +273,28 @@ textarea {
 .ligne-ajout-groupe {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-end;
   gap: 0.5rem;
   margin-bottom: 0.6rem;
 
   input {
     flex: 1 1 100px;
+  }
+}
+
+// Min/Max du formulaire d'ajout de groupe : libellé compact au-dessus du champ, aligné en bas de
+// ligne (voir align-items: flex-end ci-dessus) avec le champ "Libellé du groupe" et le bouton, qui
+// n'ont pas de libellé.
+.champ-min-max {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 140px;
+
+  label {
+    margin: 0 0 0.2rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #6b7280;
   }
 }
 

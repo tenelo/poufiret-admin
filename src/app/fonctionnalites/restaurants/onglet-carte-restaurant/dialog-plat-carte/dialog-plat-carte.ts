@@ -122,12 +122,21 @@ export class DialogPlatCarte implements OnInit, OnDestroy {
   private urlApercuNouvelleVarianteImage: string | null = null;
 
   // ---- Groupes d'options ----
+  // Min = 0 par défaut (facultatif) : évite qu'un groupe créé sans y penser devienne obligatoire.
   readonly nouveauGroupeLibelle = signal('');
-  readonly nouveauGroupeMin = signal('1');
+  readonly nouveauGroupeMin = signal('0');
   readonly nouveauGroupeMax = signal('1');
   readonly erreurGroupes = signal<string | null>(null);
   readonly nouvelleOptionNom = signal<Record<number, string>>({});
   readonly nouvelleOptionPrix = signal<Record<number, string>>({});
+
+  /** Résultat en direct du formulaire d'ajout (même formulation que le badge des groupes existants). */
+  readonly apercuNouveauGroupe = computed(() => {
+    const min = Number(this.nouveauGroupeMin());
+    const max = Number(this.nouveauGroupeMax());
+    if (!Number.isInteger(min) || !Number.isInteger(max) || min < 0 || max < 0) return '';
+    return min === 0 ? `Facultatif · jusqu'à ${max} choix` : `Obligatoire · ${min} au choix`;
+  });
 
   // ---- Confirmation d'un changement de prix affectant les variantes ----
   readonly confirmationPrixOuverte = signal(false);
@@ -641,9 +650,15 @@ export class DialogPlatCarte implements OnInit, OnDestroy {
   ajouterGroupe(): void {
     const plat = this.platCourant();
     const libelle = this.nouveauGroupeLibelle().trim();
+    if (!plat || !libelle) return;
+
     const min = Number(this.nouveauGroupeMin());
     const max = Number(this.nouveauGroupeMax());
-    if (!plat || !libelle || Number.isNaN(min) || Number.isNaN(max)) return;
+    const erreur = this.validerMinMaxGroupe(min, max);
+    if (erreur) {
+      this.erreurGroupes.set(erreur);
+      return;
+    }
 
     this.erreurGroupes.set(null);
     this.service
@@ -651,12 +666,23 @@ export class DialogPlatCarte implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.nouveauGroupeLibelle.set('');
-          this.nouveauGroupeMin.set('1');
+          this.nouveauGroupeMin.set('0');
           this.nouveauGroupeMax.set('1');
           this.rafraichirPlat();
         },
         error: (erreur: unknown) => this.erreurGroupes.set(extraireMessageErreur(erreur)),
       });
+  }
+
+  /** min ≥ 0, max ≥ 1, min ≤ max — message clair sinon, null si valide. */
+  private validerMinMaxGroupe(min: number, max: number): string | null {
+    if (!Number.isInteger(min) || !Number.isInteger(max)) {
+      return 'Le minimum et le maximum doivent être des nombres entiers.';
+    }
+    if (min < 0) return 'Le minimum doit être supérieur ou égal à 0.';
+    if (max < 1) return 'Le maximum doit être supérieur ou égal à 1.';
+    if (min > max) return 'Le minimum ne peut pas dépasser le maximum.';
+    return null;
   }
 
   supprimerGroupe(groupe: GroupeOptionCarte): void {
