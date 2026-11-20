@@ -5,6 +5,49 @@ export function formaterMontant(valeur: number | null | undefined): string {
   return `${Math.round(valeur ?? 0).toLocaleString('fr-FR')} FCFA`;
 }
 
+/** Nom lisible d'un format ou d'une option : texte tel quel, ou champ nom/libelle d'un objet. */
+function nomLisible(valeur: unknown): string {
+  if (typeof valeur === 'string') return valeur.trim();
+  if (typeof valeur === 'number') return String(valeur);
+  if (valeur && typeof valeur === 'object') {
+    const objet = valeur as Record<string, unknown>;
+    for (const cle of ['nom', 'libelle', 'name']) {
+      if (typeof objet[cle] === 'string') return (objet[cle] as string).trim();
+    }
+  }
+  // Jamais de « [object Object] » : un objet sans nom n'est pas affiché.
+  return '';
+}
+
+/**
+ * Ligne de commande : nom du format (variante) puis options/suppléments choisis, séparés par
+ * « · » — ex. « 1 000 f · Attiéké (offert) · Attiéké en plus ». Chaîne vide si rien à afficher.
+ * Partagé par le centre des commandes admin et « Mes commandes » du partenaire.
+ */
+export function texteFormatEtOptions(variante: unknown, supplements: unknown): string {
+  const options = Array.isArray(supplements) ? supplements : supplements ? [supplements] : [];
+  return [variante, ...options].map(nomLisible).filter((texte) => texte.length > 0).join(' · ');
+}
+
+/** `details` d'une ligne admin : texte tel quel, ou objet {variante, supplements} rendu lisible. */
+export function texteDetailsLigne(details: unknown): string {
+  if (typeof details === 'string') return details.trim();
+  if (details && typeof details === 'object') {
+    const objet = details as Record<string, unknown>;
+    return texteFormatEtOptions(objet['variante'], objet['supplements']);
+  }
+  return '';
+}
+
+/** Note spéciale portée par `details` (objet) d'une ligne admin, sinon chaîne vide. */
+export function noteDetailsLigne(details: unknown): string {
+  if (details && typeof details === 'object') {
+    const note = (details as Record<string, unknown>)['note_speciale'];
+    return typeof note === 'string' ? note.trim() : '';
+  }
+  return '';
+}
+
 /** Âge d'une commande : "à l'instant", "il y a 12 min", "il y a 3 h", "il y a 2 j". */
 export function formaterAge(minutes: number): string {
   if (minutes < 1) return "à l'instant";

@@ -17,6 +17,8 @@ import {
   formaterMontant,
   lienTel,
   lienWhatsApp,
+  noteDetailsLigne,
+  texteDetailsLigne,
 } from '../formater-commande';
 
 const DUREE_MESSAGE_MS = 6000;
@@ -45,6 +47,8 @@ export class DetailCommandeAdmin implements OnDestroy {
   readonly modifiee = output<void>();
 
   readonly formaterMontant = formaterMontant;
+  readonly texteDetailsLigne = texteDetailsLigne;
+  readonly noteDetailsLigne = noteDetailsLigne;
   readonly formaterAge = formaterAge;
   readonly formaterDateHeure = formaterDateHeure;
   readonly classeAge = classeAge;

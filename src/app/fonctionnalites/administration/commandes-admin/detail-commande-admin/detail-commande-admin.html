@@ -67,8 +67,11 @@
               <tr>
                 <td>
                   {{ ligne.article_nom }}
-                  @if (ligne.details) {
-                    <span class="detail-ligne">{{ ligne.details }}</span>
+                  @if (texteDetailsLigne(ligne.details); as detail) {
+                    <span class="detail-ligne">{{ detail }}</span>
+                  }
+                  @if (noteDetailsLigne(ligne.details); as note) {
+                    <span class="detail-ligne">Note : {{ note }}</span>
                   }
                 </td>
                 <td class="droite">{{ ligne.quantite }}</td>

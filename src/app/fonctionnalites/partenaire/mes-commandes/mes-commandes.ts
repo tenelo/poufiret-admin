@@ -7,7 +7,6 @@ import { MesCommandesService } from './mes-commandes.service';
 import { DetailCommande } from './detail-commande/detail-commande';
 import { extraireMessageErreur } from '../mes-produits/extraire-message-erreur';
 import {
-  ActionTransitionCommande,
   Commande,
   ETATS_ACTIFS,
   ETATS_FINAUX,
@@ -18,7 +17,9 @@ import {
   OPTIONS_FILTRE_STATUT,
   ResumeCommandes,
   StatutCommande,
-  TRANSITIONS_PARTENAIRE,
+  TransitionPossibleCommande,
+  ACTIONS_COMMANDE_A_CONFIRMER,
+  motifRequis,
 } from '../../../modeles/commande.model';
 
 const INTERVALLE_RAFRAICHISSEMENT_MS = 20000;
@@ -431,16 +432,19 @@ export class MesCommandes implements OnInit {
 
   // ---- Actions inline sur une ligne du tableau (transitions sans motif/confirmation) ----
 
-  actionsInlineDisponibles(commande: Commande): ActionTransitionCommande[] {
-    return TRANSITIONS_PARTENAIRE[commande.statut].filter((a) => !a.requiertMotif && !a.dangereuse);
+  /** Depuis `transitions_possibles` du serveur, sans celles demandant un motif ou une confirmation. */
+  actionsInlineDisponibles(commande: Commande): TransitionPossibleCommande[] {
+    return (commande.transitions_possibles ?? []).filter(
+      (a) => !motifRequis(a) && !ACTIONS_COMMANDE_A_CONFIRMER.includes(a.action),
+    );
   }
 
-  appliquerTransitionInline(commande: Commande, action: ActionTransitionCommande): void {
+  appliquerTransitionInline(commande: Commande, action: TransitionPossibleCommande): void {
     if (this.transitionInlineEnCoursId()) {
       return;
     }
     this.transitionInlineEnCoursId.set(commande.id);
-    this.mesCommandesService.changerStatut(commande.id, action.cible).subscribe({
+    this.mesCommandesService.changerStatut(commande.id, action.action).subscribe({
       next: (commandeMaj) => {
         this.transitionInlineEnCoursId.set(null);
         this.surCommandeMiseAJour(commandeMaj);

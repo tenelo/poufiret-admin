@@ -250,7 +250,7 @@
                 <td>{{ formaterDateRelative(commande.created_at) }}</td>
                 <td class="colonne-actions" (click)="$event.stopPropagation()">
                   <div class="actions-ligne">
-                    @for (action of actionsInlineDisponibles(commande); track action.cible) {
+                    @for (action of actionsInlineDisponibles(commande); track action.action) {
                       <button
                         type="button"
                         class="bouton-action-ligne"

@@ -108,7 +108,14 @@ export interface LigneCommandeAdmin {
   quantite: number;
   prix_unitaire: number;
   sous_total: number;
-  details: string | null;
+  /** Objet {variante, supplements, note_speciale} (backend actuel) ou texte (ancien format). */
+  details: DetailsLigneCommandeAdmin | string | null;
+}
+
+export interface DetailsLigneCommandeAdmin {
+  variante: string | null;
+  supplements: unknown[];
+  note_speciale: string;
 }
 
 export interface NoteAdmin {

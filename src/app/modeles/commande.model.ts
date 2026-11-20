@@ -23,6 +23,7 @@ export interface LigneCommande {
   article: number | null;
   nom_article: string;
   variante_nom: string | null;
+  /** [{id, nom, prix[, groupe_id, groupe_libelle]}…] : options et suppléments choisis. */
   supplements: unknown;
   quantite: number;
   prix_unitaire: string;
@@ -55,6 +56,11 @@ export interface Commande {
   acceptee_le: string | null;
   prete_le: string | null;
   livree_le: string | null;
+  /** « court » (commerces) ou « restauration » (backend). */
+  parcours?: string;
+  /** Statuts du parcours normal de la commande, dans l'ordre. */
+  etapes?: StatutCommande[];
+  transitions_possibles?: TransitionPossibleCommande[];
 }
 
 // Corps de POST /orders/commandes/<id>/transition/.
@@ -142,36 +148,21 @@ export const OPTIONS_FILTRE_STATUT: { valeur: StatutCommande | ''; libelle: stri
   { valeur: 'expiree', libelle: 'Expirées' },
 ];
 
-export interface ActionTransitionCommande {
-  cible: StatutCommande;
+/**
+ * Action proposée par le serveur pour la commande (champ `transitions_possibles`, même format que
+ * le centre admin) : `action` est le statut cible envoyé à POST .../transition/ ({statut}).
+ * Les boutons d'action viennent UNIQUEMENT de cette liste (parcours court ou restauration).
+ */
+export interface TransitionPossibleCommande {
+  action: StatutCommande;
   libelle: string;
-  requiertMotif?: boolean;
-  dangereuse?: boolean;
+  commentaire_obligatoire: boolean;
 }
 
-// Table des transitions autorisées côté partenaire, par statut courant.
-export const TRANSITIONS_PARTENAIRE: Record<StatutCommande, ActionTransitionCommande[]> = {
-  nouvelle: [
-    { cible: 'acceptee', libelle: 'Accepter' },
-    { cible: 'refusee', libelle: 'Refuser', requiertMotif: true, dangereuse: true },
-    { cible: 'annulee', libelle: 'Annuler', dangereuse: true },
-  ],
-  acceptee: [
-    { cible: 'en_preparation', libelle: 'Mettre en préparation' },
-    { cible: 'annulee', libelle: 'Annuler', dangereuse: true },
-  ],
-  en_preparation: [
-    { cible: 'prete', libelle: 'Marquer prête' },
-    { cible: 'annulee', libelle: 'Annuler', dangereuse: true },
-  ],
-  prete: [
-    { cible: 'en_livraison', libelle: 'Passer en livraison' },
-    { cible: 'livree', libelle: 'Marquer livrée' },
-    { cible: 'expiree', libelle: 'Marquer expirée' },
-  ],
-  en_livraison: [{ cible: 'livree', libelle: 'Marquer livrée' }],
-  livree: [],
-  refusee: [],
-  annulee: [],
-  expiree: [],
-};
+/** Actions demandant une confirmation avant envoi (comportement historique conservé). */
+export const ACTIONS_COMMANDE_A_CONFIRMER: readonly string[] = ['annulee', 'refusee'];
+
+/** Le refus demande toujours un motif côté partenaire (comportement historique conservé). */
+export function motifRequis(transition: TransitionPossibleCommande): boolean {
+  return transition.commentaire_obligatoire || transition.action === 'refusee';
+}

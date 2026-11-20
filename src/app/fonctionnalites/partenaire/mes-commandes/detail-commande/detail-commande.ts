@@ -4,18 +4,21 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { MesCommandesService } from '../mes-commandes.service';
 import { extraireMessageErreur } from '../../mes-produits/extraire-message-erreur';
+import { texteFormatEtOptions } from '../../../administration/commandes-admin/formater-commande';
 import {
-  ActionTransitionCommande,
+  ACTIONS_COMMANDE_A_CONFIRMER,
   Commande,
   LIBELLES_MODE_LIVRAISON,
   LIBELLES_MODE_PAIEMENT,
   LIBELLES_STATUT_COMMANDE,
-  TRANSITIONS_PARTENAIRE,
+  TransitionPossibleCommande,
+  motifRequis,
 } from '../../../../modeles/commande.model';
 
 /**
  * Détail d'une commande, affiché en overlay par l'écran "Mes commandes" :
- * lignes, montants, et boutons d'action contextuels selon le statut courant.
+ * lignes (format et options lisibles), montants, et boutons d'action venant uniquement de
+ * `transitions_possibles` renvoyé par le serveur.
  */
 @Component({
   selector: 'app-detail-commande',
@@ -35,7 +38,10 @@ export class DetailCommande {
   readonly libellesModeLivraison = LIBELLES_MODE_LIVRAISON;
   readonly libellesModePaiement = LIBELLES_MODE_PAIEMENT;
 
-  readonly actionsDisponibles = computed(() => TRANSITIONS_PARTENAIRE[this.commande().statut]);
+  readonly texteFormatEtOptions = texteFormatEtOptions;
+
+  /** Boutons d'action : uniquement ceux renvoyés par le serveur (parcours de la commande). */
+  readonly actionsDisponibles = computed(() => this.commande().transitions_possibles ?? []);
   readonly peutCommanderLivreur = computed(
     () => this.commande().statut === 'prete' && this.commande().mode_livraison === 'livraison',
   );
@@ -49,24 +55,29 @@ export class DetailCommande {
   readonly motifRefus = signal('');
   readonly motifRefusTouche = signal(false);
 
-  readonly actionAConfirmer = signal<ActionTransitionCommande | null>(null);
+  readonly actionAConfirmer = signal<TransitionPossibleCommande | null>(null);
 
   /** Déclenché par un clic sur un bouton d'action de transition. */
-  demanderAction(action: ActionTransitionCommande): void {
+  demanderAction(action: TransitionPossibleCommande): void {
     this.messageErreur.set(null);
     this.messageSucces.set(null);
 
-    if (action.requiertMotif) {
+    if (motifRequis(action)) {
       this.motifRefus.set('');
       this.motifRefusTouche.set(false);
       this.dialogRefusOuvert.set(true);
       return;
     }
-    if (action.dangereuse) {
+    if (this.estDangereuse(action)) {
       this.actionAConfirmer.set(action);
       return;
     }
-    this.appliquerTransition(action.cible);
+    this.appliquerTransition(action.action);
+  }
+
+  /** Annuler / refuser : bouton rouge et confirmation, comme avant. */
+  estDangereuse(action: TransitionPossibleCommande): boolean {
+    return ACTIONS_COMMANDE_A_CONFIRMER.includes(action.action);
   }
 
   annulerDialogRefus(): void {
@@ -92,7 +103,7 @@ export class DetailCommande {
       return;
     }
     this.actionAConfirmer.set(null);
-    this.appliquerTransition(action.cible);
+    this.appliquerTransition(action.action);
   }
 
   private appliquerTransition(cible: Commande['statut'], raisonRefus?: string): void {
@@ -147,19 +158,6 @@ export class DetailCommande {
 
   /** `supplements` est un snapshot JSON libre (forme non documentée côté API) : on
    *  se contente de détecter s'il y a quelque chose à afficher, sans supposer sa forme. */
-  aDesSupplements(supplements: unknown): boolean {
-    if (!supplements) {
-      return false;
-    }
-    if (Array.isArray(supplements)) {
-      return supplements.length > 0;
-    }
-    if (typeof supplements === 'object') {
-      return Object.keys(supplements).length > 0;
-    }
-    return true;
-  }
-
   private extraireMessageErreurLivreur(erreur: unknown): string {
     if (erreur instanceof HttpErrorResponse && erreur.status === 409) {
       const corps = erreur.error;
